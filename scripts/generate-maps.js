@@ -24,7 +24,7 @@ const AIRPORTS = {
     ],
     kauai: { lat: 21.9786, lon: -159.3422 },
     lanai: { lat: 20.7856, lon: -156.9514 },
-    molokai: { lat: 21.1529, lon: -157.0825 },
+    molokai: { lat: 21.1517, lon: -157.0912 },
     niihau: null,
     kahoolawe: null
 };

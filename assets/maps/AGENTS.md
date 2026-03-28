@@ -70,7 +70,7 @@ Real airport locations (lat/lng):
 | Big Island | Kona (KOA) | 19.7367 | -156.0407 |
 | Big Island | Hilo (ITO) | 19.7203 | -155.0481 |
 | Kauai | Lihue (LIH) | 21.9786 | -159.3422 |
-| Molokai | Molokai (MKK) | 21.1529 | -157.0825 |
+| Molokai | Molokai (MKK) | 21.1517 | -157.0912 |
 | Lanai | Lanai (LNY) | 20.7856 | -156.9514 |
 
 ## Map Format
