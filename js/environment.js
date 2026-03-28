@@ -65,7 +65,7 @@ class CloudSystem {
     constructor(scene, count = 180) {
         this.clouds = [];
         this.scene = scene;
-        this.bounds = 30000;
+        this.bounds = 20000;
         
         const islandPositions = [
             { x: 0, z: 0 },
@@ -81,9 +81,9 @@ class CloudSystem {
         for (let i = 0; i < count; i++) {
             let x, z;
             
-            if (Math.random() < 0.65) {
+            if (Math.random() < 0.7) {
                 const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
-                const radius = 2500 + Math.random() * 10000;
+                const radius = 1500 + Math.random() * 6000;
                 const angle = Math.random() * Math.PI * 2;
                 x = island.x + Math.cos(angle) * radius;
                 z = island.z + Math.sin(angle) * radius;
@@ -133,10 +133,10 @@ class CloudSystem {
             
             for (let i = 0; i < puffsInLayer; i++) {
                 const shade = 0.92 + Math.random() * 0.08;
-                const puffMat = new THREE.MeshStandardMaterial({
+                const                 const puffMat = new THREE.MeshStandardMaterial({
                     color: new THREE.Color(shade, shade, shade),
                     transparent: true,
-                    opacity: 0.7 + Math.random() * 0.25,
+                    opacity: 0.85 + Math.random() * 0.15,
                     roughness: 1,
                     depthWrite: false
                 });
@@ -161,7 +161,7 @@ class CloudSystem {
             }
         }
         
-        const altitude = 150 + Math.random() * 2500;
+        const altitude = 300 + Math.random() * 1500;
         cloudGroup.position.set(x, altitude, z);
         
         const baseSpeed = 3 + Math.random() * 12;
