@@ -225,7 +225,7 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const group = new THREE.Group();
     group.add(terrain);
     
-    group.position.set(worldX, 0, worldZ);
+    group.position.set(worldX, -25, worldZ);
     scene.add(group);
     
     return group;
@@ -348,7 +348,10 @@ const islandPositions = [
     { name: 'kahoolawe', x: 2200, z: -2200, hasAirport: false, worldScale: 0.08 }
 ];
 
-async function createAllIslands(scene) {
+async function createAllIslands(scene, onProgress) {
+    const total = islandPositions.length;
+    let loaded = 0;
+    
     const loadPromises = islandPositions.map(island => {
         return createIslandFromHeightmap(
             scene,
@@ -356,7 +359,11 @@ async function createAllIslands(scene) {
             island.x,
             island.z,
             { hasAirport: island.hasAirport, worldScale: island.worldScale }
-        );
+        ).then(island => {
+            loaded++;
+            if (onProgress) onProgress(Math.round((loaded / total) * 100));
+            return island;
+        });
     });
 
     const islands = await Promise.all(loadPromises);
