@@ -62,63 +62,127 @@ function updateOceanWaves(time) {
 
 // ========== CLOUDS ==========
 class CloudSystem {
-    constructor(scene, count = 50) {
+    constructor(scene, count = 80) {
         this.clouds = [];
         this.scene = scene;
+        this.bounds = 25000;
+        
+        const islandPositions = [
+            { x: 0, z: 0 },
+            { x: 4800, z: -9600 },
+            { x: -9600, z: -4200 },
+            { x: -18000, z: -6000 },
+            { x: -2100, z: -5400 },
+            { x: 2100, z: -4800 },
+            { x: -14400, z: -7200 },
+            { x: 3300, z: -3300 }
+        ];
         
         for (let i = 0; i < count; i++) {
-            this.createCloud();
+            let x, z;
+            
+            if (Math.random() < 0.6) {
+                const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
+                const radius = 3000 + Math.random() * 8000;
+                const angle = Math.random() * Math.PI * 2;
+                x = island.x + Math.cos(angle) * radius;
+                z = island.z + Math.sin(angle) * radius;
+            } else {
+                x = (Math.random() - 0.5) * this.bounds * 2;
+                z = (Math.random() - 0.5) * this.bounds * 2;
+            }
+            
+            this.createCloud(x, z);
         }
     }
     
-    createCloud() {
+    createCloud(x, z) {
         const cloudGroup = new THREE.Group();
         
-        const puffCount = 5 + Math.floor(Math.random() * 5);
-        const puffGeo = new THREE.SphereGeometry(1, 8, 8);
+        const type = Math.random();
+        let baseSize, puffCount, spread;
+        
+        if (type < 0.4) {
+            baseSize = 40 + Math.random() * 30;
+            puffCount = 8 + Math.floor(Math.random() * 6);
+            spread = 50;
+        } else if (type < 0.7) {
+            baseSize = 60 + Math.random() * 40;
+            puffCount = 12 + Math.floor(Math.random() * 8);
+            spread = 70;
+        } else {
+            baseSize = 80 + Math.random() * 50;
+            puffCount = 15 + Math.floor(Math.random() * 10);
+            spread = 90;
+        }
+        
+        const puffGeo = new THREE.SphereGeometry(1, 12, 12);
         const puffMat = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             transparent: true,
-            opacity: 0.9,
-            roughness: 1
+            opacity: 0.85,
+            roughness: 1,
+            depthWrite: false
         });
         
         for (let i = 0; i < puffCount; i++) {
-            const puff = new THREE.Mesh(puffGeo, puffMat);
+            const puff = new THREE.Mesh(puffGeo, puffMat.clone());
+            
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI * 0.5;
+            const r = Math.random() * spread;
+            
             puff.position.set(
-                (Math.random() - 0.5) * 30,
-                (Math.random() - 0.5) * 10,
-                (Math.random() - 0.5) * 20
+                Math.sin(phi) * Math.cos(theta) * r,
+                (Math.random() - 0.3) * spread * 0.4,
+                Math.sin(phi) * Math.sin(theta) * r
             );
-            puff.scale.setScalar(10 + Math.random() * 15);
+            
+            const scale = baseSize * (0.4 + Math.random() * 0.6);
+            puff.scale.set(scale, scale * (0.6 + Math.random() * 0.4), scale);
+            
+            puff.material.opacity = 0.6 + Math.random() * 0.35;
             cloudGroup.add(puff);
         }
         
-        cloudGroup.position.set(
-            (Math.random() - 0.5) * 40000,
-            500 + Math.random() * 1500,
-            (Math.random() - 0.5) * 40000
-        );
+        const altitude = 200 + Math.random() * 2000;
+        cloudGroup.position.set(x, altitude, z);
         
-        cloudGroup.userData.velocity = new THREE.Vector3(
-            (Math.random() - 0.5) * 10,
-            0,
-            (Math.random() - 0.5) * 5
-        );
+        const baseSpeed = 5 + Math.random() * 15;
+        const baseDir = Math.random() * Math.PI * 2;
+        
+        cloudGroup.userData = {
+            velocity: new THREE.Vector3(
+                Math.cos(baseDir) * baseSpeed,
+                (Math.random() - 0.5) * 0.5,
+                Math.sin(baseDir) * baseSpeed
+            ),
+            rotationSpeed: (Math.random() - 0.5) * 0.01,
+            bobPhase: Math.random() * Math.PI * 2,
+            bobSpeed: 0.5 + Math.random() * 0.5,
+            bobAmount: 2 + Math.random() * 3,
+            baseY: altitude
+        };
         
         this.scene.add(cloudGroup);
         this.clouds.push(cloudGroup);
     }
     
-    update(delta) {
+    update(delta, time) {
         this.clouds.forEach(cloud => {
-            cloud.position.x += cloud.userData.velocity.x * delta;
-            cloud.position.z += cloud.userData.velocity.z * delta;
+            const ud = cloud.userData;
             
-            if (cloud.position.x > 20000) cloud.position.x = -20000;
-            if (cloud.position.x < -20000) cloud.position.x = 20000;
-            if (cloud.position.z > 20000) cloud.position.z = -20000;
-            if (cloud.position.z < -20000) cloud.position.z = 20000;
+            cloud.position.x += ud.velocity.x * delta;
+            cloud.position.z += ud.velocity.z * delta;
+            cloud.position.y = ud.baseY + Math.sin(time * ud.bobSpeed + ud.bobPhase) * ud.bobAmount;
+            
+            cloud.rotation.y += ud.rotationSpeed * delta;
+            
+            const b = this.bounds;
+            if (cloud.position.x > b) cloud.position.x = -b;
+            if (cloud.position.x < -b) cloud.position.x = b;
+            if (cloud.position.z > b) cloud.position.z = -b;
+            if (cloud.position.z < -b) cloud.position.z = b;
         });
     }
 }

@@ -111,7 +111,7 @@
             }
             
             orbitCamera.update(delta);
-            cloudSystem.update(delta);
+            cloudSystem.update(delta, time);
             wildlife.update(delta);
             
             renderer.render(scene, camera);
