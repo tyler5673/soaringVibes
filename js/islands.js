@@ -225,7 +225,7 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const group = new THREE.Group();
     group.add(terrain);
     
-    group.position.set(worldX, 0, worldZ);
+    group.position.set(worldX, -330, worldZ);
     scene.add(group);
     
     return group;
@@ -369,7 +369,7 @@ async function createAllIslands(scene) {
         addRocks(islandGroup, info.worldScale, radius);
         
         if (info.hasAirport) {
-            createAirport(scene, info.x, info.z);
+            createAirport(scene, info.x, info.z, islandGroup);
         }
     });
 

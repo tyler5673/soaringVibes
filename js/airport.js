@@ -1,11 +1,10 @@
 // ========== AIRPORT ==========
-function createAirport(scene, x, z) {
+function createAirport(scene, x, z, parentGroup = null) {
     const group = new THREE.Group();
     
     const runwayLength = 600;
     const runwayWidth = 30;
     
-    // Rotate runway to match aircraft direction (along Z axis)
     group.rotation.y = Math.PI / 2;
     
     const runwayGeo = new THREE.PlaneGeometry(runwayLength, runwayWidth);
@@ -97,9 +96,12 @@ function createAirport(scene, x, z) {
     hangarRoof.position.set(420, 25, 100);
     group.add(hangarRoof);
     
-    const waterLevel = 2;
-    const airportY = waterLevel + 1.5;
+    const localY = 2.5;
+    group.position.set(x, localY, z);
     
-    group.position.set(x, airportY, z);
-    scene.add(group);
+    if (parentGroup) {
+        parentGroup.add(group);
+    } else {
+        scene.add(group);
+    }
 }
