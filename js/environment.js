@@ -133,7 +133,7 @@ class CloudSystem {
             
             for (let i = 0; i < puffsInLayer; i++) {
                 const shade = 0.92 + Math.random() * 0.08;
-                const                 const puffMat = new THREE.MeshStandardMaterial({
+                const puffMat = new THREE.MeshStandardMaterial({
                     color: new THREE.Color(shade, shade, shade),
                     transparent: true,
                     opacity: 0.85 + Math.random() * 0.15,
