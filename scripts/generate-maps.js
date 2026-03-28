@@ -30,6 +30,18 @@ const AIRPORTS = {
     kahoolawe: null
 };
 
+const MANUAL_AIRPORT_PIXELS = {
+    maui: { x: 440, y: 730 },
+    oahu: { x: 650, y: 850 },
+    'big-island': [
+        { x: 200, y: 450, name: 'Kona' },
+        { x: 850, y: 450, name: 'Hilo' }
+    ],
+    kauai: { x: 850, y: 600 },
+    lanai: { x: 500, y: 550 },
+    molokai: { x: 450, y: 500 }
+};
+
 function loadIslandJson(name) {
     const jsonPath = path.join(HEIGHTMAP_DIR, `${name}.json`);
     return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
@@ -58,33 +70,14 @@ function findIslandBounds(heightData, width, height) {
         }
     }
     
-    if (!found) {
-        return { minX: 0, maxX: width - 1, minY: 0, maxY: height - 1, width, height };
-    }
-    
-    const padding = 10;
-    minX = Math.max(0, minX - padding);
-    maxX = Math.min(width - 1, maxX + padding);
-    minY = Math.max(0, minY - padding);
-    maxY = Math.min(height - 1, maxY + padding);
-    
-    return { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
+    return { minX, maxX, minY, maxY, width, height };
 }
 
-function utmToIslandUv(utmX, utmY, island, bounds) {
+function utmToIslandUv(utmX, utmY, island, width, height) {
     const bbox = island.bbox;
     
-    const bboxWidth = bbox.xmax - bbox.xmin;
-    const bboxHeight = bbox.ymax - bbox.ymin;
-    
-    const scaleX = bboxWidth / bounds.width;
-    const scaleY = bboxHeight / bounds.height;
-    
-    const offsetX = utmX - (bbox.xmin + bounds.minX * scaleX);
-    const offsetY = utmY - (bbox.ymax - bounds.maxY * scaleY);
-    
-    const u = offsetX / (bounds.width * scaleX);
-    const v = offsetY / (bounds.height * scaleY);
+    const u = (utmX - bbox.xmin) / (bbox.xmax - bbox.xmin);
+    const v = (utmY - bbox.ymin) / (bbox.ymax - bbox.ymin);
     
     return { u: Math.max(0, Math.min(1, u)), v: Math.max(0, Math.min(1, v)) };
 }
@@ -95,111 +88,46 @@ async function generateMap(islandName) {
     const island = loadIslandJson(islandName);
     const heightmapPath = path.join(HEIGHTMAP_DIR, `${islandName}.png`);
     
-    const heightmap = await sharp(heightmapPath).raw().toBuffer({ resolveWithObject: true });
-    const { data, info } = heightmap;
+    const metadata = await sharp(heightmapPath).metadata();
+    const width = metadata.width;
+    const height = metadata.height;
+    console.log(`  Image: ${width}x${height}, channels: ${metadata.channels}`);
     
-    const width = info.width;
-    const height = info.height;
+    let composite = sharp(heightmapPath);
     
-    const bounds = findIslandBounds(data, width, height);
-    console.log(`  Island bounds: x=${bounds.minX}-${bounds.maxX}, y=${bounds.minY}-${bounds.maxY}`);
-    console.log(`  Island size: ${bounds.width}x${bounds.height}`);
-    
-    const minElev = island.minElevation;
-    const maxElev = island.maxElevation;
-    const elevRange = maxElev - minElev;
-    
-    const waterLevel = 2;
-    const beachLevel = 10;
-    const grassLevel = 40;
-    const forestLevel = 120;
-    const cliffLevel = Math.max(200, maxElev * 0.5);
-    const snowLevel = Math.max(200, maxElev * 0.7);
-    
-    const outputBuffer = Buffer.alloc(width * height * 3);
-    
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const idx = (y * width + x);
-            const heightVal = data[idx];
-            
-            if (heightVal >= 253) {
-                const outIdx = idx * 3;
-                outputBuffer[outIdx] = 0;
-                outputBuffer[outIdx + 1] = 0;
-                outputBuffer[outIdx + 2] = 0;
-                continue;
-            }
-            
-            const normalizedHeight = heightVal / 255;
-            const realHeight = minElev + normalizedHeight * elevRange;
-            
-            let color;
-            
-            if (heightVal <= 1) {
-                color = COLOR_WATER;
-            } else if (realHeight < waterLevel + 2) {
-                color = COLOR_BEACH;
-            } else if (realHeight < beachLevel) {
-                color = COLOR_BEACH;
-            } else if (realHeight < grassLevel) {
-                color = COLOR_GRASS;
-            } else if (realHeight < forestLevel) {
-                color = COLOR_FOREST;
-            } else if (realHeight < cliffLevel) {
-                color = COLOR_CLIFF;
-            } else if (realHeight < snowLevel) {
-                color = COLOR_CLIFF;
-            } else {
-                color = COLOR_SNOW;
-            }
-            
-            const outIdx = idx * 3;
-            outputBuffer[outIdx] = color.r;
-            outputBuffer[outIdx + 1] = color.g;
-            outputBuffer[outIdx + 2] = color.b;
-        }
-    }
-    
-    const airportData = AIRPORTS[islandName];
-    if (airportData) {
-        const airports = Array.isArray(airportData) ? airportData : [airportData];
+    const manualPixels = MANUAL_AIRPORT_PIXELS[islandName];
+    if (manualPixels) {
+        const airports = Array.isArray(manualPixels) ? manualPixels : [manualPixels];
         
         for (const airport of airports) {
-            const utm = latLonToUtm(airport.lat, airport.lon);
-            const uv = utmToIslandUv(utm.easting, utm.northing, island, bounds);
+            const px = airport.x;
+            const py = airport.y;
             
-            const px = Math.floor(uv.u * (bounds.maxX - bounds.minX) + bounds.minX);
-            const py = Math.floor((1 - uv.v) * (bounds.maxY - bounds.minY) + bounds.minY);
+            console.log(`  ${airport.name || 'Airport'}: pixel (${px}, ${py})`);
             
-            console.log(`  ${airport.name || 'Airport'} at UTM (${utm.easting}, ${utm.northing}) -> UV (${uv.u.toFixed(4)}, ${uv.v.toFixed(4)}) -> pixel (${px}, ${py})`);
-            
-            const radius = 20;
-            for (let dy = -radius; dy <= radius; dy++) {
-                for (let dx = -radius; dx <= radius; dx++) {
-                    if (dx * dx + dy * dy <= radius * radius) {
-                        const x = px + dx;
-                        const y = py + dy;
-                        if (x >= 0 && x < width && y >= 0 && y < height) {
-                            const idx = (y * width + x) * 3;
-                            outputBuffer[idx] = COLOR_AIRPORT.r;
-                            outputBuffer[idx + 1] = COLOR_AIRPORT.g;
-                            outputBuffer[idx + 2] = COLOR_AIRPORT.b;
-                        }
-                    }
-                }
+            const radius = 15;
+            const dotBuffer = Buffer.alloc(radius * radius * 4);
+            for (let i = 0; i < radius * radius; i++) {
+                dotBuffer[i * 4] = 255;
+                dotBuffer[i * 4 + 1] = 0;
+                dotBuffer[i * 4 + 2] = 0;
+                dotBuffer[i * 4 + 3] = 255;
             }
+            
+            const dotImage = await sharp(dotBuffer, {
+                raw: { width: radius, height: radius, channels: 4 }
+            }).png().toBuffer();
+            
+            composite = composite.composite([{
+                input: dotImage,
+                left: px - Math.floor(radius / 2),
+                top: py - Math.floor(radius / 2)
+            }]);
         }
     }
     
     const outputPath = path.join(MAPS_DIR, `${islandName}.png`);
-    await sharp(outputBuffer, {
-        raw: {
-            width: width,
-            height: height,
-            channels: 3
-        }
-    }).png().toFile(outputPath);
+    await composite.toFile(outputPath);
     
     console.log(`  Saved to ${outputPath}`);
 }
