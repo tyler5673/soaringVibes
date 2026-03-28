@@ -1,0 +1,59 @@
+# Flight Simulator Project Specification
+
+## Overview
+Build a full-simulation flight simulator as an HTML5 web application using Three.js. The simulator features realistic flight physics, a lush tropical archipelago environment, and a third-person camera system.
+
+## Technical Stack
+- **Rendering Engine:** Three.js (WebGL)
+- **Platform:** HTML5 (browser-based)
+- **No frameworks** — vanilla JavaScript with Three.js
+
+## Core Features
+
+### Flight Physics (Full Simulation)
+- Realistic aerodynamics with lift, drag, thrust, and weight forces
+- Stall behavior at high angles of attack
+- Control surfaces: ailerons, elevator, rudder
+- Throttle control for thrust
+- Realistic acceleration and deceleration
+- Ground effect near runway
+
+### Aircraft
+- Single, well-detailed aircraft
+- Starts positioned on a runway at the airport
+
+### Camera System
+- Third-person view from behind the aircraft
+- Mouse movement orbits the camera around the plane
+- Scroll wheel controls zoom (distance from aircraft)
+- Camera smoothly follows aircraft orientation
+
+### Controls (Keyboard)
+- W/S or Up/Down: Pitch (elevator)
+- A/D or Left/Right: Roll (ailerons)
+- Q/E: Yaw (rudder)
+- Shift: Increase throttle
+- Ctrl: Decrease throttle
+- Space: Brakes (on ground)
+
+### Environment
+- **Setting:** Lush tropical archipelago (multiple islands)
+- **Visual Style:** Realistic with high-quality meshes, realistic textures, and atmospheric lighting
+- **Airport:** Starting location with runway
+- **Animated Elements:**
+  - Clouds (animated movement)
+  - Birds (flying patterns)
+  - Hot air balloons
+  - Wildlife on islands
+  - Buildings and structures fitting the tropical setting
+
+### Gameplay
+- Free flight only — no missions, cargo, or economy
+- Open exploration of the archipelago
+
+## Implementation Notes
+- Use Three.js for all 3D rendering
+- Implement custom flight physics model (not built-in physics engine)
+- Create or use suitable 3D assets for: aircraft, islands, clouds, birds, balloons, buildings
+- Implement orbit camera with mouse and scroll wheel input
+- Ensure performant rendering for smooth gameplay
