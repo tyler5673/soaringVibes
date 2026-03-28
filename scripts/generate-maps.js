@@ -31,15 +31,14 @@ const AIRPORTS = {
 };
 
 const MANUAL_AIRPORT_PIXELS = {
-    maui: { x: 440, y: 730 },
-    oahu: { x: 650, y: 850 },
+    maui: { x: 368, y: 715 },
+    oahu: { x: 582, y: 158 },
     'big-island': [
-        { x: 200, y: 450, name: 'Kona' },
-        { x: 850, y: 450, name: 'Hilo' }
+        { x: 32, y: 607, name: 'Kona' }
     ],
-    kauai: { x: 850, y: 600 },
-    lanai: { x: 500, y: 550 },
-    molokai: { x: 450, y: 500 }
+    kauai: { x: 920, y: 310 },
+    lanai: { x: 445, y: 280 },
+    molokai: { x: 388, y: 615 }
 };
 
 function loadIslandJson(name) {
