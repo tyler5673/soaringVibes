@@ -84,7 +84,7 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const terrainWidth = meta.worldWidth * worldScale;
     const terrainHeight = meta.worldHeight * worldScale;
     
-    const segments = 1536;
+    const segments = 768;
     const terrainGeo = new THREE.PlaneGeometry(terrainWidth, terrainHeight, segments, segments);
     terrainGeo.rotateX(-Math.PI / 2);
     
@@ -113,7 +113,7 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const snowColor = new THREE.Color(0x228B22);
     
     const heightScale = elevRange / 255;
-    const terrainScale = 0.1;
+    const terrainScale = 0.15;
     
     let centerX = 0, centerZ = 0;
     let airportRadius = 100 * worldScale;
@@ -227,7 +227,7 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const group = new THREE.Group();
     group.add(terrain);
     
-    group.position.set(worldX, 0, worldZ);
+    group.position.set(worldX, -330, worldZ);
     scene.add(group);
     
     return group;
@@ -340,14 +340,14 @@ function addRocks(group, scale, islandRadius) {
 }
 
 const islandPositions = [
-    { name: 'maui', x: 0, z: 0, hasAirport: true, worldScale: 0.04 },
-    { name: 'big-island', x: 1600, z: -3200, hasAirport: false, worldScale: 0.04 },
-    { name: 'oahu', x: -3200, z: -1400, hasAirport: false, worldScale: 0.04 },
-    { name: 'kauai', x: -6000, z: -2000, hasAirport: false, worldScale: 0.04 },
-    { name: 'molokai', x: -700, z: -1800, hasAirport: false, worldScale: 0.04 },
-    { name: 'lanai', x: 700, z: -1600, hasAirport: false, worldScale: 0.04 },
-    { name: 'niihau', x: -4800, z: -2400, hasAirport: false, worldScale: 0.04 },
-    { name: 'kahoolawe', x: 1100, z: -1100, hasAirport: false, worldScale: 0.04 }
+    { name: 'maui', x: 0, z: 0, hasAirport: true, worldScale: 0.12 },
+    { name: 'big-island', x: 4800, z: -9600, hasAirport: false, worldScale: 0.12 },
+    { name: 'oahu', x: -9600, z: -4200, hasAirport: false, worldScale: 0.12 },
+    { name: 'kauai', x: -18000, z: -6000, hasAirport: false, worldScale: 0.12 },
+    { name: 'molokai', x: -2100, z: -5400, hasAirport: false, worldScale: 0.12 },
+    { name: 'lanai', x: 2100, z: -4800, hasAirport: false, worldScale: 0.12 },
+    { name: 'niihau', x: -14400, z: -7200, hasAirport: false, worldScale: 0.12 },
+    { name: 'kahoolawe', x: 3300, z: -3300, hasAirport: false, worldScale: 0.12 }
 ];
 
 async function createAllIslands(scene) {
