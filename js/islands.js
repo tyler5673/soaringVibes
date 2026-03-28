@@ -67,6 +67,48 @@ function getHeightFromData(data, width, height, x, y) {
     return h0 * (1 - fy) + h1 * fy;
 }
 
+function getTerrainHeight(worldX, worldZ) {
+    const terrainScale = 0.15;
+    const groupOffsetY = -25;
+    
+    for (let i = 0; i < islandPositions.length; i++) {
+        const islandInfo = islandPositions[i];
+        const data = heightmapCache[islandInfo.name];
+        const meta = islandMetadataCache[islandInfo.name];
+        
+        if (!data || !meta) continue;
+        
+        const localX = worldX - islandInfo.x;
+        const localZ = worldZ - islandInfo.z;
+        
+        const terrainWidth = meta.worldWidth * islandInfo.worldScale;
+        const terrainHeight = meta.worldHeight * islandInfo.worldScale;
+        
+        const halfWidth = terrainWidth / 2;
+        const halfHeight = terrainHeight / 2;
+        
+        if (Math.abs(localX) > halfWidth || Math.abs(localZ) > halfHeight) continue;
+        
+        const u = (localX / terrainWidth) + 0.5;
+        const v = (localZ / terrainHeight) + 0.5;
+        
+        const imgX = u * 1023;
+        const imgY = (1 - v) * 1023;
+        
+        const minElev = meta.minElevation;
+        const maxElev = meta.maxElevation;
+        const elevRange = maxElev - minElev;
+        
+        const normalizedHeight = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
+        let height = minElev + normalizedHeight * elevRange;
+        height *= terrainScale;
+        
+        return height + groupOffsetY;
+    }
+    
+    return 0;
+}
+
 function createIslandFromHeightmap(scene, islandName, worldX, worldZ, options = {}) {
     const { hasAirport = false, worldScale = 1 } = options;
     
@@ -303,6 +345,52 @@ function addVegetation(group, scale, islandRadius) {
     }
 }
 
+function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius) {
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+    
+    const treeCount = 30;
+    const halfSize = islandRadius * 0.8;
+    
+    for (let i = 0; i < treeCount; i++) {
+        const localX = (Math.random() - 0.5) * halfSize * 2;
+        const localZ = (Math.random() - 0.5) * halfSize * 2;
+        
+        const worldX = islandWorldX + localX;
+        const worldZ = islandWorldZ + localZ;
+        
+        const terrainY = getTerrainHeight(worldX, worldZ);
+        
+        if (terrainY <= 0) continue;
+        
+        const palmHeight = 5 + Math.random() * 2;
+        
+        const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, palmHeight, 6);
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.set(localX, terrainY - group.position.y + palmHeight / 2, localZ);
+        trunk.rotation.z = (Math.random() - 0.5) * 0.15;
+        trunk.castShadow = true;
+        group.add(trunk);
+        
+        const frondCount = 5 + Math.floor(Math.random() * 2);
+        for (let k = 0; k < frondCount; k++) {
+            const frondGeo = new THREE.ConeGeometry(0.8 + Math.random() * 0.4, 3 + Math.random() * 2, 4);
+            const frond = new THREE.Mesh(frondGeo, leafMat);
+            const frondAngle = (k / frondCount) * Math.PI * 2 + Math.random() * 0.3;
+            
+            frond.position.set(
+                localX + Math.cos(frondAngle) * 0.3,
+                terrainY - group.position.y + palmHeight + 0.2,
+                localZ + Math.sin(frondAngle) * 0.3
+            );
+            frond.rotation.x = 1.1 + Math.random() * 0.3;
+            frond.rotation.z = frondAngle + Math.PI / 2;
+            frond.castShadow = true;
+            group.add(frond);
+        }
+    }
+}
+
 function addRocks(group, scale, islandRadius) {
     const rockMat = new THREE.MeshStandardMaterial({ color: 0x5D5D5D, roughness: 0.9, flatShading: true });
     const darkRockMat = new THREE.MeshStandardMaterial({ color: 0x3D3D3D, roughness: 0.95, flatShading: true });
@@ -373,6 +461,7 @@ async function createAllIslands(scene, onProgress) {
         const radius = 500 * info.worldScale;
         
         addVegetation(islandGroup, info.worldScale, radius);
+        addPalmTrees(islandGroup, info.worldScale, info.x, info.z, radius);
         addRocks(islandGroup, info.worldScale, radius);
         
         if (info.hasAirport) {
