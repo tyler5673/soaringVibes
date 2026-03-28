@@ -102,20 +102,18 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const cliffLevel = Math.max(200, maxElev * 0.5);
     const snowLevel = Math.max(200, maxElev * 0.7);
     
-    const sandColor = new THREE.Color(0x228B22);
-    const darkSandColor = new THREE.Color(0x1B5E20);
-    const lightGrassColor = new THREE.Color(0x228B22);
-    const grassColor = new THREE.Color(0x228B22);
-    const darkGrassColor = new THREE.Color(0x1B5E20);
-    const forestColor = new THREE.Color(0x1B5E20);
-    const rockColor = new THREE.Color(0x228B22);
-    const darkRockColor = new THREE.Color(0x1B5E20);
-    const snowColor = new THREE.Color(0x228B22);
+    const sandColor = new THREE.Color(0xE6D5AC);
+    const darkSandColor = new THREE.Color(0xC4B896);
+    const lightGrassColor = new THREE.Color(0x7CB342);
+    const grassColor = new THREE.Color(0x558B2F);
+    const darkGrassColor = new THREE.Color(0x33691E);
+    const forestColor = new THREE.Color(0x2E7D32);
+    const rockColor = new THREE.Color(0x757575);
+    const darkRockColor = new THREE.Color(0x424242);
+    const snowColor = new THREE.Color(0xECEFF1);
     
-    const heightScale = elevRange / 255;
     const terrainScale = 0.15;
     
-    let centerX = 0, centerZ = 0;
     let airportRadius = 100 * worldScale;
     let airportTransition = 50 * worldScale;
     

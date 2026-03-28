@@ -1,20 +1,24 @@
 // ========== AIRCRAFT ==========
 class Aircraft {
     constructor() {
+        // Physics constants
         this.mass = 5000;
         this.wingArea = 30;
-        this.maxThrust = 50000;
-        this.maxSpeed = 250;
+        this.maxThrust = 60000;
+        this.maxSpeed = 280;
         this.airDensity = 1.225;
-        this.rollRate = degreesToRadians(60);
-        this.pitchRate = degreesToRadians(40);
-        this.yawRate = degreesToRadians(30);
         
-        this.position = new THREE.Vector3(0, 5, -200);
+        // Control rates
+        this.rollRate = degreesToRadians(70);
+        this.pitchRate = degreesToRadians(45);
+        this.yawRate = degreesToRadians(35);
+        
+        // Initial state
+        this.position = new THREE.Vector3(0, 10, -250);
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.rotation = new THREE.Euler(0, Math.PI, 0, 'YXZ');
-        this.throttle = 0.3;
-        this.altitude = 3;
+        this.throttle = 0.35;
+        this.altitude = 8;
         
         this.controlInput = { pitch: 0, roll: 0, yaw: 0 };
         this.ias = 0;
@@ -185,9 +189,9 @@ class Aircraft {
     }
     
     reset() {
-        this.position.set(0, 5, -300);
+        this.position.set(0, 10, -350);
         this.velocity.set(0, 0, 0);
         this.rotation.set(0, Math.PI, 0);
-        this.throttle = 0.3;
+        this.throttle = 0.35;
     }
 }

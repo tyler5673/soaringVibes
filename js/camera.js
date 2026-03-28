@@ -3,14 +3,21 @@ class OrbitCamera {
     constructor(camera, target) {
         this.camera = camera;
         this.target = target;
-        this.distance = 25;
-        this.minDistance = 8;
-        this.maxDistance = 80;
+        
+        this.distance = 30;
+        this.minDistance = 10;
+        this.maxDistance = 120;
+        
         this.azimuth = 0;
-        this.elevation = 0.3;
-        this.orbitSensitivity = 0.005;
-        this.zoomSensitivity = 0.05;
-        this.smoothness = 5;
+        this.elevation = 0.35;
+        
+        this.orbitSensitivity = 0.004;
+        this.zoomSensitivity = 0.08;
+        this.smoothness = 6;
+        
+        this.heightOffset = 4;
+        this.lookAheadDistance = 8;
+        
         this.currentPosition = new THREE.Vector3();
         this.currentLookAt = new THREE.Vector3();
     }
@@ -37,14 +44,14 @@ class OrbitCamera {
             Math.cos(this.azimuth) * Math.cos(this.elevation) * this.distance
         );
         
-        offset.y += 3;
+        offset.y += this.heightOffset;
         
         const desiredPosition = targetPos.clone().add(offset);
         
         const t = 1 - Math.exp(-this.smoothness * delta);
         this.currentPosition.lerp(desiredPosition, t);
         
-        const lookAhead = new THREE.Vector3(0, 0, -5);
+        const lookAhead = new THREE.Vector3(0, 0, -this.lookAheadDistance);
         lookAhead.applyEuler(this.target.rotation);
         this.currentLookAt.lerp(targetPos.clone().add(lookAhead), t);
         
