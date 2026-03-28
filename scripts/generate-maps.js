@@ -40,15 +40,8 @@ const ISLAND_BOUNDS = {
     kahoolawe: { north: 20.637269737328893, south: 20.49699071402145, east: -156.49069436182018, west: -156.7041221827599 }
 };
 
-const IMAGE_ISLAND_BOUNDS = {
-    maui: { minX: 12, maxX: 1022, minY: 170, maxY: 969 },
-    oahu: { minX: 11, maxX: 1023, minY: 151, maxY: 904 },
-    'big-island': { minX: 93, maxX: 939, minY: 28, maxY: 1007 },
-    kauai: { minX: 62, maxX: 1017, minY: 111, maxY: 891 },
-    molokai: { minX: 10, maxX: 1022, minY: 400, maxY: 650 },
-    lanai: { minX: 14, maxX: 1006, minY: 112, maxY: 910 },
-    niihau: { minX: 0, maxX: 1023, minY: 0, maxY: 1023 },
-    kahoolawe: { minX: 0, maxX: 1023, minY: 0, maxY: 1023 }
+const MANUAL_IMAGE_BOUNDS = {
+    molokai: { minX: 10, maxX: 1022, minY: 400, maxY: 650 }
 };
 
 function latLngToPixel(lat, lon, bounds, imgBounds) {
@@ -121,7 +114,16 @@ async function generateMap(islandName) {
     
     const airportData = AIRPORTS[islandName];
     const bounds = ISLAND_BOUNDS[islandName];
-    const imgBounds = IMAGE_ISLAND_BOUNDS[islandName];
+    
+    let imgBounds = MANUAL_IMAGE_BOUNDS[islandName];
+    if (!imgBounds) {
+        const heightData = await sharp(heightmapPath).grayscale().raw().toBuffer();
+        const detected = findIslandBounds(heightData, width, height);
+        imgBounds = { minX: detected.minX, maxX: detected.maxX, minY: detected.minY, maxY: detected.maxY };
+        console.log(`  Auto-detected bounds: x=${imgBounds.minX}-${imgBounds.maxX}, y=${imgBounds.minY}-${imgBounds.maxY}`);
+    } else {
+        console.log(`  Using manual bounds: x=${imgBounds.minX}-${imgBounds.maxX}, y=${imgBounds.minY}-${imgBounds.maxY}`);
+    }
     
     if (airportData && bounds && imgBounds) {
         const airports = Array.isArray(airportData) ? airportData : [airportData];
