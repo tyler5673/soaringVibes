@@ -45,7 +45,7 @@ const IMAGE_ISLAND_BOUNDS = {
     oahu: { minX: 11, maxX: 1023, minY: 151, maxY: 904 },
     'big-island': { minX: 93, maxX: 939, minY: 28, maxY: 1007 },
     kauai: { minX: 62, maxX: 1017, minY: 111, maxY: 891 },
-    molokai: { minX: 10, maxX: 1022, minY: 355, maxY: 1023 },
+    molokai: { minX: 10, maxX: 1022, minY: 400, maxY: 650 },
     lanai: { minX: 14, maxX: 1006, minY: 112, maxY: 910 },
     niihau: { minX: 0, maxX: 1023, minY: 0, maxY: 1023 },
     kahoolawe: { minX: 0, maxX: 1023, minY: 0, maxY: 1023 }
