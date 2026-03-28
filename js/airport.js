@@ -97,6 +97,10 @@ function createAirport(scene, x, z) {
     hangarRoof.position.set(420, 25, 100);
     group.add(hangarRoof);
     
-    group.position.set(x, 2, z);
+    const islandOffset = -330;
+    const waterLevel = 2;
+    const airportY = islandOffset + waterLevel + 1.5;
+    
+    group.position.set(x, airportY, z);
     scene.add(group);
 }

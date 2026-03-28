@@ -14,7 +14,7 @@ class Aircraft {
         this.yawRate = degreesToRadians(20);
         
         // Initial state
-        this.position = new THREE.Vector3(0, 10, -250);
+        this.position = new THREE.Vector3(0, -310, -100);
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.rotation = new THREE.Euler(0, Math.PI, 0, 'YXZ');
         this.throttle = 0.4;
@@ -30,50 +30,122 @@ class Aircraft {
     createMesh() {
         const group = new THREE.Group();
         
-        const fuselageGeo = new THREE.CylinderGeometry(0.5, 0.3, 8, 8);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const accentMat = new THREE.MeshStandardMaterial({ color: 0xcc0000 });
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0x3366ff, transparent: true, opacity: 0.7 });
+        const propMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+        
+        const fuselageGeo = new THREE.CylinderGeometry(0.6, 0.4, 7, 12);
         fuselageGeo.rotateX(Math.PI / 2);
-        const fuselageMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
-        const fuselage = new THREE.Mesh(fuselageGeo, fuselageMat);
+        const fuselage = new THREE.Mesh(fuselageGeo, bodyMat);
+        fuselage.position.z = 0.5;
         group.add(fuselage);
         
-        const wingGeo = new THREE.BoxGeometry(12, 0.1, 1.5);
-        const wingMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-        const wings = new THREE.Mesh(wingGeo, wingMat);
-        wings.position.set(0, 0, 0.5);
-        group.add(wings);
+        const noseGeo = new THREE.CylinderGeometry(0.4, 0.5, 1.2, 12);
+        noseGeo.rotateX(Math.PI / 2);
+        const nose = new THREE.Mesh(noseGeo, bodyMat);
+        nose.position.set(0, -0.1, -3);
+        group.add(nose);
         
-        const tailHGeo = new THREE.BoxGeometry(4, 0.1, 1);
-        const tailH = new THREE.Mesh(tailHGeo, wingMat);
-        tailH.position.set(0, 0, 3.5);
-        group.add(tailH);
+        const spinnerGeo = new THREE.ConeGeometry(0.35, 0.5, 12);
+        spinnerGeo.rotateX(-Math.PI / 2);
+        const spinner = new THREE.Mesh(spinnerGeo, accentMat);
+        spinner.position.set(0, 0, -3.6);
+        group.add(spinner);
         
-        const tailVGeo = new THREE.BoxGeometry(0.1, 2, 1);
-        const tailV = new THREE.Mesh(tailVGeo, wingMat);
-        tailV.position.set(0, 1, 3.5);
-        group.add(tailV);
+        const propGeo = new THREE.BoxGeometry(2.2, 0.08, 0.15);
+        const prop = new THREE.Mesh(propGeo, propMat);
+        prop.position.set(0, 0, -3.7);
+        group.add(prop);
         
-        const cockpitGeo = new THREE.SphereGeometry(0.6, 8, 8);
-        cockpitGeo.scale(1, 0.6, 1.2);
-        const cockpitMat = new THREE.MeshStandardMaterial({ color: 0x3366ff, transparent: true, opacity: 0.7 });
-        const cockpit = new THREE.Mesh(cockpitGeo, cockpitMat);
-        cockpit.position.set(0, 0.4, -1.5);
+        const wingSpan = 11;
+        const wingChord = 1.2;
+        
+        const leftWingGeo = new THREE.BoxGeometry(wingSpan / 2, 0.12, wingChord);
+        const leftWing = new THREE.Mesh(leftWingGeo, bodyMat);
+        leftWing.position.set(-wingSpan / 4 - 0.3, 0.3, 0);
+        leftWing.rotation.z = -0.02;
+        group.add(leftWing);
+        
+        const rightWing = new THREE.Mesh(leftWingGeo, bodyMat);
+        rightWing.position.set(wingSpan / 4 + 0.3, 0.3, 0);
+        rightWing.rotation.z = 0.02;
+        group.add(rightWing);
+        
+        const wingStripeGeo = new THREE.BoxGeometry(wingSpan / 2 - 1, 0.13, wingChord * 0.4);
+        const leftStripe = new THREE.Mesh(wingStripeGeo, accentMat);
+        leftStripe.position.set(-wingSpan / 4 - 0.3, 0.31, 0);
+        leftStripe.rotation.z = -0.02;
+        group.add(leftStripe);
+        
+        const rightStripe = new THREE.Mesh(wingStripeGeo, accentMat);
+        rightStripe.position.set(wingSpan / 4 + 0.3, 0.31, 0);
+        rightStripe.rotation.z = 0.02;
+        group.add(rightStripe);
+        
+        const tailLength = 2.2;
+        const tailHeight = 2;
+        const tailChord = 1;
+        
+        const vStabGeo = new THREE.BoxGeometry(0.1, tailHeight, tailChord);
+        const vStab = new THREE.Mesh(vStabGeo, bodyMat);
+        vStab.position.set(0, tailHeight / 2 + 0.2, 3.8);
+        group.add(vStab);
+        
+        const vStripeGeo = new THREE.BoxGeometry(0.11, tailHeight * 0.7, tailChord * 0.5);
+        const vStripe = new THREE.Mesh(vStripeGeo, accentMat);
+        vStripe.position.set(0, tailHeight / 2 + 0.4, 3.8);
+        group.add(vStripe);
+        
+        const hStabSpan = 3.5;
+        const hStabGeo = new THREE.BoxGeometry(hStabSpan, 0.1, tailChord);
+        const hStab = new THREE.Mesh(hStabGeo, bodyMat);
+        hStab.position.set(0, 0.1, 3.8);
+        group.add(hStab);
+        
+        const hStripeGeo = new THREE.BoxGeometry(hStabSpan * 0.6, 0.11, tailChord * 0.4);
+        const hStripe = new THREE.Mesh(hStripeGeo, accentMat);
+        hStripe.position.set(0, 0.11, 3.8);
+        group.add(hStripe);
+        
+        const cockpitGeo = new THREE.SphereGeometry(0.5, 12, 10);
+        cockpitGeo.scale(1, 0.6, 1.3);
+        const cockpit = new THREE.Mesh(cockpitGeo, glassMat);
+        cockpit.position.set(0, 0.35, -1.8);
         group.add(cockpit);
         
-        const wheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 8);
+        const wheelGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.15, 12);
         wheelGeo.rotateZ(Math.PI / 2);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
         
         const frontWheel = new THREE.Mesh(wheelGeo, wheelMat);
-        frontWheel.position.set(0, -0.5, -2);
+        frontWheel.position.set(0, -0.6, -2.5);
         group.add(frontWheel);
         
-        const leftWheel = new THREE.Mesh(wheelGeo, wheelMat);
-        leftWheel.position.set(-1.5, -0.5, 2);
-        group.add(leftWheel);
+        const strutGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.8, 6);
+        const strutMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
         
-        const rightWheel = new THREE.Mesh(wheelGeo, wheelMat);
-        rightWheel.position.set(1.5, -0.5, 2);
-        group.add(rightWheel);
+        const leftStrut = new THREE.Mesh(strutGeo, strutMat);
+        leftStrut.position.set(-1.8, -0.3, 1);
+        group.add(leftStrut);
+        
+        const rightStrut = new THREE.Mesh(strutGeo, strutMat);
+        rightStrut.position.set(1.8, -0.3, 1);
+        group.add(rightStrut);
+        
+        const leftWheelPos = new THREE.Mesh(wheelGeo, wheelMat);
+        leftWheelPos.position.set(-1.8, -0.7, 1);
+        group.add(leftWheelPos);
+        
+        const rightWheelPos = new THREE.Mesh(wheelGeo, wheelMat);
+        rightWheelPos.position.set(1.8, -0.7, 1);
+        group.add(rightWheelPos);
+        
+        const axelGeo = new THREE.CylinderGeometry(0.04, 0.04, 3.8, 6);
+        axelGeo.rotateZ(Math.PI / 2);
+        const axel = new THREE.Mesh(axelGeo, strutMat);
+        axel.position.set(0, -0.7, 1);
+        group.add(axel);
         
         group.castShadow = true;
         return group;
@@ -189,7 +261,7 @@ class Aircraft {
     }
     
     reset() {
-        this.position.set(0, 10, -350);
+        this.position.set(0, -310, -150);
         this.velocity.set(0, 0, 0);
         this.rotation.set(0, Math.PI, 0);
         this.throttle = 0.4;
