@@ -55,11 +55,13 @@ function latLngToPixel(lat, lon, bounds, imgBounds) {
     const u = (lon - bounds.west) / (bounds.east - bounds.west);
     const v = (lat - bounds.south) / (bounds.north - bounds.south);
     
-    const imgU = u * (imgBounds.maxX - imgBounds.minX) + imgBounds.minX;
-    const imgV = v * (imgBounds.maxY - imgBounds.minY) + imgBounds.minY;
-    
-    const px = Math.round(imgU);
-    const py = Math.round(1023 - imgV);
+    // Map to image bounds: 
+    // - u=0 (west) -> imgBounds.minX (left)
+    // - u=1 (east) -> imgBounds.maxX (right)
+    // - v=0 (south) -> imgBounds.maxY (bottom of image, higher y value)
+    // - v=1 (north) -> imgBounds.minY (top of image, lower y value)
+    const px = Math.round(imgBounds.minX + u * (imgBounds.maxX - imgBounds.minX));
+    const py = Math.round(imgBounds.minY + (1 - v) * (imgBounds.maxY - imgBounds.minY));
     
     return { x: px, y: py };
 }
