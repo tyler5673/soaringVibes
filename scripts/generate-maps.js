@@ -39,11 +39,52 @@ function latLonToUtm(lat, lon) {
     return fromLatLon(lat, lon);
 }
 
-function utmToIslandUv(utmX, utmY, island) {
+function findIslandBounds(heightData, width, height) {
+    let minX = width, maxX = 0, minY = height, maxY = 0;
+    let found = false;
+    
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = y * width + x;
+            const val = heightData[idx];
+            const isTerrain = val > 1 && val < 253;
+            if (isTerrain) {
+                found = true;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+        }
+    }
+    
+    if (!found) {
+        return { minX: 0, maxX: width - 1, minY: 0, maxY: height - 1, width, height };
+    }
+    
+    const padding = 10;
+    minX = Math.max(0, minX - padding);
+    maxX = Math.min(width - 1, maxX + padding);
+    minY = Math.max(0, minY - padding);
+    maxY = Math.min(height - 1, maxY + padding);
+    
+    return { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
+}
+
+function utmToIslandUv(utmX, utmY, island, bounds) {
     const bbox = island.bbox;
     
-    const u = (utmX - bbox.xmin) / (bbox.xmax - bbox.xmin);
-    const v = (bbox.ymax - utmY) / (bbox.ymax - bbox.ymin);
+    const bboxWidth = bbox.xmax - bbox.xmin;
+    const bboxHeight = bbox.ymax - bbox.ymin;
+    
+    const scaleX = bboxWidth / bounds.width;
+    const scaleY = bboxHeight / bounds.height;
+    
+    const offsetX = utmX - (bbox.xmin + bounds.minX * scaleX);
+    const offsetY = utmY - (bbox.ymax - bounds.maxY * scaleY);
+    
+    const u = offsetX / (bounds.width * scaleX);
+    const v = offsetY / (bounds.height * scaleY);
     
     return { u: Math.max(0, Math.min(1, u)), v: Math.max(0, Math.min(1, v)) };
 }
@@ -59,6 +100,10 @@ async function generateMap(islandName) {
     
     const width = info.width;
     const height = info.height;
+    
+    const bounds = findIslandBounds(data, width, height);
+    console.log(`  Island bounds: x=${bounds.minX}-${bounds.maxX}, y=${bounds.minY}-${bounds.maxY}`);
+    console.log(`  Island size: ${bounds.width}x${bounds.height}`);
     
     const minElev = island.minElevation;
     const maxElev = island.maxElevation;
@@ -78,12 +123,20 @@ async function generateMap(islandName) {
             const idx = (y * width + x);
             const heightVal = data[idx];
             
+            if (heightVal >= 253) {
+                const outIdx = idx * 3;
+                outputBuffer[outIdx] = 0;
+                outputBuffer[outIdx + 1] = 0;
+                outputBuffer[outIdx + 2] = 0;
+                continue;
+            }
+            
             const normalizedHeight = heightVal / 255;
             const realHeight = minElev + normalizedHeight * elevRange;
             
             let color;
             
-            if (normalizedHeight < 0.05) {
+            if (heightVal <= 1) {
                 color = COLOR_WATER;
             } else if (realHeight < waterLevel + 2) {
                 color = COLOR_BEACH;
@@ -114,14 +167,14 @@ async function generateMap(islandName) {
         
         for (const airport of airports) {
             const utm = latLonToUtm(airport.lat, airport.lon);
-            const uv = utmToIslandUv(utm.easting, utm.northing, island);
+            const uv = utmToIslandUv(utm.easting, utm.northing, island, bounds);
             
-            const px = Math.floor(uv.u * (width - 1));
-            const py = Math.floor(uv.v * (height - 1));
+            const px = Math.floor(uv.u * (bounds.maxX - bounds.minX) + bounds.minX);
+            const py = Math.floor((1 - uv.v) * (bounds.maxY - bounds.minY) + bounds.minY);
             
-            console.log(`  ${airport.name || 'Airport'} at UV (${uv.u.toFixed(4)}, ${uv.v.toFixed(4)}) -> pixel (${px}, ${py})`);
+            console.log(`  ${airport.name || 'Airport'} at UTM (${utm.easting}, ${utm.northing}) -> UV (${uv.u.toFixed(4)}, ${uv.v.toFixed(4)}) -> pixel (${px}, ${py})`);
             
-            const radius = 15;
+            const radius = 20;
             for (let dy = -radius; dy <= radius; dy++) {
                 for (let dx = -radius; dx <= radius; dx++) {
                     if (dx * dx + dy * dy <= radius * radius) {
