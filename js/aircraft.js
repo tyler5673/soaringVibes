@@ -1,20 +1,20 @@
 // ========== AIRCRAFT ==========
 class Aircraft {
     constructor() {
-        this.mass = 2300;
-        this.wingArea = 26;
-        this.maxThrust = 12000;
-        this.maxSpeed = 180;
+        this.mass = 1100;
+        this.wingArea = 16;
+        this.maxThrust = 3500;
+        this.maxSpeed = 80;
         this.airDensity = 1.225;
         
-        this.rollRate = degreesToRadians(40);
-        this.pitchRate = degreesToRadians(25);
+        this.rollRate = degreesToRadians(45);
+        this.pitchRate = degreesToRadians(30);
         this.yawRate = degreesToRadians(20);
         
         this.position = new THREE.Vector3(0, 760, -100);
-        this.velocity = new THREE.Vector3(0, 0, 0);
+        this.velocity = new THREE.Vector3(0, 0, 60);
         this.rotation = new THREE.Euler(0, Math.PI, 0, 'YXZ');
-        this.throttle = 0.4;
+        this.throttle = 0.5;
         this.altitude = 8;
         
         this.controlInput = { pitch: 0, roll: 0, yaw: 0 };
@@ -382,7 +382,7 @@ class Aircraft {
     update(delta) {
         // Animate propeller based on throttle
         if (this.propeller) {
-            this.propeller.rotation.z += this.throttle * 30 * delta;
+            this.propeller.rotation.z += this.throttle * 25 * delta;
         }
         
         // Animate control surfaces based on input
@@ -404,8 +404,11 @@ class Aircraft {
         const forward = new THREE.Vector3(0, 0, -1);
         forward.applyEuler(this.rotation);
         
-        const up = new THREE.Vector3(0, 1, 0);
-        up.applyEuler(this.rotation);
+        const aircraftUp = new THREE.Vector3(0, 1, 0);
+        aircraftUp.applyEuler(this.rotation);
+        
+        const right = new THREE.Vector3(1, 0, 0);
+        right.applyEuler(this.rotation);
         
         const thrustMagnitude = this.throttle * this.maxThrust;
         const thrust = forward.clone().multiplyScalar(thrustMagnitude);
@@ -416,14 +419,14 @@ class Aircraft {
         if (speed > 1) {
             const velocityDir = this.velocity.clone().normalize();
             aoa = forward.angleTo(velocityDir);
-            const pitchComponent = velocityDir.dot(up);
+            const pitchComponent = velocityDir.dot(aircraftUp);
             if (pitchComponent > 0) aoa = -aoa;
         }
         
         const stallAngle = degreesToRadians(15);
         let cl;
         if (Math.abs(aoa) < stallAngle) {
-            cl = 2 * Math.PI * aoa * 2;
+            cl = 2 * Math.PI * aoa;
         } else {
             cl = 2 * Math.PI * stallAngle * 0.5 * Math.sign(aoa);
         }
@@ -435,8 +438,15 @@ class Aircraft {
         
         const q = 0.5 * this.airDensity * speed * speed;
         
-        const lift = up.clone().multiplyScalar(q * this.wingArea * cl);
-        const drag = this.velocity.clone().normalize().multiplyScalar(-q * this.wingArea * cd);
+        // Lift perpendicular to velocity, in plane of aircraft up
+        const velocityDir = speed > 0.1 ? this.velocity.clone().normalize() : forward.clone();
+        let liftDir = new THREE.Vector3().crossVectors(right, velocityDir).normalize();
+        if (liftDir.length() < 0.1) {
+            liftDir = aircraftUp.clone();
+        }
+        const lift = liftDir.multiplyScalar(q * this.wingArea * cl);
+        
+        const drag = velocityDir.clone().multiplyScalar(-q * this.wingArea * cd);
         
         const weight = new THREE.Vector3(0, -this.mass * 9.81, 0);
         
@@ -499,8 +509,8 @@ class Aircraft {
     
     reset() {
         this.position.set(0, 760, -150);
-        this.velocity.set(0, 0, 0);
+        this.velocity.set(0, 0, 60);
         this.rotation.set(0, Math.PI, 0);
-        this.throttle = 0.4;
+        this.throttle = 0.5;
     }
 }
