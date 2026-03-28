@@ -62,10 +62,10 @@ function updateOceanWaves(time) {
 
 // ========== CLOUDS ==========
 class CloudSystem {
-    constructor(scene, count = 120) {
+    constructor(scene, count = 100) {
         this.clouds = [];
         this.scene = scene;
-        this.bounds = 15000;
+        this.bounds = 12000;
         
         const islandPositions = [
             { x: 0, z: 0 },
@@ -94,18 +94,20 @@ class CloudSystem {
     createCloud(x, z) {
         const cloudGroup = new THREE.Group();
         
-        const puffCount = 8 + Math.floor(Math.random() * 12);
-        const baseSize = 50 + Math.random() * 50;
-        const spread = 40 + Math.random() * 40;
+        const puffCount = 6 + Math.floor(Math.random() * 15);
+        const baseSize = 80 + Math.random() * 80;
+        const spread = 60 + Math.random() * 60;
         
         const puffGeo = new THREE.SphereGeometry(1, 12, 12);
         
         for (let i = 0; i < puffCount; i++) {
+            const opacity = 0.4 + Math.random() * 0.4;
             const puffMat = new THREE.MeshStandardMaterial({
                 color: 0xffffff,
                 transparent: true,
-                opacity: 0.9,
-                roughness: 1
+                opacity: opacity,
+                roughness: 1,
+                depthWrite: false
             });
             
             const puff = new THREE.Mesh(puffGeo, puffMat);
@@ -115,17 +117,17 @@ class CloudSystem {
             
             puff.position.set(
                 Math.cos(theta) * r,
-                (Math.random() - 0.5) * spread * 0.5,
+                (Math.random() - 0.5) * spread * 0.6,
                 Math.sin(theta) * r
             );
             
-            const scale = baseSize * (0.5 + Math.random() * 0.5);
-            puff.scale.set(scale, scale * (0.6 + Math.random() * 0.4), scale);
+            const scale = baseSize * (0.4 + Math.random() * 0.6);
+            puff.scale.set(scale, scale * (0.5 + Math.random() * 0.5), scale);
             
             cloudGroup.add(puff);
         }
         
-        const altitude = 250 + Math.random() * 800;
+        const altitude = 200 + Math.random() * 1200;
         cloudGroup.position.set(x, altitude, z);
         
         const speed = 2 + Math.random() * 8;
