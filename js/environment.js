@@ -94,9 +94,9 @@ class CloudSystem {
     createCloud(x, z) {
         const cloudGroup = new THREE.Group();
         
-        const puffCount = 6 + Math.floor(Math.random() * 15);
-        const baseSize = 80 + Math.random() * 80;
-        const spread = 60 + Math.random() * 60;
+        const puffCount = 10 + Math.floor(Math.random() * 20);
+        const baseSize = 120 + Math.random() * 100;
+        const spread = 80 + Math.random() * 80;
         
         const puffGeo = new THREE.SphereGeometry(1, 12, 12);
         
