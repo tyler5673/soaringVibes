@@ -96,8 +96,8 @@ function createAirport(scene, x, z, parentGroup = null) {
     hangarRoof.position.set(420, 25, 100);
     group.add(hangarRoof);
     
-    const localY = 20;
-    group.position.set(x, localY, z);
+    const localY = 18;
+    group.position.set(x, localY, z + 1500);
     
     if (parentGroup) {
         parentGroup.add(group);
