@@ -20,8 +20,7 @@ const AIRPORTS = {
     maui: { lat: 20.8922, lon: -156.4381 },
     oahu: { lat: 21.3258, lon: -157.9217 },
     'big-island': [
-        { lat: 19.7367, lon: -156.0407, name: 'Kona' },
-        { lat: 19.7203, lon: -155.0481, name: 'Hilo' }
+        { lat: 19.7367, lon: -156.0407, name: 'Kona' }
     ],
     kauai: { lat: 21.9786, lon: -159.3422 },
     lanai: { lat: 20.7856, lon: -156.9514 },
@@ -30,16 +29,26 @@ const AIRPORTS = {
     kahoolawe: null
 };
 
-const MANUAL_AIRPORT_PIXELS = {
-    maui: { x: 368, y: 715 },
-    oahu: { x: 582, y: 158 },
-    'big-island': [
-        { x: 32, y: 607, name: 'Kona' }
-    ],
-    kauai: { x: 920, y: 310 },
-    lanai: { x: 445, y: 280 },
-    molokai: { x: 388, y: 615 }
+const ISLAND_BOUNDS = {
+    maui: { north: 21.031363703651188, south: 20.574418740849925, east: -155.9790147408373, west: -156.6971637036512 },
+    oahu: { north: 21.712412752206696, south: 21.254794138987258, east: -157.6486640799658, west: -158.28092225298528 },
+    'big-island': { north: 20.310696845612735, south: 18.861803665309147, east: -154.75671076144639, west: -156.12486296186597 },
+    kauai: { north: 22.238843653393445, south: 21.8551371481648, east: -159.28180443330066, west: -159.79838227902235 },
+    molokai: { north: 21.224127027458906, south: 21.046067348013413, east: -156.70987086760655, west: -157.31081071139295 },
+    lanai: { north: 20.92936330044028, south: 20.73178950730314, east: -156.80536990808585, west: -157.0621973224075 },
+    niihau: { north: 22.02845014502927, south: 21.778478902016587, east: -160.04946654636794, west: -160.24703641028984 },
+    kahoolawe: { north: 20.637269737328893, south: 20.49699071402145, east: -156.49069436182018, west: -156.7041221827599 }
 };
+
+function latLngToPixel(lat, lon, bounds) {
+    const u = (lon - bounds.west) / (bounds.east - bounds.west);
+    const v = (lat - bounds.south) / (bounds.north - bounds.south);
+    
+    const px = Math.round(u * 1023);
+    const py = Math.round((1 - v) * 1023);
+    
+    return { x: px, y: py };
+}
 
 function loadIslandJson(name) {
     const jsonPath = path.join(HEIGHTMAP_DIR, `${name}.json`);
@@ -94,15 +103,18 @@ async function generateMap(islandName) {
     
     let composite = sharp(heightmapPath);
     
-    const manualPixels = MANUAL_AIRPORT_PIXELS[islandName];
-    if (manualPixels) {
-        const airports = Array.isArray(manualPixels) ? manualPixels : [manualPixels];
+    const airportData = AIRPORTS[islandName];
+    const bounds = ISLAND_BOUNDS[islandName];
+    
+    if (airportData && bounds) {
+        const airports = Array.isArray(airportData) ? airportData : [airportData];
         
         for (const airport of airports) {
-            const px = airport.x;
-            const py = airport.y;
+            const pos = latLngToPixel(airport.lat, airport.lon, bounds);
+            const px = pos.x;
+            const py = pos.y;
             
-            console.log(`  ${airport.name || 'Airport'}: pixel (${px}, ${py})`);
+            console.log(`  ${airport.name || 'Airport'}: lat=${airport.lat}, lng=${airport.lon} -> pixel (${px}, ${py})`);
             
             const radius = 15;
             const dotBuffer = Buffer.alloc(radius * radius * 4);
