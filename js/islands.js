@@ -1,182 +1,209 @@
 // ========== ISLANDS ==========
-function addPalmTrees(island, scale) {
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-    const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-    const darkLeafMat = new THREE.MeshStandardMaterial({ color: 0x1B5E20 });
-    
-    for (let i = 0; i < 8; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const radius = 80 * scale * Math.random() + 20 * scale;
-        
-        const trunkHeight = 5 * scale + Math.random() * 3 * scale;
-        const trunkGeo = new THREE.CylinderGeometry(0.2 * scale, 0.5 * scale, trunkHeight, 6);
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-        trunk.position.set(Math.cos(angle) * radius, trunkHeight / 2, Math.sin(angle) * radius);
-        trunk.rotation.z = (Math.random() - 0.5) * 0.15;
-        trunk.castShadow = true;
-        island.add(trunk);
-        
-        const leafCount = 2 + Math.floor(Math.random() * 2);
-        for (let j = 0; j < leafCount; j++) {
-            const leafGeo = new THREE.ConeGeometry(2.5 * scale + Math.random() * 2 * scale, 2 * scale + Math.random() * 1.5 * scale, 5);
-            const leaf = new THREE.Mesh(leafGeo, Math.random() > 0.5 ? leafMat : darkLeafMat);
-            leaf.position.set(
-                trunk.position.x + (Math.random() - 0.5) * 2 * scale,
-                trunkHeight + 1.5 * scale + j * 1.5 * scale,
-                trunk.position.z + (Math.random() - 0.5) * 2 * scale
-            );
-            leaf.rotation.x = -0.3 + Math.random() * 0.6;
-            leaf.rotation.z = Math.random() * Math.PI * 2;
-            leaf.castShadow = true;
-            island.add(leaf);
-        }
-    }
-}
+const heightmapCache = {};
+const islandMetadataCache = {};
 
-function addBuildings(island, scale) {
-    const buildingColors = [0xFFFAF0, 0xE8E8E8, 0xFFF8DC, 0xF5F5DC, 0xFFE4C4];
-    const roofColors = [0xFF6B6B, 0x4169E1, 0x228B22, 0x8B4513, 0x696969];
+async function loadIslandData(islandName) {
+    if (heightmapCache[islandName] && islandMetadataCache[islandName]) {
+        return { data: heightmapCache[islandName], meta: islandMetadataCache[islandName] };
+    }
+
+    const loader = new THREE.TextureLoader();
     
-    for (let i = 0; i < 4; i++) {
-        const width = (8 + Math.random() * 10) * scale;
-        const height = (6 + Math.random() * 10) * scale;
-        const depth = (8 + Math.random() * 10) * scale;
-        
-        const buildingGeo = new THREE.BoxGeometry(width, height, depth);
-        const buildingMat = new THREE.MeshStandardMaterial({ color: buildingColors[i % buildingColors.length] });
-        const building = new THREE.Mesh(buildingGeo, buildingMat);
-        
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 60 * scale + Math.random() * 80 * scale;
-        building.position.set(
-            Math.cos(angle) * dist,
-            height / 2,
-            Math.sin(angle) * dist
+    const texture = await new Promise((resolve, reject) => {
+        loader.load(
+            `assets/heightmaps/${islandName}.png`,
+            resolve,
+            undefined,
+            reject
         );
-        building.castShadow = true;
-        island.add(building);
-        
-        const roofGeo = new THREE.BoxGeometry(width * 1.1, 2 * scale, depth * 1.1);
-        const roofMat = new THREE.MeshStandardMaterial({ color: roofColors[i % roofColors.length] });
-        const roof = new THREE.Mesh(roofGeo, roofMat);
-        roof.position.set(building.position.x, height + 1 * scale, building.position.z);
-        roof.castShadow = true;
-        island.add(roof);
+    });
+    
+    texture.image.width = 1024;
+    texture.image.height = 1024;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(texture.image, 0, 0);
+    
+    const imageData = ctx.getImageData(0, 0, 1024, 1024);
+    const data = new Uint8Array(1024 * 1024);
+    
+    for (let i = 0; i < imageData.data.length; i += 4) {
+        data[i / 4] = imageData.data[i];
     }
+
+    const metaResponse = await fetch(`assets/heightmaps/${islandName}.json`);
+    const meta = await metaResponse.json();
+
+    heightmapCache[islandName] = data;
+    islandMetadataCache[islandName] = meta;
+
+    return { data, meta };
 }
 
-function createIsland(scene, x, z, scale = 1, hasAirport = false) {
-    const group = new THREE.Group();
-    const baseRadius = 300 * scale;
-    const seed = x * 0.1 + z * 0.1;
+function getHeightFromData(data, width, height, x, y) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return 0;
     
-    // Organic island shape using noise
-    function getIslandShape(px, pz) {
-        const angle = Math.atan2(pz, px);
-        const baseR = baseRadius * (0.7 + 0.3 * Math.sin(angle * 3 + seed) * Math.cos(angle * 2 + seed * 0.5));
-        const noiseR = noise(px * 0.02, pz * 0.02, seed) * baseRadius * 0.3;
-        return baseR + noiseR;
-    }
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+    const fx = x - ix;
+    const fy = y - iy;
     
-    // Terrain mesh - high poly with Maui-like gentle slopes
-    const terrainSize = baseRadius * 3;
-    const segments = 120;
-    const terrainGeo = new THREE.PlaneGeometry(terrainSize, terrainSize, segments, segments);
+    const idx00 = iy * width + ix;
+    const idx10 = iy * width + Math.min(ix + 1, width - 1);
+    const idx01 = Math.min(iy + 1, height - 1) * width + ix;
+    const idx11 = Math.min(iy + 1, height - 1) * width + Math.min(ix + 1, width - 1);
+    
+    const h00 = data[idx00] || 0;
+    const h10 = data[idx10] || 0;
+    const h01 = data[idx01] || 0;
+    const h11 = data[idx11] || 0;
+    
+    const h0 = h00 * (1 - fx) + h10 * fx;
+    const h1 = h01 * (1 - fx) + h11 * fx;
+    
+    return h0 * (1 - fy) + h1 * fy;
+}
+
+function createIslandFromHeightmap(scene, islandName, worldX, worldZ, options = {}) {
+    const { hasAirport = false, worldScale = 1 } = options;
+    
+    return loadIslandData(islandName).then(({ data, meta }) => {
+        return createTerrainMesh(scene, data, meta, worldX, worldZ, { hasAirport, worldScale, islandName });
+    });
+}
+
+function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
+    const { hasAirport = false, worldScale = 1, islandName } = options;
+    
+    const imgWidth = 1024;
+    const imgHeight = 1024;
+    
+    const terrainWidth = meta.worldWidth * worldScale;
+    const terrainHeight = meta.worldHeight * worldScale;
+    
+    const segments = 1536;
+    const terrainGeo = new THREE.PlaneGeometry(terrainWidth, terrainHeight, segments, segments);
     terrainGeo.rotateX(-Math.PI / 2);
-    
-    // Maui-style mountains: gentle shield volcanoes
-    const mountainCount = hasAirport ? 1 : 3;
-    const mountains = [];
-    for (let i = 0; i < mountainCount; i++) {
-        const angle = (i / mountainCount) * Math.PI * 2 + 0.5;
-        const dist = baseRadius * (0.25 + Math.random() * 0.2);
-        mountains.push({
-            x: Math.cos(angle) * dist,
-            z: Math.sin(angle) * dist,
-            h: (120 + Math.random() * 80) * scale,
-            r: (150 + Math.random() * 100) * scale
-        });
-    }
     
     const posAttr = terrainGeo.attributes.position;
     const colors = [];
+    
+    const minElev = meta.minElevation;
+    const maxElev = meta.maxElevation;
+    const elevRange = maxElev - minElev;
+    
+    const waterLevel = 2;
+    const beachLevel = 10;
+    const grassLevel = 40;
+    const forestLevel = 120;
+    const cliffLevel = Math.max(200, maxElev * 0.5);
+    const snowLevel = Math.max(200, maxElev * 0.7);
+    
+    const sandColor = new THREE.Color(0x228B22);
+    const darkSandColor = new THREE.Color(0x1B5E20);
+    const lightGrassColor = new THREE.Color(0x228B22);
     const grassColor = new THREE.Color(0x228B22);
     const darkGrassColor = new THREE.Color(0x1B5E20);
-    const sandColor = new THREE.Color(0xF4D03F);
-    const darkSandColor = new THREE.Color(0xC9A020);
-    const rockColor = new THREE.Color(0x666666);
-    const snowColor = new THREE.Color(0xFFFFFF);
+    const forestColor = new THREE.Color(0x1B5E20);
+    const rockColor = new THREE.Color(0x228B22);
+    const darkRockColor = new THREE.Color(0x1B5E20);
+    const snowColor = new THREE.Color(0x228B22);
     
-    const airportCenter = hasAirport ? { x: 0, z: 0 } : null;
-    const airportRadius = 120 * scale;
-    const airportTransition = 80 * scale;
+    const heightScale = elevRange / 255;
+    const terrainScale = 0.1;
+    
+    let centerX = 0, centerZ = 0;
+    let airportRadius = 100 * worldScale;
+    let airportTransition = 50 * worldScale;
     
     for (let i = 0; i < posAttr.count; i++) {
         const px = posAttr.getX(i);
         const pz = posAttr.getZ(i);
-        const dist = Math.sqrt(px * px + pz * pz);
-        const shapeRadius = getIslandShape(px, pz);
         
-        if (dist > shapeRadius * 1.05) {
-            posAttr.setY(i, -20);
+        const u = (px / terrainWidth) + 0.5;
+        const v = (pz / terrainHeight) + 0.5;
+        
+        const imgX = u * (imgWidth - 1);
+        const imgY = (1 - v) * (imgHeight - 1);
+        
+        let normalizedHeight = getHeightFromData(heightData, imgWidth, imgHeight, imgX, imgY) / 255;
+        
+        let height = minElev + normalizedHeight * elevRange;
+        
+        const dist = Math.sqrt(px * px + pz * pz);
+        const maxDist = Math.min(terrainWidth, terrainHeight) * 0.45;
+        
+        let edgeFade = 1;
+        if (dist > maxDist * 0.7) {
+            edgeFade = Math.max(0, 1 - (dist - maxDist * 0.7) / (maxDist * 0.3));
+        }
+        
+        if (normalizedHeight < 0.05 || edgeFade < 0.1) {
+            posAttr.setY(i, -50);
             colors.push(0, 0, 0);
             continue;
         }
         
-        // Base terrain from noise
-        const n = noise(px * 0.3, pz * 0.3, seed);
-        let height = 5 + n * 20 * scale;
+        height *= terrainScale;
         
-        // Add gentle coastal rise
-        const edgeFactor = Math.max(0, 1 - dist / shapeRadius);
-        height += edgeFactor * edgeFactor * 30 * scale;
-        
-        // Add Maui-style gentle mountains
-        for (const m of mountains) {
-            const dx = px - m.x;
-            const dz = pz - m.z;
-            const mDist = Math.sqrt(dx * dx + dz * dz);
-            if (mDist < m.r) {
-                const t = 1 - (mDist / m.r);
-                const smoothT = t * t * (3 - 2 * t);
-                height += smoothT * m.h;
-            }
-        }
-        
-        // Flat area for airport
         if (hasAirport) {
-            const airportDist = Math.sqrt(Math.pow(px - airportCenter.x, 2) + Math.pow(pz - airportCenter.z, 2));
+            const airportDist = Math.sqrt(px * px + pz * pz);
             if (airportDist < airportRadius) {
-                height = 2;
+                height = waterLevel + 0.5;
             } else if (airportDist < airportRadius + airportTransition) {
                 const t = (airportDist - airportRadius) / airportTransition;
                 const smoothT = t * t * (3 - 2 * t);
-                height = height * smoothT + 2 * (1 - smoothT);
+                height = height * smoothT + (waterLevel + 0.5) * (1 - smoothT);
             }
         }
         
-        posAttr.setY(i, Math.max(0.5, height));
+        height *= edgeFade;
+        height = Math.max(waterLevel - 5, height);
         
-        // Color based on elevation
-        const waterLevel = 2;
-        const beachLevel = 8;
-        const cliffLevel = height * 0.6;
-        const snowLevel = Math.max(100 * scale, height * 0.75);
+        posAttr.setY(i, height);
+        
+        const realHeight = height / terrainScale;
         
         let color;
-        if (height < waterLevel + 1) {
+        
+        if (realHeight < waterLevel + 2) {
             color = darkSandColor;
-        } else if (height < beachLevel) {
-            const t = (height - waterLevel) / (beachLevel - waterLevel);
-            color = sandColor.clone().lerp(grassColor, t * t);
-        } else if (height < cliffLevel) {
-            const t = (height - beachLevel) / (cliffLevel - beachLevel);
-            color = grassColor.clone().lerp(darkGrassColor, t);
-        } else if (height > snowLevel - 15) {
-            const t = Math.min(1, (height - snowLevel + 15) / 30);
-            color = rockColor.clone().lerp(snowColor, t * t);
+        } else if (realHeight < beachLevel) {
+            const t = (realHeight - waterLevel) / (beachLevel - waterLevel);
+            const t2 = t * t;
+            color = darkSandColor.clone().lerp(sandColor, t2);
+        } else if (realHeight < grassLevel) {
+            const t = (realHeight - beachLevel) / (grassLevel - beachLevel);
+            const t2 = Math.sqrt(t);
+            const variation = (Math.sin(px * 0.1) * Math.cos(pz * 0.1) * 0.5 + 0.5) * 0.15;
+            color = sandColor.clone().lerp(grassColor, t2 + variation);
+            if (t > 0.7) {
+                color.lerp(lightGrassColor, (t - 0.7) / 0.3 * 0.5);
+            }
+        } else if (realHeight < forestLevel) {
+            const t = (realHeight - grassLevel) / (forestLevel - grassLevel);
+            const t2 = Math.sqrt(t);
+            const variation = (Math.sin(px * 0.05 + pz * 0.07) * 0.5 + 0.5) * 0.2;
+            color = grassColor.clone().lerp(darkGrassColor, t2);
+            color.lerp(forestColor, variation);
+        } else if (realHeight < cliffLevel) {
+            const t = (realHeight - forestLevel) / (cliffLevel - forestLevel);
+            const t2 = Math.sqrt(t);
+            const slopeFactor = Math.min(1, (realHeight - grassLevel) / 100);
+            color = darkGrassColor.clone().lerp(forestColor, 1 - t2);
+            color.lerp(rockColor, slopeFactor * 0.7);
+        } else if (realHeight < snowLevel) {
+            const t = (realHeight - cliffLevel) / (snowLevel - cliffLevel);
+            const t2 = t * t;
+            const variation = (Math.sin(px * 0.2) * Math.cos(pz * 0.2) * 0.5 + 0.5) * 0.2;
+            color = rockColor.clone().lerp(darkRockColor, variation);
+            color.lerp(snowColor, t2 * 0.5);
         } else {
-            color = darkGrassColor;
+            const t = Math.min(1, (realHeight - snowLevel) / 50);
+            color = darkRockColor.clone().lerp(snowColor, t);
         }
         
         colors.push(color.r, color.g, color.b);
@@ -185,41 +212,168 @@ function createIsland(scene, x, z, scale = 1, hasAirport = false) {
     terrainGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     terrainGeo.computeVertexNormals();
     
-    const terrainMat = new THREE.MeshStandardMaterial({ 
+    const terrainMat = new THREE.MeshStandardMaterial({
         vertexColors: true,
-        roughness: 0.9,
-        flatShading: true,
+        roughness: 0.85,
+        metalness: 0.05,
+        flatShading: false,
         side: THREE.DoubleSide
     });
+    
     const terrain = new THREE.Mesh(terrainGeo, terrainMat);
-    terrain.position.y = 0;
     terrain.receiveShadow = true;
+    terrain.castShadow = true;
+    
+    const group = new THREE.Group();
     group.add(terrain);
     
-    // Small rocky outcrops
-    const rockMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.9, flatShading: true });
-    for (let i = 0; i < 5; i++) {
+    group.position.set(worldX, 0, worldZ);
+    scene.add(group);
+    
+    return group;
+}
+
+function addVegetation(group, scale, islandRadius) {
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+    const darkLeafMat = new THREE.MeshStandardMaterial({ color: 0x1B5E20 });
+    
+    const treeCount = Math.floor(20 * scale);
+    
+    for (let i = 0; i < treeCount; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = baseRadius * 0.2 + Math.random() * baseRadius * 0.5;
-        const rockGeo = new THREE.DodecahedronGeometry(1.5 * scale * (0.3 + Math.random() * 0.4), 0);
-        const rock = new THREE.Mesh(rockGeo, rockMat);
+        const radius = 30 * scale + Math.random() * (islandRadius * 0.4);
+        
+        const treeType = Math.random();
+        
+        if (treeType < 0.6) {
+            const trunkHeight = 4 * scale + Math.random() * 4 * scale;
+            const trunkGeo = new THREE.CylinderGeometry(0.15 * scale, 0.4 * scale, trunkHeight, 6);
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.set(Math.cos(angle) * radius, trunkHeight / 2 + 2, Math.sin(angle) * radius);
+            trunk.castShadow = true;
+            group.add(trunk);
+            
+            const leafCount = 2 + Math.floor(Math.random() * 3);
+            for (let j = 0; j < leafCount; j++) {
+                const leafGeo = new THREE.ConeGeometry(2 * scale + Math.random() * 1.5 * scale, 3 * scale + Math.random() * 2 * scale, 6);
+                const leaf = new THREE.Mesh(leafGeo, Math.random() > 0.5 ? leafMat : darkLeafMat);
+                leaf.position.set(
+                    trunk.position.x + (Math.random() - 0.5) * scale,
+                    trunkHeight + 1.5 * scale + j * 1.8 * scale,
+                    trunk.position.z + (Math.random() - 0.5) * scale
+                );
+                leaf.rotation.x = -0.2 + Math.random() * 0.4;
+                leaf.rotation.z = Math.random() * Math.PI * 2;
+                leaf.castShadow = true;
+                group.add(leaf);
+            }
+        } else if (treeType < 0.85) {
+            const palmHeight = 6 * scale + Math.random() * 4 * scale;
+            const trunkGeo = new THREE.CylinderGeometry(0.2 * scale, 0.35 * scale, palmHeight, 6);
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.set(Math.cos(angle) * radius, palmHeight / 2 + 2, Math.sin(angle) * radius);
+            trunk.rotation.z = (Math.random() - 0.5) * 0.1;
+            trunk.castShadow = true;
+            group.add(trunk);
+            
+            for (let j = 0; j < 5; j++) {
+                const leafGeo = new THREE.ConeGeometry(1.5 * scale, 4 * scale, 4);
+                const leaf = new THREE.Mesh(leafGeo, darkLeafMat);
+                leaf.position.set(
+                    trunk.position.x + Math.cos(j * Math.PI * 2 / 5) * 0.5 * scale,
+                    palmHeight + 1 * scale,
+                    trunk.position.z + Math.sin(j * Math.PI * 2 / 5) * 0.5 * scale
+                );
+                leaf.rotation.x = 0.8;
+                leaf.rotation.z = j * Math.PI * 2 / 5;
+                leaf.castShadow = true;
+                group.add(leaf);
+            }
+        } else {
+            const bushGeo = new THREE.DodecahedronGeometry(1.5 * scale, 0);
+            const bush = new THREE.Mesh(bushGeo, darkLeafMat);
+            bush.position.set(
+                Math.cos(angle) * radius,
+                2 * scale,
+                Math.sin(angle) * radius
+            );
+            bush.scale.set(1 + Math.random() * 0.5, 0.8 + Math.random() * 0.4, 1 + Math.random() * 0.5);
+            bush.castShadow = true;
+            group.add(bush);
+        }
+    }
+}
+
+function addRocks(group, scale, islandRadius) {
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x5D5D5D, roughness: 0.9, flatShading: true });
+    const darkRockMat = new THREE.MeshStandardMaterial({ color: 0x3D3D3D, roughness: 0.95, flatShading: true });
+    
+    const rockCount = Math.floor(8 * scale);
+    
+    for (let i = 0; i < rockCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 20 * scale + Math.random() * islandRadius * 0.35;
+        
+        const rockSize = (1 + Math.random() * 2) * scale;
+        const rockGeo = new THREE.DodecahedronGeometry(rockSize, 0);
+        const rock = new THREE.Mesh(rockGeo, Math.random() > 0.5 ? rockMat : darkRockMat);
+        
         rock.position.set(
-            Math.cos(angle) * dist,
-            2 * scale,
-            Math.sin(angle) * dist
+            Math.cos(angle) * radius,
+            rockSize * 0.3 + 2,
+            Math.sin(angle) * radius
         );
-        rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-        rock.scale.y = 0.5 + Math.random() * 0.5;
+        rock.rotation.set(
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+            Math.random() * Math.PI
+        );
+        rock.scale.set(
+            0.8 + Math.random() * 0.4,
+            0.5 + Math.random() * 0.5,
+            0.8 + Math.random() * 0.4
+        );
         rock.castShadow = true;
         group.add(rock);
     }
-    
-    if (!hasAirport) {
-        addPalmTrees(group, scale);
-        addBuildings(group, scale);
-    }
-    
-    group.position.set(x, 0, z);
-    scene.add(group);
-    return group;
+}
+
+const islandPositions = [
+    { name: 'maui', x: 0, z: 0, hasAirport: true, worldScale: 0.04 },
+    { name: 'big-island', x: 1600, z: -3200, hasAirport: false, worldScale: 0.04 },
+    { name: 'oahu', x: -3200, z: -1400, hasAirport: false, worldScale: 0.04 },
+    { name: 'kauai', x: -6000, z: -2000, hasAirport: false, worldScale: 0.04 },
+    { name: 'molokai', x: -700, z: -1800, hasAirport: false, worldScale: 0.04 },
+    { name: 'lanai', x: 700, z: -1600, hasAirport: false, worldScale: 0.04 },
+    { name: 'niihau', x: -4800, z: -2400, hasAirport: false, worldScale: 0.04 },
+    { name: 'kahoolawe', x: 1100, z: -1100, hasAirport: false, worldScale: 0.04 }
+];
+
+async function createAllIslands(scene) {
+    const loadPromises = islandPositions.map(island => {
+        return createIslandFromHeightmap(
+            scene,
+            island.name,
+            island.x,
+            island.z,
+            { hasAirport: island.hasAirport, worldScale: island.worldScale }
+        );
+    });
+
+    const islands = await Promise.all(loadPromises);
+
+    islands.forEach((islandGroup, index) => {
+        const info = islandPositions[index];
+        const radius = 500 * info.worldScale;
+        
+        addVegetation(islandGroup, info.worldScale, radius);
+        addRocks(islandGroup, info.worldScale, radius);
+        
+        if (info.hasAirport) {
+            createAirport(scene, info.x, info.z);
+        }
+    });
+
+    return islands;
 }

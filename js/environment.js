@@ -35,7 +35,7 @@ function createOcean(scene) {
     });
     oceanMesh = new THREE.Mesh(geometry, material);
     oceanMesh.rotation.x = -Math.PI / 2;
-    oceanMesh.position.y = -1;
+    oceanMesh.position.y = 2;
     oceanMesh.receiveShadow = true;
     oceanMesh.userData.originalPositions = geometry.attributes.position.array.slice();
     scene.add(oceanMesh);
@@ -50,9 +50,9 @@ function updateOceanWaves(time) {
         const x = original[i * 3];
         const y = original[i * 3 + 1];
         
-        const wave1 = Math.sin(x * 0.003 + time * 0.8) * Math.cos(y * 0.003 + time * 0.5) * 2;
-        const wave2 = Math.sin(x * 0.008 + y * 0.006 + time * 1.2) * 1;
-        const wave3 = Math.cos(x * 0.001 - y * 0.002 + time * 0.3) * 1.5;
+        const wave1 = Math.sin(x * 0.003 + time * 0.8) * Math.cos(y * 0.003 + time * 0.5) * 0.5;
+        const wave2 = Math.sin(x * 0.008 + y * 0.006 + time * 1.2) * 0.25;
+        const wave3 = Math.cos(x * 0.001 - y * 0.002 + time * 0.3) * 0.4;
         
         positions.setZ(i, wave1 + wave2 + wave3);
     }

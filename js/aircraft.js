@@ -10,7 +10,7 @@ class Aircraft {
         this.pitchRate = degreesToRadians(40);
         this.yawRate = degreesToRadians(30);
         
-        this.position = new THREE.Vector3(0, 2, -1500);
+        this.position = new THREE.Vector3(0, 5, -200);
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.rotation = new THREE.Euler(0, Math.PI, 0, 'YXZ');
         this.throttle = 0.3;
@@ -185,7 +185,7 @@ class Aircraft {
     }
     
     reset() {
-        this.position.set(0, 2, -1500);
+        this.position.set(0, 5, -300);
         this.velocity.set(0, 0, 0);
         this.rotation.set(0, Math.PI, 0);
         this.throttle = 0.3;
