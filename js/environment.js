@@ -62,28 +62,28 @@ function updateOceanWaves(time) {
 
 // ========== CLOUDS ==========
 class CloudSystem {
-    constructor(scene, count = 80) {
+    constructor(scene, count = 180) {
         this.clouds = [];
         this.scene = scene;
-        this.bounds = 25000;
+        this.bounds = 30000;
         
         const islandPositions = [
             { x: 0, z: 0 },
-            { x: 4800, z: -9600 },
-            { x: -9600, z: -4200 },
-            { x: -18000, z: -6000 },
-            { x: -2100, z: -5400 },
-            { x: 2100, z: -4800 },
-            { x: -14400, z: -7200 },
-            { x: 3300, z: -3300 }
+            { x: 3200, z: -6400 },
+            { x: -6400, z: -2800 },
+            { x: -12000, z: -4000 },
+            { x: -1400, z: -3600 },
+            { x: 1400, z: -3200 },
+            { x: -9600, z: -4800 },
+            { x: 2200, z: -2200 }
         ];
         
         for (let i = 0; i < count; i++) {
             let x, z;
             
-            if (Math.random() < 0.6) {
+            if (Math.random() < 0.65) {
                 const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
-                const radius = 3000 + Math.random() * 8000;
+                const radius = 2500 + Math.random() * 10000;
                 const angle = Math.random() * Math.PI * 2;
                 x = island.x + Math.cos(angle) * radius;
                 z = island.z + Math.sin(angle) * radius;
@@ -100,68 +100,90 @@ class CloudSystem {
         const cloudGroup = new THREE.Group();
         
         const type = Math.random();
-        let baseSize, puffCount, spread;
+        let baseSize, puffCount, spread, layers;
         
-        if (type < 0.4) {
-            baseSize = 40 + Math.random() * 30;
-            puffCount = 8 + Math.floor(Math.random() * 6);
-            spread = 50;
-        } else if (type < 0.7) {
-            baseSize = 60 + Math.random() * 40;
+        if (type < 0.3) {
+            baseSize = 35 + Math.random() * 25;
             puffCount = 12 + Math.floor(Math.random() * 8);
-            spread = 70;
+            spread = 60;
+            layers = 2;
+        } else if (type < 0.6) {
+            baseSize = 55 + Math.random() * 35;
+            puffCount = 18 + Math.floor(Math.random() * 10);
+            spread = 80;
+            layers = 3;
+        } else if (type < 0.85) {
+            baseSize = 75 + Math.random() * 45;
+            puffCount = 25 + Math.floor(Math.random() * 12);
+            spread = 100;
+            layers = 4;
         } else {
-            baseSize = 80 + Math.random() * 50;
-            puffCount = 15 + Math.floor(Math.random() * 10);
-            spread = 90;
+            baseSize = 100 + Math.random() * 60;
+            puffCount = 35 + Math.floor(Math.random() * 15);
+            spread = 130;
+            layers = 5;
         }
         
-        const puffGeo = new THREE.SphereGeometry(1, 12, 12);
-        const puffMat = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.85,
-            roughness: 1,
-            depthWrite: false
-        });
+        const puffGeo = new THREE.SphereGeometry(1, 16, 16);
         
-        for (let i = 0; i < puffCount; i++) {
-            const puff = new THREE.Mesh(puffGeo, puffMat.clone());
+        for (let layer = 0; layer < layers; layer++) {
+            const layerOffset = (layer - layers / 2) * spread * 0.25;
+            const layerScale = 1 - layer * 0.15;
+            const puffsInLayer = Math.floor(puffCount / layers);
             
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI * 0.5;
-            const r = Math.random() * spread;
-            
-            puff.position.set(
-                Math.sin(phi) * Math.cos(theta) * r,
-                (Math.random() - 0.3) * spread * 0.4,
-                Math.sin(phi) * Math.sin(theta) * r
-            );
-            
-            const scale = baseSize * (0.4 + Math.random() * 0.6);
-            puff.scale.set(scale, scale * (0.6 + Math.random() * 0.4), scale);
-            
-            puff.material.opacity = 0.6 + Math.random() * 0.35;
-            cloudGroup.add(puff);
+            for (let i = 0; i < puffsInLayer; i++) {
+                const shade = 0.92 + Math.random() * 0.08;
+                const puffMat = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(shade, shade, shade),
+                    transparent: true,
+                    opacity: 0.7 + Math.random() * 0.25,
+                    roughness: 1,
+                    depthWrite: false
+                });
+                
+                const puff = new THREE.Mesh(puffGeo, puffMat);
+                
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI * 0.55;
+                const r = Math.random() * spread * layerScale;
+                
+                puff.position.set(
+                    Math.sin(phi) * Math.cos(theta) * r + (Math.random() - 0.5) * 20,
+                    layerOffset + (Math.random() - 0.4) * spread * 0.3,
+                    Math.sin(phi) * Math.sin(theta) * r + (Math.random() - 0.5) * 20
+                );
+                
+                const scale = baseSize * layerScale * (0.35 + Math.random() * 0.65);
+                const squash = 0.5 + Math.random() * 0.5;
+                puff.scale.set(scale, scale * squash, scale);
+                
+                cloudGroup.add(puff);
+            }
         }
         
-        const altitude = 200 + Math.random() * 2000;
+        const altitude = 150 + Math.random() * 2500;
         cloudGroup.position.set(x, altitude, z);
         
-        const baseSpeed = 5 + Math.random() * 15;
+        const baseSpeed = 3 + Math.random() * 12;
         const baseDir = Math.random() * Math.PI * 2;
         
         cloudGroup.userData = {
             velocity: new THREE.Vector3(
                 Math.cos(baseDir) * baseSpeed,
-                (Math.random() - 0.5) * 0.5,
+                (Math.random() - 0.5) * 0.3,
                 Math.sin(baseDir) * baseSpeed
             ),
-            rotationSpeed: (Math.random() - 0.5) * 0.01,
-            bobPhase: Math.random() * Math.PI * 2,
-            bobSpeed: 0.5 + Math.random() * 0.5,
-            bobAmount: 2 + Math.random() * 3,
-            baseY: altitude
+            rotationSpeedX: (Math.random() - 0.5) * 0.008,
+            rotationSpeedY: (Math.random() - 0.5) * 0.012,
+            rotationSpeedZ: (Math.random() - 0.5) * 0.006,
+            bobPhaseX: Math.random() * Math.PI * 2,
+            bobPhaseY: Math.random() * Math.PI * 2,
+            bobSpeedX: 0.3 + Math.random() * 0.4,
+            bobSpeedY: 0.4 + Math.random() * 0.3,
+            bobAmountX: 1.5 + Math.random() * 2,
+            bobAmountY: 1 + Math.random() * 1.5,
+            baseY: altitude,
+            time: Math.random() * 100
         };
         
         this.scene.add(cloudGroup);
@@ -173,10 +195,20 @@ class CloudSystem {
             const ud = cloud.userData;
             
             cloud.position.x += ud.velocity.x * delta;
+            cloud.position.y += ud.velocity.y * delta;
             cloud.position.z += ud.velocity.z * delta;
-            cloud.position.y = ud.baseY + Math.sin(time * ud.bobSpeed + ud.bobPhase) * ud.bobAmount;
             
-            cloud.rotation.y += ud.rotationSpeed * delta;
+            const t = time + ud.time;
+            cloud.position.x = cloud.position.x + Math.sin(t * ud.bobSpeedX + ud.bobPhaseX) * ud.bobAmountX * delta;
+            cloud.position.y = ud.baseY + Math.sin(t * ud.bobSpeedY + ud.bobPhaseY) * ud.bobAmountY;
+            cloud.position.z = cloud.position.z + Math.cos(t * ud.bobSpeedX * 0.7 + ud.bobPhaseX) * ud.bobAmountZ * delta;
+            
+            cloud.rotation.x += ud.rotationSpeedX * delta;
+            cloud.rotation.y += ud.rotationSpeedY * delta;
+            cloud.rotation.z += ud.rotationSpeedZ * delta;
+            
+            if (cloud.position.y < 100) cloud.position.y = 100;
+            if (cloud.position.y > 3000) cloud.position.y = 3000;
             
             const b = this.bounds;
             if (cloud.position.x > b) cloud.position.x = -b;
