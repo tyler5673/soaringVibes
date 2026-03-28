@@ -338,7 +338,7 @@ function addRocks(group, scale, islandRadius) {
 }
 
 const islandPositions = [
-    { name: 'maui', x: 800, z: 800, hasAirport: true, worldScale: 0.12 },
+    { name: 'maui', x: 0, z: -600, hasAirport: true, worldScale: 0.12 },
     { name: 'big-island', x: 4800, z: -9600, hasAirport: false, worldScale: 0.12 },
     { name: 'oahu', x: -9600, z: -4200, hasAirport: false, worldScale: 0.12 },
     { name: 'kauai', x: -18000, z: -6000, hasAirport: false, worldScale: 0.12 },
