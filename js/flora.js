@@ -462,6 +462,7 @@ class FloraManager {
         tree.position.set(x, y, z);
         tree.scale.setScalar(scale);
         tree.rotation.y = Math.random() * Math.PI * 2;
+        tree.visible = true; // Ensure visible by default
         
         return tree;
     }
@@ -501,7 +502,9 @@ class FloraManager {
                 return;
             }
             
-            if (!this.perfManager.isInView(treeData.mesh)) {
+            // Use world position for frustum check, not local mesh position
+            const worldPos = treeData.worldPos;
+            if (!this.perfManager.frustum.containsPoint(worldPos)) {
                 treeData.mesh.visible = false;
                 return;
             }
