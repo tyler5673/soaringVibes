@@ -94,10 +94,22 @@
             createAllIslands(scene, (progress) => {
                 updateLoading(10 + Math.round(progress * 0.8));
             }).then(() => {
+                updateLoading(90);
+                
+                // Initialize fauna after islands are loaded
+                const faunaManager = new FaunaManager(scene, camera);
+                faunaManager.init();
+                window.faunaManager = faunaManager;
+                
+                // Initialize performance monitor
+                const perfMonitor = new PerformanceMonitor();
+                window.perfMonitor = perfMonitor;
+                
                 updateLoading(100);
                 setTimeout(hideLoading, 300);
             });
             
+            // Keep old wildlife for backward compatibility (balloons)
             wildlife = new Wildlife(scene);
             
             window.addEventListener('resize', onWindowResize);
@@ -152,6 +164,16 @@
             // Update flora LOD and culling
             if (window.floraManager) {
                 window.floraManager.update(delta);
+            }
+            
+            // Update fauna (animals)
+            if (window.faunaManager) {
+                window.faunaManager.update(delta);
+            }
+            
+            // Update performance monitor
+            if (window.perfMonitor) {
+                window.perfMonitor.update();
             }
             
             renderer.render(scene, camera);
