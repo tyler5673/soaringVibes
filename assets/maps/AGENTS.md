@@ -1,11 +1,19 @@
 # Island Maps
 
-## Source
+## Sources
 
+### Heightmaps (assets/heightmaps/)
 Data downloaded from USGS 10m DEM via PacIOOS ERDDAP service:
 - https://pae-paha.pacioos.hawaii.edu/erddap/
 - Original data from USGS 1/3 arc-second DEM quadrangles
 - Coordinate system: EPSG:4326 (WGS84)
+
+### Land Cover (this directory)
+Data downloaded from Hawaii State GIS Program:
+- Source: Carbon Assessment of Hawaii - Biome Unit
+- Service: ArcGIS REST API via geodata.hawaii.gov
+- URL: https://geodata.hawaii.gov/arcgis/rest/services/LandUseLandCover_Raster/MapServer/export
+- Layer: 2 (Biome Unit)
 
 ## Bounding Coordinates (lat/lng)
 
@@ -73,13 +81,31 @@ Real airport locations (lat/lng):
 | Molokai | Molokai (MKK) | 21.1517 | -157.0912 |
 | Lanai | Lanai (LNY) | 20.7856 | -156.9514 |
 
-## Map Format
+## Map Files
 
-Each map is a 1024x1024 PNG that mirrors the corresponding heightmap:
-- Black pixels (value 0) = no data / ocean
-- Grayscale values (1-252) = elevation data
-- White pixels (253) = edge padding / no data
-- Color overlays (red dots) = airports
+### `{island}-airport.png` (1024x1024)
+Airport location markers overlaid on terrain:
+- Black = no data / ocean
+- Grayscale = elevation data
+- Red dots = airport locations
+
+### `{island}-landcover.png` (1024x1024)
+Land cover / vegetation data from Carbon Assessment of Hawaii:
+
+| Color | Biome Type | Description |
+|-------|------------|-------------|
+| Dark Green | Wet Forest | Tropical wet forests (ohia, koa) |
+| Medium Green | Wet Shrubland | Wet shrubland and brush |
+| Light Green | Wet Grassland | Wet grasslands and meadows |
+| Dark Teal | Mesic Forest | Mesic (moderately moist) forests |
+| Teal | Mesic Shrubland | Mesic shrubland |
+| Light Teal | Mesic Grassland | Mesic grasslands |
+| Brown | Dry Forest | Dry forest (kiawe, alien species) |
+| Tan | Dry Shrubland | Dry shrubland |
+| Yellow-Tan | Dry Grassland | Dry grasslands |
+| Pink | Agriculture | Cultivated agricultural areas |
+| Gray | Developed | Urban/developed areas |
+| White | Not Vegetated | Bare rock, lava, sand |
 
 ## Coordinate Transformation
 
