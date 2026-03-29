@@ -984,13 +984,19 @@ async function createAllIslands(scene, onProgress) {
     await Promise.all(landcoverPromises);
     
     // Initialize FloraManager with global camera reference
+    console.log('createAllIslands: window.camera =', window.camera);
     if (window.camera) {
+        console.log('Creating FloraManager...');
         const floraManager = new FloraManager(scene, window.camera);
         window.floraManager = floraManager;
         
         for (const { island: islandGroup, info } of results) {
             floraManager.placeTreesForIsland(islandGroup, info.name, info.x, info.z);
         }
+        
+        console.log(`FloraManager created with ${floraManager.allTrees.length} total trees`);
+    } else {
+        console.warn('No window.camera available, FloraManager not created');
     }
 
     return results.map(r => r.island);

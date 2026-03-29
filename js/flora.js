@@ -401,9 +401,14 @@ class FloraManager {
     }
     
     placeTreesForIsland(islandGroup, islandName, islandWorldX, islandWorldZ) {
+        console.log(`FloraManager: Starting tree placement for ${islandName}`);
+        
         const spacing = 50;
         const meta = islandMetadataCache[islandName];
-        if (!meta) return;
+        if (!meta) {
+            console.warn(`FloraManager: No metadata for ${islandName}, skipping tree placement`);
+            return;
+        }
         
         const terrainWidth = meta.worldWidth * 0.08;
         const terrainHeight = meta.worldHeight * 0.08;
