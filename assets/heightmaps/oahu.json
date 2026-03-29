@@ -1,0 +1,17 @@
+{
+  "name": "oahu",
+  "displayName": "Oahu",
+  "bbox": {
+    "xmin": 574440,
+    "ymin": 2350814,
+    "xmax": 640164,
+    "ymax": 2401347
+  },
+  "minElevation": 0,
+  "maxElevation": 1227,
+  "worldWidth": 65724,
+  "worldHeight": 50533,
+  "width": 1024,
+  "height": 1024,
+  "file": "oahu.png"
+}

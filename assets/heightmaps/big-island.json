@@ -1,0 +1,17 @@
+{
+  "name": "big-island",
+  "displayName": "Hawaii (Big Island)",
+  "bbox": {
+    "xmin": 805861,
+    "ymin": 2092919,
+    "xmax": 942571,
+    "ymax": 2248259
+  },
+  "minElevation": 0,
+  "maxElevation": 4200,
+  "worldWidth": 136710,
+  "worldHeight": 155340,
+  "width": 1024,
+  "height": 1024,
+  "file": "big-island.png"
+}

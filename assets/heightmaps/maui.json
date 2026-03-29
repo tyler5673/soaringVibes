@@ -1,0 +1,17 @@
+{
+  "name": "maui",
+  "displayName": "Maui",
+  "bbox": {
+    "xmin": 739488,
+    "ymin": 2277234,
+    "xmax": 814608,
+    "ymax": 2327504
+  },
+  "minElevation": 0,
+  "maxElevation": 3055,
+  "worldWidth": 75120,
+  "worldHeight": 50270,
+  "width": 1024,
+  "height": 1024,
+  "file": "maui.png"
+}

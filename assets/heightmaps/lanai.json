@@ -1,0 +1,17 @@
+{
+  "name": "lanai",
+  "displayName": "Lanai",
+  "bbox": {
+    "xmin": 701562,
+    "ymin": 2293787,
+    "xmax": 728422,
+    "ymax": 2315647
+  },
+  "minElevation": 0,
+  "maxElevation": 1026,
+  "worldWidth": 26860,
+  "worldHeight": 21860,
+  "width": 1024,
+  "height": 1024,
+  "file": "lanai.png"
+}

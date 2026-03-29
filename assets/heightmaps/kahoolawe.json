@@ -1,0 +1,17 @@
+{
+  "name": "kahoolawe",
+  "displayName": "Kahoolawe",
+  "bbox": {
+    "xmin": 739765,
+    "ymin": 2268641,
+    "xmax": 761245,
+    "ymax": 2283631
+  },
+  "minElevation": 0,
+  "maxElevation": 450,
+  "worldWidth": 21480,
+  "worldHeight": 14990,
+  "width": 1024,
+  "height": 1024,
+  "file": "kahoolawe.png"
+}

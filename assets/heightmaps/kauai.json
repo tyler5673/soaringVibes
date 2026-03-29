@@ -1,0 +1,17 @@
+{
+  "name": "kauai",
+  "displayName": "Kauai",
+  "bbox": {
+    "xmin": 418663,
+    "ymin": 2418303,
+    "xmax": 469853,
+    "ymax": 2458613
+  },
+  "minElevation": 0,
+  "maxElevation": 1598,
+  "worldWidth": 51190,
+  "worldHeight": 40310,
+  "width": 1024,
+  "height": 1024,
+  "file": "kauai.png"
+}

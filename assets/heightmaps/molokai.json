@@ -1,0 +1,17 @@
+{
+  "name": "molokai",
+  "displayName": "Molokai",
+  "bbox": {
+    "xmin": 675449,
+    "ymin": 2328712,
+    "xmax": 737809,
+    "ymax": 2347962
+  },
+  "minElevation": 0,
+  "maxElevation": 1570,
+  "worldWidth": 62360,
+  "worldHeight": 19250,
+  "width": 1024,
+  "height": 1024,
+  "file": "molokai.png"
+}

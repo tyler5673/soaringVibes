@@ -1,0 +1,17 @@
+{
+  "name": "niihau",
+  "displayName": "Niihau",
+  "bbox": {
+    "xmin": 371125,
+    "ymin": 2408779,
+    "xmax": 391655,
+    "ymax": 2436389
+  },
+  "minElevation": 0,
+  "maxElevation": 381,
+  "worldWidth": 20530,
+  "worldHeight": 27610,
+  "width": 1024,
+  "height": 1024,
+  "file": "niihau.png"
+}

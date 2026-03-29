@@ -1,0 +1,122 @@
+[
+  {
+    "name": "big-island",
+    "displayName": "Hawaii (Big Island)",
+    "bbox": {
+      "xmin": 805861,
+      "ymin": 2092919,
+      "xmax": 942571,
+      "ymax": 2248259
+    },
+    "minElevation": 0,
+    "maxElevation": 4200,
+    "worldWidth": 136710,
+    "worldHeight": 155340,
+    "file": "big-island.png"
+  },
+  {
+    "name": "maui",
+    "displayName": "Maui",
+    "bbox": {
+      "xmin": 739488,
+      "ymin": 2277234,
+      "xmax": 814608,
+      "ymax": 2327504
+    },
+    "minElevation": 0,
+    "maxElevation": 3055,
+    "worldWidth": 75120,
+    "worldHeight": 50270,
+    "file": "maui.png"
+  },
+  {
+    "name": "oahu",
+    "displayName": "Oahu",
+    "bbox": {
+      "xmin": 574440,
+      "ymin": 2350814,
+      "xmax": 640164,
+      "ymax": 2401347
+    },
+    "minElevation": 0,
+    "maxElevation": 1227,
+    "worldWidth": 65724,
+    "worldHeight": 50533,
+    "file": "oahu.png"
+  },
+  {
+    "name": "kauai",
+    "displayName": "Kauai",
+    "bbox": {
+      "xmin": 418663,
+      "ymin": 2418303,
+      "xmax": 469853,
+      "ymax": 2458613
+    },
+    "minElevation": 0,
+    "maxElevation": 1598,
+    "worldWidth": 51190,
+    "worldHeight": 40310,
+    "file": "kauai.png"
+  },
+  {
+    "name": "molokai",
+    "displayName": "Molokai",
+    "bbox": {
+      "xmin": 675449,
+      "ymin": 2328712,
+      "xmax": 737809,
+      "ymax": 2347962
+    },
+    "minElevation": 0,
+    "maxElevation": 1570,
+    "worldWidth": 62360,
+    "worldHeight": 19250,
+    "file": "molokai.png"
+  },
+  {
+    "name": "lanai",
+    "displayName": "Lanai",
+    "bbox": {
+      "xmin": 701562,
+      "ymin": 2293787,
+      "xmax": 728422,
+      "ymax": 2315647
+    },
+    "minElevation": 0,
+    "maxElevation": 1026,
+    "worldWidth": 26860,
+    "worldHeight": 21860,
+    "file": "lanai.png"
+  },
+  {
+    "name": "niihau",
+    "displayName": "Niihau",
+    "bbox": {
+      "xmin": 371125,
+      "ymin": 2408779,
+      "xmax": 391655,
+      "ymax": 2436389
+    },
+    "minElevation": 0,
+    "maxElevation": 381,
+    "worldWidth": 20530,
+    "worldHeight": 27610,
+    "file": "niihau.png"
+  },
+  {
+    "name": "kahoolawe",
+    "displayName": "Kahoolawe",
+    "bbox": {
+      "xmin": 739765,
+      "ymin": 2268641,
+      "xmax": 761245,
+      "ymax": 2283631
+    },
+    "minElevation": 0,
+    "maxElevation": 450,
+    "worldWidth": 21480,
+    "worldHeight": 14990,
+    "file": "kahoolawe.png"
+  }
+]
