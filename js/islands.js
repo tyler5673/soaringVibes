@@ -282,8 +282,12 @@ function getTerrainHeight(worldX, worldZ) {
         const u = (localX / terrainWidth) + 0.5;
         const v = (localZ / terrainHeight) + 0.5;
         
-        const imgX = u * 1023;
-        const imgY = (1 - v) * 1023;
+        // Clamp to valid range and match createTerrainMesh sampling exactly
+        const clampedU = Math.max(0, Math.min(1, u));
+        const clampedV = Math.max(0, Math.min(1, v));
+        
+        const imgX = clampedU * (1024 - 1);
+        const imgY = (1 - clampedV) * (1024 - 1);
         
         const minElev = meta.minElevation;
         const maxElev = meta.maxElevation;
@@ -291,9 +295,8 @@ function getTerrainHeight(worldX, worldZ) {
         
         const normalizedHeight = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
         let height = minElev + normalizedHeight * elevRange;
-        height *= terrainScale;
         
-        return height + groupOffsetY;
+        return height;
     }
     
     return 0;
@@ -537,20 +540,23 @@ function addVegetationFromLandcover(group, scale, islandName, islandWorldX, isla
     console.log(`Island ${islandName}: ${palmCount} palms, ${treeCount} trees, ${shrubCount} shrubs. Biomes:`, biomeCounts);
 }
 
-function createPalmTree(localX, localZ, terrainY, group, biome = 'forest') {
+const treeMeshes = [];
+
+function createPalmTree(localX, localZ, terrainY, group, renderDistance = Infinity) {
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
     const leafColors = {
         forest: 0x1B5E20,
         shrubland: 0x6B8E23,
         grassland: 0x8BC34A
     };
-    const leafMat = new THREE.MeshStandardMaterial({ color: leafColors[biome] || 0x228B22 });
+    const leafMat = new THREE.MeshStandardMaterial({ color: leafColors.forest });
     
     const palmHeight = 5 + Math.random() * 2;
     
     const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, palmHeight, 6);
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-    trunk.position.set(localX, terrainY - group.position.y + palmHeight / 2, localZ);
+    // terrainY is now the actual mesh Y position (matches terrain vertices)
+    trunk.position.set(localX, terrainY + palmHeight / 2, localZ);
     trunk.rotation.z = (Math.random() - 0.5) * 0.15;
     trunk.castShadow = true;
     group.add(trunk);
@@ -563,13 +569,26 @@ function createPalmTree(localX, localZ, terrainY, group, biome = 'forest') {
         
         frond.position.set(
             localX + Math.cos(frondAngle) * 0.3,
-            terrainY - group.position.y + palmHeight + 0.2,
+            terrainY + palmHeight + 0.2,
             localZ + Math.sin(frondAngle) * 0.3
         );
         frond.rotation.x = 1.1 + Math.random() * 0.3;
         frond.rotation.z = frondAngle + Math.PI / 2;
         frond.castShadow = true;
         group.add(frond);
+        
+        if (renderDistance < Infinity) {
+            const worldPos = new THREE.Vector3();
+            frond.getWorldPosition(worldPos);
+            treeMeshes.push({ mesh: frond, worldPos: worldPos, renderDistance });
+        }
+    }
+}
+
+function updateTreeVisibility(cameraPosition) {
+    for (const tree of treeMeshes) {
+        const dist = cameraPosition.distanceTo(tree.worldPos);
+        tree.mesh.visible = dist < tree.renderDistance;
     }
 }
 
@@ -581,7 +600,8 @@ function createDeciduousTree(localX, localZ, terrainY, group, scale) {
     const trunkHeight = 4 * scale + Math.random() * 4 * scale;
     const trunkGeo = new THREE.CylinderGeometry(0.15 * scale, 0.4 * scale, trunkHeight, 6);
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-    trunk.position.set(localX, terrainY - group.position.y + trunkHeight / 2, localZ);
+    // terrainY is the mesh Y position (matches terrain vertices)
+    trunk.position.set(localX, terrainY + trunkHeight / 2, localZ);
     trunk.castShadow = true;
     group.add(trunk);
     
@@ -591,7 +611,7 @@ function createDeciduousTree(localX, localZ, terrainY, group, scale) {
         const leaf = new THREE.Mesh(leafGeo, Math.random() > 0.5 ? leafMat : darkLeafMat);
         leaf.position.set(
             localX + (Math.random() - 0.5) * scale,
-            terrainY - group.position.y + trunkHeight + 1.5 * scale + j * 1.8 * scale,
+            terrainY + trunkHeight + 1.5 * scale + j * 1.8 * scale,
             localZ + (Math.random() - 0.5) * scale
         );
         leaf.rotation.x = -0.2 + Math.random() * 0.4;
@@ -606,10 +626,170 @@ function createShrub(localX, localZ, terrainY, group, scale) {
     
     const bushGeo = new THREE.DodecahedronGeometry(1.5 * scale, 0);
     const bush = new THREE.Mesh(bushGeo, darkLeafMat);
-    bush.position.set(localX, terrainY - group.position.y + 1.5 * scale, localZ);
-    bush.scale.set(1 + Math.random() * 0.5, 0.8 + Math.random() * 0.4, 1 + Math.random() * 0.5);
+    // terrainY is the mesh Y position (matches terrain vertices)
+    bush.position.set(localX, terrainY + 1.5 * scale, localZ);
+    bush.scale.set(1 + Math.random() * 5, 0.8 + Math.random() * 0.4, 1 + Math.random() * 0.5);
     bush.castShadow = true;
     group.add(bush);
+}
+
+const TREE_SPACING = 50;
+const WATER_LEVEL = 2;
+const TREE_RENDER_DISTANCE = 1000;
+const TERRAIN_SCALE = 0.15;
+const GROUP_OFFSET_Y = -50;
+
+function isPointOnIsland(worldX, worldZ, islandName) {
+    const data = heightmapCache[islandName];
+    const meta = islandMetadataCache[islandName];
+    if (!data || !meta) return false;
+    
+    const islandInfo = islandPositions.find(i => i.name === islandName);
+    if (!islandInfo) return false;
+    
+    const localX = worldX - islandInfo.x;
+    const localZ = worldZ - islandInfo.z;
+    
+    const terrainWidth = meta.worldWidth * islandInfo.worldScale;
+    const terrainHeight = meta.worldHeight * islandInfo.worldScale;
+    
+    const halfWidth = terrainWidth / 2;
+    const halfHeight = terrainHeight / 2;
+    
+    if (Math.abs(localX) > halfWidth || Math.abs(localZ) > halfHeight) return false;
+    
+        const u = (localX / terrainWidth) + 0.5;
+        const v = (localZ / terrainHeight) + 0.5;
+        
+        // Clamp to valid range
+        const clampedU = Math.max(0, Math.min(1, u));
+        const clampedV = Math.max(0, Math.min(1, v));
+        
+        // Match createTerrainMesh sampling exactly
+        const imgX = clampedU * (1024 - 1);
+        const imgY = (1 - clampedV) * (1024 - 1);
+    
+    const normalizedHeight = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
+    
+    return normalizedHeight >= 0.05;
+}
+
+function getTerrainMeshHeight(worldX, worldZ, islandName) {
+    const data = heightmapCache[islandName];
+    const meta = islandMetadataCache[islandName];
+    const islandInfo = islandPositions.find(i => i.name === islandName);
+    
+    if (!data || !meta || !islandInfo) return GROUP_OFFSET_Y;
+    
+    const localX = worldX - islandInfo.x;
+    const localZ = worldZ - islandInfo.z;
+    
+    const terrainWidth = meta.worldWidth * islandInfo.worldScale;
+    const terrainHeight = meta.worldHeight * islandInfo.worldScale;
+    
+    // Sample heightmap (match createTerrainMesh exactly)
+    const u = (localX / terrainWidth) + 0.5;
+    const v = (localZ / terrainHeight) + 0.5;
+    const clampedU = Math.max(0, Math.min(1, u));
+    const clampedV = Math.max(0, Math.min(1, v));
+    const imgX = clampedU * (1024 - 1);
+    const imgY = (1 - clampedV) * (1024 - 1);
+    
+    const normalizedHeight = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
+    
+    // Convert to real elevation
+    const minElev = meta.minElevation;
+    const maxElev = meta.maxElevation;
+    const elevRange = maxElev - minElev;
+    let height = minElev + normalizedHeight * elevRange;
+    
+    // Apply terrain scale
+    height *= TERRAIN_SCALE;
+    
+    // Calculate edge fade (same as createTerrainMesh)
+    const px = localX;
+    const pz = localZ;
+    const dist = Math.sqrt(px * px + pz * pz);
+    const maxDist = Math.min(terrainWidth, terrainHeight) * 0.45;
+    
+    let edgeFade = 1;
+    if (dist > maxDist * 0.7) {
+        edgeFade = Math.max(0, 1 - (dist - maxDist * 0.7) / (maxDist * 0.3));
+    }
+    
+    // If below threshold, return low value (won't place trees here anyway)
+    if (normalizedHeight < 0.05 || edgeFade < 0.1) {
+        return GROUP_OFFSET_Y - 50;
+    }
+    
+    // Airport flattening (Maui)
+    if (islandInfo.hasAirport) {
+        const airportRadius = 100 * islandInfo.worldScale;
+        const airportTransition = 50 * islandInfo.worldScale;
+        const airportDist = Math.sqrt(px * px + pz * pz);
+        const waterLevel = 2;
+        
+        if (airportDist < airportRadius) {
+            height = waterLevel + 0.5;
+        } else if (airportDist < airportRadius + airportTransition) {
+            const t = (airportDist - airportRadius) / airportTransition;
+            const smoothT = t * t * (3 - 2 * t);
+            height = height * smoothT + (waterLevel + 0.5) * (1 - smoothT);
+        }
+    }
+    
+    // Apply edge fade and water clamp
+    height *= edgeFade;
+    height = Math.max(WATER_LEVEL - 5, height);
+    
+    // Return mesh Y position (this is what gets added to group.position.y)
+    return height;
+}
+
+function addTreesOnGrid(group, islandName, islandWorldX, islandWorldZ) {
+    const meta = islandMetadataCache[islandName];
+    const data = heightmapCache[islandName];
+    if (!meta || !data) return;
+    
+    console.log(`Island ${islandName}: group at (${group.position.x}, ${group.position.z}), worldX=${islandWorldX}, worldZ=${islandWorldZ}`);
+    console.log(`  terrain dims: ${meta.worldWidth * 0.08} x ${meta.worldHeight * 0.08}`);
+    
+    const terrainWidth = meta.worldWidth * 0.08;
+    const terrainHeight = meta.worldHeight * 0.08;
+    const halfWidth = terrainWidth / 2;
+    const halfHeight = terrainHeight / 2;
+    
+    const startX = islandWorldX - halfWidth;
+    const startZ = islandWorldZ - halfHeight;
+    const endX = islandWorldX + halfWidth;
+    const endZ = islandWorldZ + halfHeight;
+    
+    const gridStep = TREE_SPACING;
+    let treeCount = 0;
+    
+    console.log(`  grid bounds: x[${startX.toFixed(0)} to ${endX.toFixed(0)}] z[${startZ.toFixed(0)} to ${endZ.toFixed(0)}]`);
+    
+    for (let x = startX; x <= endX; x += gridStep) {
+        for (let z = startZ; z <= endZ; z += gridStep) {
+            if (!isPointOnIsland(x, z, islandName)) continue;
+            
+            const terrainY = getTerrainMeshHeight(x, z, islandName);
+            
+            if (terrainY <= WATER_LEVEL) continue;
+            
+            const localX = x - islandWorldX;
+            const localZ = z - islandWorldZ;
+            
+            if (treeCount < 3) {
+                console.log(`  Tree ${treeCount}: world=(${x.toFixed(0)}, ${z.toFixed(0)}) local=(${localX.toFixed(1)}, ${localZ.toFixed(1)}) meshY=${terrainY.toFixed(1)}`);
+            }
+            
+            createPalmTree(localX, localZ, terrainY, group, TREE_RENDER_DISTANCE);
+            treeCount++;
+        }
+    }
+    
+    console.log(`Island ${islandName}: placed ${treeCount} trees`);
 }
 
 let landcoverDebugLogged = false;
@@ -639,8 +819,12 @@ function getBiomeFromTerrain(worldX, worldZ) {
         const u = (localX / terrainWidth) + 0.5;
         const v = (localZ / terrainHeight) + 0.5;
         
-        const imgX = u * 1023;
-        const imgY = (1 - v) * 1023;
+        // Clamp to valid range and match createTerrainMesh sampling exactly
+        const clampedU = Math.max(0, Math.min(1, u));
+        const clampedV = Math.max(0, Math.min(1, v));
+        
+        const imgX = clampedU * (1024 - 1);
+        const imgY = (1 - clampedV) * (1024 - 1);
         
         const height = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
         const realHeight = meta.minElevation + height * (meta.maxElevation - meta.minElevation);
@@ -690,7 +874,7 @@ function getBiomeFromTerrain(worldX, worldZ) {
     return { biome: 'unknown', height: 0, slope: 0 };
 }
 
-function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius) {
+function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius, islandName) {
     const halfSize = islandRadius * 0.8;
     
     const attempts = 60;
@@ -703,9 +887,10 @@ function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius) {
         const worldX = islandWorldX + localX;
         const worldZ = islandWorldZ + localZ;
         
-        const terrainY = getTerrainHeight(worldX, worldZ);
+        // Use getTerrainMeshHeight to get the actual mesh Y position
+        const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
         
-        if (terrainY <= 2) continue;
+        if (terrainY <= WATER_LEVEL) continue;
         
         const biome = getLandcoverAtPosition(worldX, worldZ);
         
@@ -716,7 +901,7 @@ function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius) {
     }
 }
 
-function addRocks(group, scale, islandRadius) {
+function addRocks(group, scale, islandRadius, islandName) {
     const rockMat = new THREE.MeshStandardMaterial({ color: 0x5D5D5D, roughness: 0.9, flatShading: true });
     const darkRockMat = new THREE.MeshStandardMaterial({ color: 0x3D3D3D, roughness: 0.95, flatShading: true });
     
@@ -732,17 +917,19 @@ function addRocks(group, scale, islandRadius) {
         const worldX = group.position.x + localX;
         const worldZ = group.position.z + localZ;
         
-        const terrainY = getTerrainHeight(worldX, worldZ);
+        // Use getTerrainMeshHeight to get the actual mesh Y position
+        const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
         
-        if (terrainY <= 2) continue;
+        if (terrainY <= WATER_LEVEL) continue;
         
         const rockSize = (1 + Math.random() * 2) * scale;
         const rockGeo = new THREE.DodecahedronGeometry(rockSize, 0);
         const rock = new THREE.Mesh(rockGeo, Math.random() > 0.5 ? rockMat : darkRockMat);
         
+        // terrainY is now the mesh Y position (matches terrain vertices)
         rock.position.set(
             localX,
-            terrainY - group.position.y + rockSize * 0.3,
+            terrainY + rockSize * 0.3,
             localZ
         );
         rock.rotation.set(
@@ -796,10 +983,14 @@ async function createAllIslands(scene, onProgress) {
     });
     await Promise.all(landcoverPromises);
     
-    for (const { island: islandGroup, info } of results) {
-        const radius = 3500 * info.worldScale;
+    // Initialize FloraManager with global camera reference
+    if (window.camera) {
+        const floraManager = new FloraManager(scene, window.camera);
+        window.floraManager = floraManager;
         
-        addVegetationFromLandcover(islandGroup, info.worldScale * 10, info.name, info.x, info.z, radius);
+        for (const { island: islandGroup, info } of results) {
+            floraManager.placeTreesForIsland(islandGroup, info.name, info.x, info.z);
+        }
     }
 
     return results.map(r => r.island);

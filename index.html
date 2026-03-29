@@ -29,6 +29,9 @@
     <script src="js/islands.js"></script>
     <script src="js/airport.js"></script>
     <script src="js/wildlife.js"></script>
+    <script src="js/performance.js"></script>
+    <script src="js/flora.js"></script>
+    <script src="js/fauna.js"></script>
     <script>
         // ========== MAIN ==========
         let scene, camera, renderer;
@@ -145,6 +148,11 @@
             orbitCamera.update(delta);
             cloudSystem.update(delta, time);
             wildlife.update(delta);
+            
+            // Update flora LOD and culling
+            if (window.floraManager) {
+                window.floraManager.update(delta);
+            }
             
             renderer.render(scene, camera);
         }
