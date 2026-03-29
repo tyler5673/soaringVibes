@@ -9,8 +9,8 @@ class Animal {
             speed: 10,
             turnSpeed: 1,
             animationSpeed: 1,
-            viewDistance: 1000,
-            updateDistance: 2000,
+            viewDistance: 2000, // Increased for better visibility
+            updateDistance: 4000,
             ...config
         };
         
@@ -21,6 +21,11 @@ class Animal {
         this.isVisible = true;
         
         this.createMesh();
+        
+        // Ensure mesh starts visible
+        if (this.mesh) {
+            this.mesh.visible = true;
+        }
     }
     
     createMesh() {
@@ -912,6 +917,23 @@ class FaunaManager {
     }
     
     init() {
+        console.log('FaunaManager: Starting initialization...');
+        
+        // Debug: Spawn one of each animal type at origin for testing
+        const debugPos = new THREE.Vector3(200, 0, 200);
+        
+        // Debug whale at origin
+        const debugWhale = new Whale(this.scene, debugPos.clone());
+        this.animals.push(debugWhale);
+        this.whalePool.push(debugWhale);
+        console.log('Spawned debug whale at', debugPos);
+        
+        // Debug albatross above origin
+        const debugAlbatross = new Albatross(this.scene, new THREE.Vector3(200, 150, 200));
+        this.animals.push(debugAlbatross);
+        this.albatrossPool.push(debugAlbatross);
+        console.log('Spawned debug albatross at (200, 150, 200)');
+        
         // Spawn whales in open ocean
         for (let i = 0; i < this.spawnConfig.whale.count; i++) {
             const pos = this.getOceanPosition(this.spawnConfig.whale.radius);
@@ -998,7 +1020,8 @@ class FaunaManager {
     
     getOceanPosition(radius) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = 2000 + Math.random() * radius;
+        // Spawn closer to origin so they're visible at start
+        const dist = 500 + Math.random() * Math.min(radius, 2000);
         return new THREE.Vector3(
             Math.cos(angle) * dist,
             0,

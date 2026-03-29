@@ -497,14 +497,8 @@ class FloraManager {
         this.allTrees.forEach(treeData => {
             const dist = camPos.distanceTo(treeData.worldPos);
             
+            // Distance culling only for now (simpler than frustum)
             if (dist > TREE_RENDER_DISTANCE) {
-                treeData.mesh.visible = false;
-                return;
-            }
-            
-            // Use world position for frustum check, not local mesh position
-            const worldPos = treeData.worldPos;
-            if (!this.perfManager.frustum.containsPoint(worldPos)) {
                 treeData.mesh.visible = false;
                 return;
             }
@@ -512,12 +506,14 @@ class FloraManager {
             treeData.mesh.visible = true;
             visibleCount++;
             
+            // LOD switching (optional - can be disabled for performance)
             const targetLOD = this.perfManager.getLODLevel(dist);
             if (treeData.currentLOD !== targetLOD) {
                 this.switchLOD(treeData, targetLOD);
             }
         });
         
+        // Limit max visible trees
         if (visibleCount > this.maxVisibleTrees) {
             const sorted = this.allTrees
                 .filter(t => t.mesh.visible)
