@@ -635,7 +635,7 @@ function createShrub(localX, localZ, terrainY, group, scale) {
 
 const TREE_SPACING = 50;
 const WATER_LEVEL = 2;
-const TREE_RENDER_DISTANCE = 1000;
+const TREE_RENDER_DISTANCE = 3000; // Increased from 1000 for better visibility
 const TERRAIN_SCALE = 0.15;
 const GROUP_OFFSET_Y = -50;
 

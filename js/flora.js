@@ -356,8 +356,8 @@ class FloraManager {
         this.camera = camera;
         this.geometryCache = new TreeGeometryCache();
         this.allTrees = [];
-        this.maxVisibleTrees = 500;
-        this.updateInterval = 0.5;
+        this.maxVisibleTrees = 800; // Increased from 500
+        this.updateInterval = 0.1; // Faster updates (was 0.5)
         this.lastUpdate = 0;
         this.perfManager = new PerformanceManager(camera);
     }
