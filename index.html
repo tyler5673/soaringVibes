@@ -8,8 +8,10 @@
 </head>
 <body>
     <div id="loading">
+        <img src="assets/images/logo.png" id="loading-logo" alt="Flying Vibes">
         <div class="loader"></div>
         <div id="loading-text">Loading Flight Simulator...</div>
+        <div id="loading-bar"><div id="loading-bar-fill"></div></div>
         <div id="loading-progress">0%</div>
     </div>
     <div id="hud">
@@ -40,8 +42,10 @@
         let totalItems = 8;
         
         function updateLoading(progress) {
-            const el = document.getElementById('loading-progress');
-            if (el) el.textContent = progress + '%';
+            const progressEl = document.getElementById('loading-progress');
+            const barFillEl = document.getElementById('loading-bar-fill');
+            if (progressEl) progressEl.textContent = progress + '%';
+            if (barFillEl) barFillEl.style.width = progress + '%';
         }
         
         function hideLoading() {

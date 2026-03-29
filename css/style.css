@@ -15,6 +15,16 @@ body { overflow: hidden; background: #000; }
     z-index: 1000;
     font-family: 'Segoe UI', Arial, sans-serif;
 }
+#loading-logo {
+    width: 200px;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 0 20px rgba(79, 195, 247, 0.4));
+    animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 0.9; }
+}
 .loader {
     width: 60px;
     height: 60px;
@@ -33,11 +43,29 @@ body { overflow: hidden; background: #000; }
     text-transform: uppercase;
     letter-spacing: 3px;
 }
+#loading-bar {
+    width: 300px;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    margin-top: 20px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+#loading-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #4fc3f7 0%, #29b6f6 50%, #03a9f4 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease-out;
+    box-shadow: 0 0 10px rgba(79, 195, 247, 0.6), 0 0 20px rgba(79, 195, 247, 0.3);
+}
 #loading-progress {
     color: #4fc3f7;
     font-size: 36px;
     margin-top: 12px;
     font-weight: bold;
+    text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
 }
 #loading.hidden {
     opacity: 0;

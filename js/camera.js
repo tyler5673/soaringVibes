@@ -8,7 +8,7 @@ class OrbitCamera {
         this.minDistance = 10;
         this.maxDistance = 120;
         
-        this.azimuth = 0;
+        this.azimuth = Math.PI;
         this.elevation = 0.35;
         
         this.orbitSensitivity = 0.004;

@@ -1,6 +1,196 @@
 // ========== ISLANDS ==========
 const heightmapCache = {};
 const islandMetadataCache = {};
+const landcoverCache = {};
+
+const BIOME_TYPES = {
+    WET_FOREST: 'wet_forest',
+    WET_SHRUBLAND: 'wet_shrubland',
+    WET_GRASSLAND: 'wet_grassland',
+    MESIC_FOREST: 'mesic_forest',
+    MESIC_SHRUBLAND: 'mesic_shrubland',
+    MESIC_GRASSLAND: 'mesic_grassland',
+    DRY_FOREST: 'dry_forest',
+    DRY_SHRUBLAND: 'dry_shrubland',
+    DRY_GRASSLAND: 'dry_grassland',
+    AGRICULTURE: 'agriculture',
+    DEVELOPED: 'developed',
+    NOT_VEGETATED: 'not_vegetated',
+    WATER: 'water',
+    UNKNOWN: 'unknown'
+};
+
+const BIOME_COLORS = {
+    // Red tones = wet forest
+    '255,0,0': BIOME_TYPES.WET_FOREST,
+    '254,0,0': BIOME_TYPES.WET_FOREST,
+    '200,0,0': BIOME_TYPES.WET_FOREST,
+    '180,0,0': BIOME_TYPES.WET_FOREST,
+    '150,0,0': BIOME_TYPES.WET_FOREST,
+    '128,0,0': BIOME_TYPES.WET_FOREST,
+    
+    // Green tones = wet shrubland/grassland
+    '0,128,0': BIOME_TYPES.WET_SHRUBLAND,
+    '0,160,0': BIOME_TYPES.WET_SHRUBLAND,
+    '0,200,0': BIOME_TYPES.WET_SHRUBLAND,
+    '0,255,0': BIOME_TYPES.WET_GRASSLAND,
+    '50,200,50': BIOME_TYPES.WET_GRASSLAND,
+    '100,255,100': BIOME_TYPES.WET_GRASSLAND,
+    
+    // Blue/teal tones = mesic
+    '0,0,128': BIOME_TYPES.MESIC_FOREST,
+    '0,0,160': BIOME_TYPES.MESIC_FOREST,
+    '0,0,200': BIOME_TYPES.MESIC_FOREST,
+    '0,128,128': BIOME_TYPES.MESIC_SHRUBLAND,
+    '0,160,160': BIOME_TYPES.MESIC_SHRUBLAND,
+    '0,200,200': BIOME_TYPES.MESIC_SHRUBLAND,
+    '128,0,128': BIOME_TYPES.MESIC_GRASSLAND,
+    '128,128,200': BIOME_TYPES.MESIC_GRASSLAND,
+    
+    // Brown/tan tones = dry
+    '128,64,0': BIOME_TYPES.DRY_FOREST,
+    '150,75,0': BIOME_TYPES.DRY_FOREST,
+    '160,82,45': BIOME_TYPES.DRY_FOREST,
+    '128,128,0': BIOME_TYPES.DRY_SHRUBLAND,
+    '160,160,0': BIOME_TYPES.DRY_SHRUBLAND,
+    '180,180,50': BIOME_TYPES.DRY_SHRUBLAND,
+    '255,255,0': BIOME_TYPES.DRY_GRASSLAND,
+    '255,255,128': BIOME_TYPES.DRY_GRASSLAND,
+    '255,255,197': BIOME_TYPES.DRY_GRASSLAND,
+    '240,230,140': BIOME_TYPES.DRY_GRASSLAND,
+    
+    // Pink/magenta = agriculture
+    '255,0,255': BIOME_TYPES.AGRICULTURE,
+    '255,150,150': BIOME_TYPES.AGRICULTURE,
+    '255,200,150': BIOME_TYPES.AGRICULTURE,
+    '255,180,180': BIOME_TYPES.AGRICULTURE,
+    
+    // Gray tones = developed
+    '128,128,128': BIOME_TYPES.DEVELOPED,
+    '150,150,150': BIOME_TYPES.DEVELOPED,
+    '180,180,180': BIOME_TYPES.DEVELOPED,
+    '200,200,200': BIOME_TYPES.DEVELOPED,
+    
+    // White = not vegetated
+    '255,255,255': BIOME_TYPES.NOT_VEGETATED,
+    '240,240,240': BIOME_TYPES.NOT_VEGETATED,
+    '220,220,220': BIOME_TYPES.NOT_VEGETATED,
+    '200,200,200': BIOME_TYPES.NOT_VEGETATED,
+    '150,150,150': BIOME_TYPES.NOT_VEGETATED,
+    '100,100,100': BIOME_TYPES.NOT_VEGETATED,
+};
+
+const VEGETATION_BIOMES = new Set([
+    BIOME_TYPES.WET_FOREST,
+    BIOME_TYPES.WET_SHRUBLAND,
+    BIOME_TYPES.WET_GRASSLAND,
+    BIOME_TYPES.MESIC_FOREST,
+    BIOME_TYPES.MESIC_SHRUBLAND,
+    BIOME_TYPES.MESIC_GRASSLAND,
+    BIOME_TYPES.DRY_FOREST,
+    BIOME_TYPES.DRY_SHRUBLAND,
+    BIOME_TYPES.DRY_GRASSLAND,
+    BIOME_TYPES.AGRICULTURE
+]);
+
+const DENSE_VEGETATION_BIOMES = new Set([
+    BIOME_TYPES.WET_FOREST,
+    BIOME_TYPES.MESIC_FOREST,
+    BIOME_TYPES.DRY_FOREST
+]);
+
+async function loadLandcoverData(islandName) {
+    if (landcoverCache[islandName]) {
+        return landcoverCache[islandName];
+    }
+
+    const loader = new THREE.TextureLoader();
+    
+    try {
+        const texture = await new Promise((resolve, reject) => {
+            loader.load(
+                `assets/maps/${islandName}-landcover.png`,
+                resolve,
+                undefined,
+                reject
+            );
+        });
+        
+        texture.image.width = 1024;
+        texture.image.height = 1024;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 1024;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(texture.image, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, 1024, 1024);
+        const data = new Uint8Array(1024 * 1024 * 3);
+        
+        let nonZeroCount = 0;
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            const idx = i / 4;
+            data[idx * 3] = imageData.data[i];
+            data[idx * 3 + 1] = imageData.data[i + 1];
+            data[idx * 3 + 2] = imageData.data[i + 2];
+            if (imageData.data[i] > 0 || imageData.data[i+1] > 0 || imageData.data[i+2] > 0) {
+                nonZeroCount++;
+            }
+        }
+        
+        console.log(`Landcover loaded for ${islandName}: ${nonZeroCount} non-black pixels out of ${1024*1024}`);
+        
+        landcoverCache[islandName] = data;
+        return data;
+    } catch (e) {
+        console.warn(`No landcover map found for ${islandName}, vegetation will be random`, e);
+        return null;
+    }
+}
+
+function getLandcoverAtPixel(data, x, y, debug = false) {
+    if (!data) return BIOME_TYPES.UNKNOWN;
+    
+    const ix = Math.floor(Math.max(0, Math.min(1023, x)));
+    const iy = Math.floor(Math.max(0, Math.min(1023, y)));
+    const idx = (iy * 1024 + ix) * 3;
+    
+    const r = data[idx];
+    const g = data[idx + 1];
+    const b = data[idx + 2];
+    
+    if (debug) {
+        console.log(`  Pixel at ${ix},${iy}: RGB(${r},${g},${b})`);
+    }
+    
+    if (r < 20 && g < 20 && b < 30) {
+        return BIOME_TYPES.WATER;
+    }
+    
+    const key = `${r},${g},${b}`;
+    
+    if (BIOME_COLORS[key]) {
+        return BIOME_COLORS[key];
+    }
+    
+    // Try approximate matching for similar colors
+    if (r > 200 && g < 50 && b < 50) return BIOME_TYPES.WET_FOREST;
+    if (r > 100 && r < 200 && g < 50 && b < 50) return BIOME_TYPES.WET_FOREST;
+    if (g > 100 && r < 50 && b < 50) return BIOME_TYPES.WET_SHRUBLAND;
+    if (g > 200 && r < 50 && b < 50) return BIOME_TYPES.WET_GRASSLAND;
+    if (b > 100 && r < 50 && g < 50) return BIOME_TYPES.MESIC_FOREST;
+    if (g > 50 && b > 50 && r < 50) return BIOME_TYPES.MESIC_SHRUBLAND;
+    if (r > 100 && b > 100 && g < 50) return BIOME_TYPES.MESIC_GRASSLAND;
+    if (r > 80 && g > 40 && g < 100 && b < 50) return BIOME_TYPES.DRY_FOREST;
+    if (r > 100 && g > 100 && g < 200 && b < 50) return BIOME_TYPES.DRY_SHRUBLAND;
+    if (r > 200 && g > 200 && g < 255 && b < 50) return BIOME_TYPES.DRY_GRASSLAND;
+    if (r > 200 && b > 200 && g < 50) return BIOME_TYPES.AGRICULTURE;
+    if (r > 100 && r < 180 && g > 100 && g < 180 && b > 100 && b < 180) return BIOME_TYPES.DEVELOPED;
+    if (r > 200 && g > 200 && b > 200) return BIOME_TYPES.NOT_VEGETATED;
+    
+    return BIOME_TYPES.UNKNOWN;
+}
 
 async function loadIslandData(islandName) {
     if (heightmapCache[islandName] && islandMetadataCache[islandName]) {
@@ -69,7 +259,7 @@ function getHeightFromData(data, width, height, x, y) {
 
 function getTerrainHeight(worldX, worldZ) {
     const terrainScale = 0.15;
-    const groupOffsetY = -25;
+    const groupOffsetY = -50;
     
     for (let i = 0; i < islandPositions.length; i++) {
         const islandInfo = islandPositions[i];
@@ -138,21 +328,17 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const elevRange = maxElev - minElev;
     
     const waterLevel = 2;
-    const beachLevel = 10;
-    const grassLevel = 40;
-    const forestLevel = 120;
-    const cliffLevel = Math.max(200, maxElev * 0.5);
-    const snowLevel = Math.max(200, maxElev * 0.7);
     
-    const sandColor = new THREE.Color(0x228B22);
-    const darkSandColor = new THREE.Color(0x1B5E20);
-    const lightGrassColor = new THREE.Color(0x228B22);
-    const grassColor = new THREE.Color(0x228B22);
-    const darkGrassColor = new THREE.Color(0x1B5E20);
+    const beachColor = new THREE.Color(0xE8D4A8);
+    const sandColor = new THREE.Color(0xD4C4A0);
+    const darkSandColor = new THREE.Color(0xBBAF8C);
     const forestColor = new THREE.Color(0x1B5E20);
-    const rockColor = new THREE.Color(0x228B22);
-    const darkRockColor = new THREE.Color(0x1B5E20);
-    const snowColor = new THREE.Color(0x228B22);
+    const shrublandColor = new THREE.Color(0x6B8E23);
+    const grasslandColor = new THREE.Color(0x8BC34A);
+    const grassColor = new THREE.Color(0x4CAF50);
+    const lightGrassColor = new THREE.Color(0x66BB6A);
+    const rockColor = new THREE.Color(0x6D6D6D);
+    const darkRockColor = new THREE.Color(0x424242);
     
     const terrainScale = 0.15;
     
@@ -170,6 +356,13 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
         const imgY = (1 - v) * (imgHeight - 1);
         
         let normalizedHeight = getHeightFromData(heightData, imgWidth, imgHeight, imgX, imgY) / 255;
+        
+        const delta = 5;
+        const h1 = getHeightFromData(heightData, imgWidth, imgHeight, imgX - delta, imgY) / 255;
+        const h2 = getHeightFromData(heightData, imgWidth, imgHeight, imgX + delta, imgY) / 255;
+        const h3 = getHeightFromData(heightData, imgWidth, imgHeight, imgX, imgY - delta) / 255;
+        const h4 = getHeightFromData(heightData, imgWidth, imgHeight, imgX, imgY + delta) / 255;
+        const slope = Math.max(Math.abs(h1 - h2), Math.abs(h3 - h4)) * elevRange;
         
         let height = minElev + normalizedHeight * elevRange;
         
@@ -209,41 +402,24 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
         
         let color;
         
-        if (realHeight < waterLevel + 2) {
-            color = darkSandColor;
-        } else if (realHeight < beachLevel) {
-            const t = (realHeight - waterLevel) / (beachLevel - waterLevel);
-            const t2 = t * t;
-            color = darkSandColor.clone().lerp(sandColor, t2);
-        } else if (realHeight < grassLevel) {
-            const t = (realHeight - beachLevel) / (grassLevel - beachLevel);
-            const t2 = Math.sqrt(t);
-            const variation = (Math.sin(px * 0.1) * Math.cos(pz * 0.1) * 0.5 + 0.5) * 0.15;
-            color = sandColor.clone().lerp(grassColor, t2 + variation);
-            if (t > 0.7) {
-                color.lerp(lightGrassColor, (t - 0.7) / 0.3 * 0.5);
-            }
-        } else if (realHeight < forestLevel) {
-            const t = (realHeight - grassLevel) / (forestLevel - grassLevel);
-            const t2 = Math.sqrt(t);
-            const variation = (Math.sin(px * 0.05 + pz * 0.07) * 0.5 + 0.5) * 0.2;
-            color = grassColor.clone().lerp(darkGrassColor, t2);
-            color.lerp(forestColor, variation);
-        } else if (realHeight < cliffLevel) {
-            const t = (realHeight - forestLevel) / (cliffLevel - forestLevel);
-            const t2 = Math.sqrt(t);
-            const slopeFactor = Math.min(1, (realHeight - grassLevel) / 100);
-            color = darkGrassColor.clone().lerp(forestColor, 1 - t2);
-            color.lerp(rockColor, slopeFactor * 0.7);
-        } else if (realHeight < snowLevel) {
-            const t = (realHeight - cliffLevel) / (snowLevel - cliffLevel);
-            const t2 = t * t;
-            const variation = (Math.sin(px * 0.2) * Math.cos(pz * 0.2) * 0.5 + 0.5) * 0.2;
+        const isUnderwater = height < waterLevel;
+        const isFlat = slope < 8;
+        const isSteep = slope > 450;
+        
+        const seed = (Math.sin(px * 0.013 + pz * 0.017) * 43758.5453) % 1;
+        const variation = Math.abs(seed);
+        
+        if (isSteep) {
             color = rockColor.clone().lerp(darkRockColor, variation);
-            color.lerp(snowColor, t2 * 0.5);
+        } else if ((isUnderwater && height > waterLevel - 20) || (!isUnderwater && realHeight < 500)) {
+            const t = isUnderwater ? (height - (waterLevel - 20)) / 20 : (realHeight / 500);
+            color = darkSandColor.clone().lerp(beachColor, Math.min(1, t));
+        } else if (realHeight >= 300) {
+            color = forestColor.clone().lerp(new THREE.Color(0x2E7D32), variation);
+        } else if (realHeight >= 100) {
+            color = shrublandColor.clone().lerp(new THREE.Color(0x558B2F), variation);
         } else {
-            const t = Math.min(1, (realHeight - snowLevel) / 50);
-            color = darkRockColor.clone().lerp(snowColor, t);
+            color = grasslandColor.clone().lerp(grassColor, variation);
         }
         
         colors.push(color.r, color.g, color.b);
@@ -267,92 +443,256 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const group = new THREE.Group();
     group.add(terrain);
     
-    group.position.set(worldX, -25, worldZ);
+    group.position.set(worldX, -50, worldZ);
     scene.add(group);
     
     return group;
 }
 
-function addVegetation(group, scale, islandRadius) {
+function addVegetationFromLandcover(group, scale, islandName, islandWorldX, islandWorldZ, islandRadius) {
+    const halfSize = islandRadius;
+    const attempts = 4000;
+    
+    let palmCount = 0;
+    let treeCount = 0;
+    let shrubCount = 0;
+    let skippedTerrain = 0;
+    let biomeCounts = {};
+    
+    for (let i = 0; i < attempts; i++) {
+        const localX = (Math.random() - 0.5) * halfSize * 2;
+        const localZ = (Math.random() - 0.5) * halfSize * 2;
+        
+        const worldX = islandWorldX + localX;
+        const worldZ = islandWorldZ + localZ;
+        
+        const { biome, height: terrainY, slope } = getBiomeFromTerrain(worldX, worldZ);
+        
+        biomeCounts[biome] = (biomeCounts[biome] || 0) + 1;
+        
+        if (biome === 'water') {
+            skippedTerrain++;
+            continue;
+        }
+        
+        const rand = Math.random();
+        
+        if (biome === 'cliff' || biome === 'rock') {
+            if (rand < 0.05) {
+                createShrub(localX, localZ, terrainY, group, scale * 0.4);
+                shrubCount++;
+            }
+        } else if (biome === 'beach') {
+            continue;
+        } else if (biome === 'grassland') {
+            if (rand < 0.3) {
+                createShrub(localX, localZ, terrainY, group, scale * 0.6);
+                shrubCount++;
+            } else if (rand < 0.5) {
+                createPalmTree(localX, localZ, terrainY, group);
+                palmCount++;
+            }
+        } else if (biome === 'shrubland') {
+            if (rand < 0.4) {
+                createPalmTree(localX, localZ, terrainY, group, 'shrubland');
+                palmCount++;
+            } else if (rand < 0.7) {
+                createShrub(localX, localZ, terrainY, group, scale * 0.8, 'shrubland');
+                shrubCount++;
+            } else {
+                createDeciduousTree(localX, localZ, terrainY, group, scale * 0.7, 'shrubland');
+                treeCount++;
+            }
+        } else if (biome === 'forest') {
+            if (terrainY > 200) {
+                if (rand < 0.6) {
+                    createDeciduousTree(localX, localZ, terrainY, group, scale * 1.2, 'forest');
+                    treeCount++;
+                } else if (rand < 0.85) {
+                    createPalmTree(localX, localZ, terrainY, group, 'forest');
+                    palmCount++;
+                } else {
+                    createShrub(localX, localZ, terrainY, group, scale, 'forest');
+                    shrubCount++;
+                }
+            } else {
+                if (rand < 0.5) {
+                    createDeciduousTree(localX, localZ, terrainY, group, scale, 'forest');
+                    treeCount++;
+                } else if (rand < 0.8) {
+                    createPalmTree(localX, localZ, terrainY, group, 'forest');
+                    palmCount++;
+                } else {
+                    createShrub(localX, localZ, terrainY, group, scale, 'forest');
+                    shrubCount++;
+                }
+            }
+        }
+    }
+    
+    console.log(`Island ${islandName}: ${palmCount} palms, ${treeCount} trees, ${shrubCount} shrubs. Biomes:`, biomeCounts);
+}
+
+function createPalmTree(localX, localZ, terrainY, group, biome = 'forest') {
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const leafColors = {
+        forest: 0x1B5E20,
+        shrubland: 0x6B8E23,
+        grassland: 0x8BC34A
+    };
+    const leafMat = new THREE.MeshStandardMaterial({ color: leafColors[biome] || 0x228B22 });
+    
+    const palmHeight = 5 + Math.random() * 2;
+    
+    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, palmHeight, 6);
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.set(localX, terrainY - group.position.y + palmHeight / 2, localZ);
+    trunk.rotation.z = (Math.random() - 0.5) * 0.15;
+    trunk.castShadow = true;
+    group.add(trunk);
+    
+    const frondCount = 5 + Math.floor(Math.random() * 2);
+    for (let k = 0; k < frondCount; k++) {
+        const frondGeo = new THREE.ConeGeometry(0.8 + Math.random() * 0.4, 3 + Math.random() * 2, 4);
+        const frond = new THREE.Mesh(frondGeo, leafMat);
+        const frondAngle = (k / frondCount) * Math.PI * 2 + Math.random() * 0.3;
+        
+        frond.position.set(
+            localX + Math.cos(frondAngle) * 0.3,
+            terrainY - group.position.y + palmHeight + 0.2,
+            localZ + Math.sin(frondAngle) * 0.3
+        );
+        frond.rotation.x = 1.1 + Math.random() * 0.3;
+        frond.rotation.z = frondAngle + Math.PI / 2;
+        frond.castShadow = true;
+        group.add(frond);
+    }
+}
+
+function createDeciduousTree(localX, localZ, terrainY, group, scale) {
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
     const leafMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
     const darkLeafMat = new THREE.MeshStandardMaterial({ color: 0x1B5E20 });
     
-    const treeCount = Math.floor(20 * scale);
+    const trunkHeight = 4 * scale + Math.random() * 4 * scale;
+    const trunkGeo = new THREE.CylinderGeometry(0.15 * scale, 0.4 * scale, trunkHeight, 6);
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.set(localX, terrainY - group.position.y + trunkHeight / 2, localZ);
+    trunk.castShadow = true;
+    group.add(trunk);
     
-    for (let i = 0; i < treeCount; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const radius = 30 * scale + Math.random() * (islandRadius * 0.4);
-        
-        const treeType = Math.random();
-        
-        if (treeType < 0.6) {
-            const trunkHeight = 4 * scale + Math.random() * 4 * scale;
-            const trunkGeo = new THREE.CylinderGeometry(0.15 * scale, 0.4 * scale, trunkHeight, 6);
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.set(Math.cos(angle) * radius, trunkHeight / 2 + 2, Math.sin(angle) * radius);
-            trunk.castShadow = true;
-            group.add(trunk);
-            
-            const leafCount = 2 + Math.floor(Math.random() * 3);
-            for (let j = 0; j < leafCount; j++) {
-                const leafGeo = new THREE.ConeGeometry(2 * scale + Math.random() * 1.5 * scale, 3 * scale + Math.random() * 2 * scale, 6);
-                const leaf = new THREE.Mesh(leafGeo, Math.random() > 0.5 ? leafMat : darkLeafMat);
-                leaf.position.set(
-                    trunk.position.x + (Math.random() - 0.5) * scale,
-                    trunkHeight + 1.5 * scale + j * 1.8 * scale,
-                    trunk.position.z + (Math.random() - 0.5) * scale
-                );
-                leaf.rotation.x = -0.2 + Math.random() * 0.4;
-                leaf.rotation.z = Math.random() * Math.PI * 2;
-                leaf.castShadow = true;
-                group.add(leaf);
-            }
-        } else if (treeType < 0.85) {
-            const palmHeight = 6 * scale + Math.random() * 4 * scale;
-            const trunkGeo = new THREE.CylinderGeometry(0.2 * scale, 0.35 * scale, palmHeight, 6);
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.set(Math.cos(angle) * radius, palmHeight / 2 + 2, Math.sin(angle) * radius);
-            trunk.rotation.z = (Math.random() - 0.5) * 0.1;
-            trunk.castShadow = true;
-            group.add(trunk);
-            
-            for (let j = 0; j < 5; j++) {
-                const leafGeo = new THREE.ConeGeometry(1.5 * scale, 4 * scale, 4);
-                const leaf = new THREE.Mesh(leafGeo, darkLeafMat);
-                leaf.position.set(
-                    trunk.position.x + Math.cos(j * Math.PI * 2 / 5) * 0.5 * scale,
-                    palmHeight + 1 * scale,
-                    trunk.position.z + Math.sin(j * Math.PI * 2 / 5) * 0.5 * scale
-                );
-                leaf.rotation.x = 0.8;
-                leaf.rotation.z = j * Math.PI * 2 / 5;
-                leaf.castShadow = true;
-                group.add(leaf);
-            }
-        } else {
-            const bushGeo = new THREE.DodecahedronGeometry(1.5 * scale, 0);
-            const bush = new THREE.Mesh(bushGeo, darkLeafMat);
-            bush.position.set(
-                Math.cos(angle) * radius,
-                2 * scale,
-                Math.sin(angle) * radius
-            );
-            bush.scale.set(1 + Math.random() * 0.5, 0.8 + Math.random() * 0.4, 1 + Math.random() * 0.5);
-            bush.castShadow = true;
-            group.add(bush);
-        }
+    const leafCount = 2 + Math.floor(Math.random() * 3);
+    for (let j = 0; j < leafCount; j++) {
+        const leafGeo = new THREE.ConeGeometry(2 * scale + Math.random() * 1.5 * scale, 3 * scale + Math.random() * 2 * scale, 6);
+        const leaf = new THREE.Mesh(leafGeo, Math.random() > 0.5 ? leafMat : darkLeafMat);
+        leaf.position.set(
+            localX + (Math.random() - 0.5) * scale,
+            terrainY - group.position.y + trunkHeight + 1.5 * scale + j * 1.8 * scale,
+            localZ + (Math.random() - 0.5) * scale
+        );
+        leaf.rotation.x = -0.2 + Math.random() * 0.4;
+        leaf.rotation.z = Math.random() * Math.PI * 2;
+        leaf.castShadow = true;
+        group.add(leaf);
     }
 }
 
-function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius) {
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-    const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+function createShrub(localX, localZ, terrainY, group, scale) {
+    const darkLeafMat = new THREE.MeshStandardMaterial({ color: 0x1B5E20 });
     
-    const treeCount = 30;
+    const bushGeo = new THREE.DodecahedronGeometry(1.5 * scale, 0);
+    const bush = new THREE.Mesh(bushGeo, darkLeafMat);
+    bush.position.set(localX, terrainY - group.position.y + 1.5 * scale, localZ);
+    bush.scale.set(1 + Math.random() * 0.5, 0.8 + Math.random() * 0.4, 1 + Math.random() * 0.5);
+    bush.castShadow = true;
+    group.add(bush);
+}
+
+let landcoverDebugLogged = false;
+
+function getBiomeFromTerrain(worldX, worldZ) {
+    const terrainScale = 0.15;
+    const groupOffsetY = -50;
+    
+    for (let i = 0; i < islandPositions.length; i++) {
+        const islandInfo = islandPositions[i];
+        const data = heightmapCache[islandInfo.name];
+        const meta = islandMetadataCache[islandInfo.name];
+        
+        if (!data || !meta) continue;
+        
+        const localX = worldX - islandInfo.x;
+        const localZ = worldZ - islandInfo.z;
+        
+        const terrainWidth = meta.worldWidth * islandInfo.worldScale;
+        const terrainHeight = meta.worldHeight * islandInfo.worldScale;
+        
+        const halfWidth = terrainWidth / 2;
+        const halfHeight = terrainHeight / 2;
+        
+        if (Math.abs(localX) > halfWidth || Math.abs(localZ) > halfHeight) continue;
+        
+        const u = (localX / terrainWidth) + 0.5;
+        const v = (localZ / terrainHeight) + 0.5;
+        
+        const imgX = u * 1023;
+        const imgY = (1 - v) * 1023;
+        
+        const height = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
+        const realHeight = meta.minElevation + height * (meta.maxElevation - meta.minElevation);
+        
+        // Calculate slope by sampling nearby points
+        const delta = 5;
+        const h1 = getHeightFromData(data, 1024, 1024, imgX - delta, imgY) / 255;
+        const h2 = getHeightFromData(data, 1024, 1024, imgX + delta, imgY) / 255;
+        const h3 = getHeightFromData(data, 1024, 1024, imgX, imgY - delta) / 255;
+        const h4 = getHeightFromData(data, 1024, 1024, imgX, imgY + delta) / 255;
+        
+        const slope = Math.max(
+            Math.abs(h1 - h2),
+            Math.abs(h3 - h4)
+        ) * (meta.maxElevation - meta.minElevation);
+        
+        const worldHeight = realHeight * terrainScale + groupOffsetY;
+        
+        // Classification based on height and slope
+        if (worldHeight <= 2) {
+            return { biome: 'water', height: worldHeight, slope: slope };
+        }
+        
+        if (worldHeight < 15 && slope < 3) {
+            return { biome: 'beach', height: worldHeight, slope: slope };
+        }
+        
+        if (worldHeight < 50 && slope < 5) {
+            return { biome: 'grassland', height: worldHeight, slope: slope };
+        }
+        
+        if (worldHeight < 150 && slope < 15) {
+            return { biome: 'shrubland', height: worldHeight, slope: slope };
+        }
+        
+        if (worldHeight < 300 && slope < 25) {
+            return { biome: 'forest', height: worldHeight, slope: slope };
+        }
+        
+        if (slope > 30) {
+            return { biome: 'cliff', height: worldHeight, slope: slope };
+        }
+        
+        return { biome: 'rock', height: worldHeight, slope: slope };
+    }
+    
+    return { biome: 'unknown', height: 0, slope: 0 };
+}
+
+function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius) {
     const halfSize = islandRadius * 0.8;
     
-    for (let i = 0; i < treeCount; i++) {
+    const attempts = 60;
+    let placed = 0;
+    
+    for (let i = 0; i < attempts; i++) {
         const localX = (Math.random() - 0.5) * halfSize * 2;
         const localZ = (Math.random() - 0.5) * halfSize * 2;
         
@@ -361,33 +701,14 @@ function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius) {
         
         const terrainY = getTerrainHeight(worldX, worldZ);
         
-        if (terrainY <= 0) continue;
+        if (terrainY <= 2) continue;
         
-        const palmHeight = 5 + Math.random() * 2;
+        const biome = getLandcoverAtPosition(worldX, worldZ);
         
-        const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, palmHeight, 6);
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-        trunk.position.set(localX, terrainY - group.position.y + palmHeight / 2, localZ);
-        trunk.rotation.z = (Math.random() - 0.5) * 0.15;
-        trunk.castShadow = true;
-        group.add(trunk);
+        if (!VEGETATION_BIOMES.has(biome)) continue;
         
-        const frondCount = 5 + Math.floor(Math.random() * 2);
-        for (let k = 0; k < frondCount; k++) {
-            const frondGeo = new THREE.ConeGeometry(0.8 + Math.random() * 0.4, 3 + Math.random() * 2, 4);
-            const frond = new THREE.Mesh(frondGeo, leafMat);
-            const frondAngle = (k / frondCount) * Math.PI * 2 + Math.random() * 0.3;
-            
-            frond.position.set(
-                localX + Math.cos(frondAngle) * 0.3,
-                terrainY - group.position.y + palmHeight + 0.2,
-                localZ + Math.sin(frondAngle) * 0.3
-            );
-            frond.rotation.x = 1.1 + Math.random() * 0.3;
-            frond.rotation.z = frondAngle + Math.PI / 2;
-            frond.castShadow = true;
-            group.add(frond);
-        }
+        createPalmTree(localX, localZ, terrainY, group);
+        placed++;
     }
 }
 
@@ -401,14 +722,24 @@ function addRocks(group, scale, islandRadius) {
         const angle = Math.random() * Math.PI * 2;
         const radius = 20 * scale + Math.random() * islandRadius * 0.35;
         
+        const localX = Math.cos(angle) * radius;
+        const localZ = Math.sin(angle) * radius;
+        
+        const worldX = group.position.x + localX;
+        const worldZ = group.position.z + localZ;
+        
+        const terrainY = getTerrainHeight(worldX, worldZ);
+        
+        if (terrainY <= 2) continue;
+        
         const rockSize = (1 + Math.random() * 2) * scale;
         const rockGeo = new THREE.DodecahedronGeometry(rockSize, 0);
         const rock = new THREE.Mesh(rockGeo, Math.random() > 0.5 ? rockMat : darkRockMat);
         
         rock.position.set(
-            Math.cos(angle) * radius,
-            rockSize * 0.3 + 2,
-            Math.sin(angle) * radius
+            localX,
+            terrainY - group.position.y + rockSize * 0.3,
+            localZ
         );
         rock.rotation.set(
             Math.random() * Math.PI,
@@ -426,14 +757,14 @@ function addRocks(group, scale, islandRadius) {
 }
 
 const islandPositions = [
-    { name: 'maui', x: 0, z: 0, hasAirport: true, worldScale: 0.08 },
-    { name: 'big-island', x: 3200, z: -6400, hasAirport: false, worldScale: 0.08 },
-    { name: 'oahu', x: -6400, z: -2800, hasAirport: false, worldScale: 0.08 },
-    { name: 'kauai', x: -12000, z: -4000, hasAirport: false, worldScale: 0.08 },
-    { name: 'molokai', x: -1400, z: -3600, hasAirport: false, worldScale: 0.08 },
-    { name: 'lanai', x: 1400, z: -3200, hasAirport: false, worldScale: 0.08 },
-    { name: 'niihau', x: -9600, z: -4800, hasAirport: false, worldScale: 0.08 },
-    { name: 'kahoolawe', x: 2200, z: -2200, hasAirport: false, worldScale: 0.08 }
+    { name: 'maui', x: 0, z: 0, hasAirport: true, worldScale: 0.08, bounds: { north: 21.031, south: 20.574, east: -155.979, west: -156.697 } },
+    { name: 'big-island', x: 3200, z: -6400, hasAirport: false, worldScale: 0.08, bounds: { north: 20.310, south: 18.861, east: -154.756, west: -156.124 } },
+    { name: 'oahu', x: -6400, z: -2800, hasAirport: false, worldScale: 0.08, bounds: { north: 21.712, south: 21.254, east: -157.648, west: -158.280 } },
+    { name: 'kauai', x: -12000, z: -4000, hasAirport: false, worldScale: 0.08, bounds: { north: 22.238, south: 21.855, east: -159.281, west: -159.798 } },
+    { name: 'molokai', x: -1400, z: -3600, hasAirport: false, worldScale: 0.08, bounds: { north: 21.224, south: 21.046, east: -156.709, west: -157.310 } },
+    { name: 'lanai', x: 1400, z: -3200, hasAirport: false, worldScale: 0.08, bounds: { north: 20.929, south: 20.731, east: -156.805, west: -157.062 } },
+    { name: 'niihau', x: -9600, z: -4800, hasAirport: false, worldScale: 0.08, bounds: { north: 22.028, south: 21.778, east: -160.049, west: -160.247 } },
+    { name: 'kahoolawe', x: 2200, z: -2200, hasAirport: false, worldScale: 0.08, bounds: { north: 20.637, south: 20.496, east: -156.490, west: -156.704 } }
 ];
 
 async function createAllIslands(scene, onProgress) {
@@ -447,27 +778,25 @@ async function createAllIslands(scene, onProgress) {
             island.x,
             island.z,
             { hasAirport: island.hasAirport, worldScale: island.worldScale }
-        ).then(island => {
+        ).then(islandGroup => {
             loaded++;
             if (onProgress) onProgress(Math.round((loaded / total) * 100));
-            return island;
+            return { island: islandGroup, info: island };
         });
     });
 
-    const islands = await Promise.all(loadPromises);
-
-    islands.forEach((islandGroup, index) => {
-        const info = islandPositions[index];
-        const radius = 500 * info.worldScale;
-        
-        addVegetation(islandGroup, info.worldScale, radius);
-        addPalmTrees(islandGroup, info.worldScale, info.x, info.z, radius);
-        addRocks(islandGroup, info.worldScale, radius);
-        
-        if (info.hasAirport) {
-            createAirport(scene, info.x, info.z, islandGroup);
-        }
+    const results = await Promise.all(loadPromises);
+    
+    const landcoverPromises = islandPositions.map(island => {
+        return loadLandcoverData(island.name);
     });
+    await Promise.all(landcoverPromises);
+    
+    for (const { island: islandGroup, info } of results) {
+        const radius = 3500 * info.worldScale;
+        
+        addVegetationFromLandcover(islandGroup, info.worldScale * 10, info.name, info.x, info.z, radius);
+    }
 
-    return islands;
+    return results.map(r => r.island);
 }
