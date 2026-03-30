@@ -340,25 +340,6 @@ function setupControls() {
     };
 }
 
-// Create a simple placeholder mesh
-function createPlaceholder(category) {
-    const group = new THREE.Group();
-    const colors = {
-        trees: 0x228B22,
-        animals: 0x888888,
-        aircraft: 0xffffff,
-        effects: 0xff6600
-    };
-    const color = colors[category] || 0x888888;
-    
-    const geo = new THREE.BoxGeometry(5, 5, 5);
-    const mat = new THREE.MeshStandardMaterial({ color });
-    const m = new THREE.Mesh(geo, mat);
-    group.add(m);
-    
-    return group;
-}
-
 // Load external models from manifest
 async function loadExternalModels() {
     try {
