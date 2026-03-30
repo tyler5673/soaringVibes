@@ -9,16 +9,57 @@
 </head>
 <body>
     <div id="loading">
-        <a href="https://ko-fi.com/tylereastman" target="_blank" id="kofi-button">
-            <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
-        </a>
+        <div class="loading-clouds">
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+        </div>
+        <div id="top-buttons">
+            <a href="https://ko-fi.com/tylereastman" target="_blank" id="kofi-button">
+                <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
+            </a>
+        </div>
         <img src="assets/images/logo.png" id="loading-logo" alt="Soaring Vibes">
-        <div class="loader"></div>
         <div id="loading-text">Loading Flight Simulator...</div>
-        <div id="loading-bar"><div id="loading-bar-fill"></div></div>
-        <div id="loading-progress">0%</div>
+        <div id="loading-bar"><div id="loading-bar-fill"></div><div id="loading-plane">🛩️</div></div>
         <button id="start-button" style="display: none;">Let's Soar!</button>
-        <div id="loading-tribute">For Bessie...<br>may your sacrifice never be forgotten</div>
+        
+        <div id="selection-area">
+            <div class="selection-row">
+                <label for="plane-name">Plane Name:</label>
+                <button id="random-name-btn" class="dice-btn" title="Random name">🎲</button>
+                <input type="text" id="plane-name" placeholder="Enter name">
+            </div>
+            <div class="selection-row">
+                <label>Main Color:</label>
+                <button id="random-colors-btn" class="dice-btn" title="Random colors">🎲</button>
+                <div class="color-selector-with-arrows">
+                    <button class="color-arrow-btn" id="main-color-left" title="Previous">◀</button>
+                    <div class="selected-color-display" id="main-color-display"></div>
+                    <button class="color-arrow-btn" id="main-color-right" title="Next">▶</button>
+                </div>
+            </div>
+            <div class="selection-row">
+                <label>Highlight:</label>
+                <button id="random-highlight-btn" class="dice-btn" title="Random highlight">🎲</button>
+                <div class="color-selector-with-arrows">
+                    <button class="color-arrow-btn" id="highlight-color-left" title="Previous">◀</button>
+                    <div class="selected-color-display" id="highlight-color-display"></div>
+                    <button class="color-arrow-btn" id="highlight-color-right" title="Next">▶</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="loading-bottom-left">
+            <div id="loading-alarm">⚠️ Early Alpha - Expect bugs!</div>
+            <div id="loading-links">
+                <a href="/viewer" id="asset-viewer-button">Open Asset Viewer</a>
+                <a href="http://multiplayer.soaringvibes.com/" id="server-button" target="_blank" title="Server">⚙️</a>
+                <a href="https://github.com/tyler5673/soaringVibes" id="repo-button" target="_blank" title="GitHub">📂</a>
+            </div>
+        </div>
         <div id="loading-version">v0.0.1</div>
     </div>
     <div id="hud">
@@ -116,6 +157,10 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script src="js/utils.js"></script>
+    <script>
+      window.MULTIPLAYER_URL = 'ws://multiplayer.soaringvibes.com/ws';
+    </script>
+    <script src="js/multiplayer.js"></script>
     <script src="js/controls.js"></script>
     <script src="js/aircraft.js"></script>
     <script src="js/camera.js"></script>
@@ -160,19 +205,156 @@
     <script src="js/animals/nene.js"></script>
     <script src="js/fauna-manager.js"></script>
     <script>
-        // ========== MAIN ==========
-        let scene, camera, renderer;
-        let aircraft;
-        let orbitCamera;
-        let cloudSystem;
-        let wildlife;
-        let clock;
+// ========== NAME & COLOR SELECTION ==========
+const planeNames = [
+    "Spirit", "Wanderer", "Phantom", "Valkyrie", "Thunder", "Shadow",
+    "Aurora", "Venom", "Blaze", "Storm", "Ghost", "Raptor",
+    "Falcon", "Eagle", "Hawk", "Viper", "Specter", "Wraith",
+    "Nighthawk", "Silver Arrow", "Midnight", "Golden Eagle", "White Knight"
+];
+
+const mainColors = [
+    "#ffffff", "#f5f5f5", "#e8e8e8", "#dcdcdc", "#d0d0d0",
+    "#c4c4c4", "#b8b8b8", "#ffffff", "#f0f0f0", "#e0e0e0"
+];
+
+const highlightColors = [
+    "#0066cc", "#cc0000", "#00aa44", "#ff6600", "#6600cc",
+    "#ffcc00", "#00ccff", "#cc0066", "#006633", "#663300",
+    "#333333", "#666666", "#999999", "#ff0066", "#00ffcc"
+];
+
+const loadingMessages = [
+    "Reticulating splines...",
+    "Feeding the dolphins...",
+    "Polishing the propeller...",
+    "Calibrating altimeter...",
+    "Finding the runway...",
+    "Tying down loose bolts...",
+    "Checking fuel levels...",
+    "Inflating tires...",
+    "Installing snacks...",
+    "Teaching birds to fly away...",
+    "Warming up the engine...",
+    " untangling flight paths...",
+    "Coordinating clouds...",
+    "Measuring island heights...",
+    "Testing gravity...",
+    "Counting palm trees...",
+    "Smoothing ocean waves...",
+    "Loading the loading screen..."
+];
+let currentMessageIndex = 0;
+
+// Current color indices
+let mainColorIndex = 0;
+let highlightColorIndex = 0;
+
+function updateColorDisplay() {
+    const mainDisplay = document.getElementById('main-color-display');
+    const highlightDisplay = document.getElementById('highlight-color-display');
+    
+    if (mainDisplay) {
+        mainDisplay.style.backgroundColor = mainColors[mainColorIndex];
+    }
+    
+    if (highlightDisplay) {
+        highlightDisplay.style.backgroundColor = highlightColors[highlightColorIndex];
+    }
+}
+
+function setRandomColors() {
+    mainColorIndex = Math.floor(Math.random() * mainColors.length);
+    
+    let newHighlightIndex = Math.floor(Math.random() * highlightColors.length);
+    while (highlightColors[newHighlightIndex] === mainColors[mainColorIndex] && highlightColors.length > 1) {
+        newHighlightIndex = Math.floor(Math.random() * highlightColors.length);
+    }
+    highlightColorIndex = newHighlightIndex;
+    
+    updateColorDisplay();
+}
+
+function setRandomName() {
+    const nameInput = document.getElementById('plane-name');
+    if (nameInput) {
+        const randomName = planeNames[Math.floor(Math.random() * planeNames.length)];
+        nameInput.value = randomName;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const randomNameBtn = document.getElementById('random-name-btn');
+    const randomColorsBtn = document.getElementById('random-colors-btn');
+    const mainColorLeft = document.getElementById('main-color-left');
+    const mainColorRight = document.getElementById('main-color-right');
+    const highlightColorLeft = document.getElementById('highlight-color-left');
+    const highlightColorRight = document.getElementById('highlight-color-right');
+    
+    if (randomNameBtn) {
+        randomNameBtn.addEventListener('click', setRandomName);
+    }
+    
+    if (randomColorsBtn) {
+        randomColorsBtn.addEventListener('click', setRandomColors);
+    }
+    
+    if (mainColorLeft) {
+        mainColorLeft.addEventListener('click', function() {
+            mainColorIndex = (mainColorIndex - 1 + mainColors.length) % mainColors.length;
+            updateColorDisplay();
+        });
+    }
+    
+    if (mainColorRight) {
+        mainColorRight.addEventListener('click', function() {
+            mainColorIndex = (mainColorIndex + 1) % mainColors.length;
+            updateColorDisplay();
+        });
+    }
+    
+    if (highlightColorLeft) {
+        highlightColorLeft.addEventListener('click', function() {
+            highlightColorIndex = (highlightColorIndex - 1 + highlightColors.length) % highlightColors.length;
+            updateColorDisplay();
+        });
+    }
+    
+    if (highlightColorRight) {
+        highlightColorRight.addEventListener('click', function() {
+            highlightColorIndex = (highlightColorIndex + 1) % highlightColors.length;
+            updateColorDisplay();
+        });
+    }
+    
+    // Set initial values
+    updateColorDisplay();
+    setRandomName();
+    setRandomColors();
+});
+
+// ========== MAIN =======
+        var scene, camera, renderer, aircraft, orbitCamera, cloudSystem, wildlife, clock;
         
         function updateLoading(progress) {
             const progressEl = document.getElementById('loading-progress');
             const barFillEl = document.getElementById('loading-bar-fill');
+            const planeEl = document.getElementById('loading-plane');
+            const textEl = document.getElementById('loading-text');
+            
             if (progressEl) progressEl.textContent = progress + '%';
             if (barFillEl) barFillEl.style.width = progress + '%';
+            if (planeEl) planeEl.style.left = progress + '%';
+            
+            // Cycle through loading messages based on progress
+            if (textEl) {
+                const messageIndex = Math.floor((progress / 100) * loadingMessages.length);
+                const actualIndex = Math.min(messageIndex, loadingMessages.length - 1);
+                if (actualIndex !== currentMessageIndex || progress === 0) {
+                    currentMessageIndex = actualIndex;
+                    textEl.textContent = loadingMessages[currentMessageIndex];
+                }
+            }
         }
         
         function hideLoading() {
@@ -192,6 +374,11 @@
             scene.background = new THREE.Color(0x87CEEB);
             scene.fog = new THREE.Fog(0x87CEEB, 2000, 15000);
             
+            // Share scene with multiplayer
+            if (typeof setMultiplayerScene === 'function') {
+                setMultiplayerScene(scene);
+            }
+            
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100000);
             camera.position.set(0, 150, -600);
             window.camera = camera; // Make globally accessible for FloraManager
@@ -206,7 +393,13 @@
             
             clock = new THREE.Clock();
             
-            aircraft = new Aircraft();
+                // Get the selected colors and create aircraft
+                const selectedMainColor = mainColors[mainColorIndex];
+                const selectedHighlightColor = highlightColors[highlightColorIndex];
+                aircraft = new Aircraft({
+                    main: selectedMainColor,
+                    highlight: selectedHighlightColor
+                });
             scene.add(aircraft.mesh);
             
             orbitCamera = new OrbitCamera(camera, aircraft);
@@ -253,15 +446,11 @@
                 // Show "Let's Soar!" button while final systems initialize
                 const startButton = document.getElementById('start-button');
                 const loadingBar = document.getElementById('loading-bar');
-                const loader = document.querySelector('.loader');
-                const loadingProgress = document.getElementById('loading-progress');
                 const loadingText = document.getElementById('loading-text');
                 
-                if (startButton && loadingBar && loader && loadingProgress && loadingText) {
+                if (startButton && loadingBar && loadingText) {
                     loadingBar.style.display = 'none';
-                    loader.style.display = 'none';
-                    loadingProgress.textContent = '100%';
-                    loadingText.textContent = 'Ready to fly!';
+                    loadingText.style.display = 'none';
                     startButton.style.display = 'block';
                     
                     startButton.onclick = () => {
