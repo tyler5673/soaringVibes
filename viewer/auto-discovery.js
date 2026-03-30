@@ -59,7 +59,15 @@ async function discoverModels() {
                 await new Promise(r => setTimeout(r, 50));
                 
                 // Get the exported class/function
-                const exportedClass = window[model.export];
+                let exportedClass = window[model.export];
+                
+                // Handle models that don't export to window
+                if (!exportedClass && model.export === 'Aircraft') {
+                    // The aircraft class is defined but not exported
+                    // Manually assign it
+                    window.Aircraft = Aircraft;
+                    exportedClass = Aircraft;
+                }
                 
                 if (!exportedClass) {
                     console.warn(`Export '${model.export}' not found from ${model.script}`);

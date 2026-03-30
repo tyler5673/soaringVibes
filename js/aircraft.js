@@ -75,18 +75,38 @@ class Aircraft {
         
         // Add some randomness to direction (fly at slight angle toward island)
         const angleVariation = (Math.random() - 0.5) * Math.PI * 0.5; // +/- 45 degrees
-        const cos = Math.cos(angleVariation);
-        const sin = Math.sin(angleVariation);
         
-        const velocityX = dirToIsland.x * cos - dirToIsland.z * sin;
-        const velocityZ = dirToIsland.x * sin + dirToIsland.z * cos;
+        // Calculate angle using atan2 with (z, x) to get standard mathematical angle
+        // Then adjust so that rotation.y = angle gives forward pointing in velocity direction
+        const angleToIsland = Math.atan2(dirToIsland.z, dirToIsland.x);
+        const finalAngle = angleToIsland + angleVariation;
         
-        // Forward speed: 60 m/s (same as original)
+        // Forward speed: 60 m/s
         const speed = 60;
-        this.velocity.set(velocityX * speed, 0, velocityZ * speed);
         
-        // Set rotation to face velocity direction
-        this.rotation.y = Math.atan2(velocityX, velocityZ);
+        // Set velocity based on angle
+        // angle = direction from island center to spawn point
+        this.velocity.set(
+            Math.sin(finalAngle) * speed,
+            0,
+            Math.cos(finalAngle) * speed
+        );
+        
+        // Set rotation to face the direction of travel
+        // In Three.js: rotation.y = 0 faces -Z (north), increases clockwise
+        // To face velocity direction (vx, vz): rotation.y = -Math.atan2(vx, vz)
+        this.rotation.x = 0;
+        this.rotation.y = -Math.atan2(velocity.x, velocity.z);
+        this.rotation.z = 0;
+        
+        // Verify: compute forward vector and compare to velocity direction
+        const forward = new THREE.Vector3(0, 0, -1);
+        forward.applyEuler(this.rotation);
+        const velocityDir = this.velocity.clone().normalize();
+        const dot = forward.dot(velocityDir);
+        
+        console.log(`Spawn: dirToIsland=(${dirToIsland.x.toFixed(2)},${dirToIsland.z.toFixed(2)}), angleToIsland=${(angleToIsland*180/Math.PI).toFixed(0)}deg, finalAngle=${(finalAngle*180/Math.PI).toFixed(0)}deg`);
+        console.log(`Spawn CHECK: forward=(${forward.x.toFixed(2)},${forward.z.toFixed(2)}), velDir=(${velocityDir.x.toFixed(2)},${velocityDir.z.toFixed(2)}), dot=${dot.toFixed(2)}`);
         
         // Update mesh position
         if (this.mesh) {
@@ -502,6 +522,12 @@ class Aircraft {
     }
     
     update(delta) {
+        if (this._debugFrame === undefined) this._debugFrame = 0;
+        this._debugFrame++;
+        if (this._debugFrame <= 3) {
+            console.log(`Frame ${this._debugFrame}: vel=(${this.velocity.x.toFixed(1)}, ${this.velocity.y.toFixed(1)}, ${this.velocity.z.toFixed(1)}), rotY=${this.rotation.y.toFixed(2)}`);
+        }
+        
         // Animate propeller based on throttle
         if (this.propeller) {
             this.propeller.rotation.z += this.throttle * 25 * delta;
@@ -635,7 +661,15 @@ class Aircraft {
     reset() {
         // Reset to a random location near an island with forward momentum
         this.setRandomStartPosition();
+        
+        // Clear any residual physics state
+        this.controlInput = { pitch: 0, roll: 0, yaw: 0 };
+        this.throttle = 0.5;
+        this.ias = 0;
+        this.groundSpeed = 0;
         this.crashed = false;
+        
+        console.log(`Reset complete: pos=(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)}, ${this.position.z.toFixed(0)}), vel=(${this.velocity.x.toFixed(1)}, ${this.velocity.y.toFixed(1)}, ${this.velocity.z.toFixed(1)}), rotY=${this.rotation.y.toFixed(2)}`);
     }
     
     checkCrash() {
@@ -676,3 +710,6 @@ class Aircraft {
         return false;
     }
 }
+
+// Export for viewer
+window.Aircraft = Aircraft;
