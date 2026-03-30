@@ -407,13 +407,14 @@ async function loadExternalModels() {
 function createFromClass(cls, modelConfig) {
     let mesh, instance = null;
     
-    // Pattern 1: Animal class (needs scene + position)
-    if (cls.prototype && cls.prototype.createMesh) {
+    // Pattern 1: Animal class - don't call update() in viewer (complex scene logic)
+    if (cls.prototype && cls.prototype.createMesh && cls.name === 'Animal') {
         try {
-            // Create a mock scene for the animal
             const mockScene = scene;
             instance = new cls(mockScene, new THREE.Vector3(0, 0, 0));
             mesh = instance.mesh;
+            // Disable update to prevent runtime errors
+            instance.update = () => {};
         } catch (e) {
             console.warn('Animal creation failed:', e);
             mesh = createPlaceholder(modelConfig.category);
@@ -446,7 +447,7 @@ function createFromClass(cls, modelConfig) {
     }
     
     // Validate we got a proper mesh
-    if (!mesh || !mesh.traverse) {
+    if (!mesh || typeof mesh.traverse !== 'function') {
         mesh = createPlaceholder(modelConfig.category);
     }
     
