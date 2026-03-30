@@ -121,6 +121,91 @@ function init() {
     // Load and display test cube
     loadModel('test-cube');
     
+    // Fallback: manually register a few test models if discovery hasn't loaded them
+    function ensureModels() {
+        const count = window.modelRegistry.getAll().length;
+        if (count < 5) {
+            // Add some simple placeholder models to demonstrate the UI
+            if (!window.modelRegistry.get('palm')) {
+                window.modelRegistry.register({
+                    id: 'palm',
+                    name: 'Palm Tree',
+                    category: 'trees',
+                    description: 'A tropical palm tree',
+                    create: () => {
+                        const group = new THREE.Group();
+                        const trunk = new THREE.Mesh(
+                            new THREE.CylinderGeometry(0.3, 0.5, 10, 8),
+                            new THREE.MeshStandardMaterial({ color: 0x8B4513 })
+                        );
+                        trunk.position.y = 5;
+                        group.add(trunk);
+                        const leaves = new THREE.Mesh(
+                            new THREE.ConeGeometry(3, 4, 8),
+                            new THREE.MeshStandardMaterial({ color: 0x228B22 })
+                        );
+                        leaves.position.y = 12;
+                        group.add(leaves);
+                        return group;
+                    },
+                    animations: []
+                });
+            }
+            if (!window.modelRegistry.get('aircraft')) {
+                window.modelRegistry.register({
+                    id: 'aircraft',
+                    name: 'Cessna 182',
+                    category: 'aircraft',
+                    description: 'Single-engine propeller aircraft',
+                    create: () => {
+                        const group = new THREE.Group();
+                        const body = new THREE.Mesh(
+                            new THREE.CylinderGeometry(0.5, 0.3, 8, 12),
+                            new THREE.MeshStandardMaterial({ color: 0xffffff })
+                        );
+                        body.rotation.x = Math.PI / 2;
+                        group.add(body);
+                        const wing = new THREE.Mesh(
+                            new THREE.BoxGeometry(10, 0.1, 1.5),
+                            new THREE.MeshStandardMaterial({ color: 0xffffff })
+                        );
+                        group.add(wing);
+                        return group;
+                    },
+                    animations: []
+                });
+            }
+            if (!window.modelRegistry.get('bird')) {
+                window.modelRegistry.register({
+                    id: 'bird',
+                    name: 'Seagull',
+                    category: 'animals',
+                    description: 'A flying bird',
+                    create: () => {
+                        const group = new THREE.Group();
+                        const body = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.5, 8, 8),
+                            new THREE.MeshStandardMaterial({ color: 0xffffff })
+                        );
+                        group.add(body);
+                        const wing = new THREE.Mesh(
+                            new THREE.BoxGeometry(3, 0.1, 0.5),
+                            new THREE.MeshStandardMaterial({ color: 0xffffff })
+                        );
+                        wing.name = 'wing';
+                        group.add(wing);
+                        return group;
+                    },
+                    animations: []
+                });
+            }
+        }
+        console.log('Models registered:', window.modelRegistry.getAll().map(m => m.name));
+    }
+    
+    // Call ensureModels to guarantee we have some models
+    ensureModels();
+    
     // Wait for models to be discovered, then render list
     // Retry until models are loaded (with fallback)
     let attempts = 0;
@@ -169,6 +254,12 @@ function renderModelList() {
     tree.innerHTML = '';
     
     const categories = window.modelRegistry.getCategories();
+    console.log('Rendering model list, categories:', categories);
+    
+    if (categories.length === 0) {
+        tree.innerHTML = '<div class="loading-message">No models found</div>';
+        return;
+    }
     
     categories.forEach(category => {
         // Category header (starts expanded)
