@@ -112,6 +112,7 @@ function init() {
     // Wait for models to be discovered, then render list
     setTimeout(() => {
         renderModelList();
+        setupSearch();
     }, 1000);
     
     animate();
@@ -242,6 +243,46 @@ function updateModelInfo(modelData) {
         <p><strong>Animations:</strong> ${modelData.animations?.length || 0}</p>
         ${modelData.description ? `<p>${modelData.description}</p>` : ''}
     `;
+}
+
+function setupSearch() {
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+    
+    let searchQuery = '';
+    let selectedCategory = 'all';
+    
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase();
+        filterModelList();
+    });
+    
+    categoryFilter.addEventListener('change', (e) => {
+        selectedCategory = e.target.value;
+        filterModelList();
+    });
+    
+    function filterModelList() {
+        const items = document.querySelectorAll('.model-item');
+        
+        items.forEach(item => {
+            const modelId = item.dataset.modelId;
+            const model = window.modelRegistry.get(modelId);
+            
+            if (!model) return;
+            
+            const matchesSearch = !searchQuery || 
+                model.name.toLowerCase().includes(searchQuery) ||
+                model.description?.toLowerCase().includes(searchQuery);
+            
+            const matchesCategory = selectedCategory === 'all' || 
+                model.category === selectedCategory;
+            
+            item.style.display = (matchesSearch && matchesCategory) ? 'block' : 'none';
+        });
+    }
+    
+    window.filterModelList = filterModelList;
 }
 
 init();
