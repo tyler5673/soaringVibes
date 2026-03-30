@@ -407,14 +407,11 @@ async function loadExternalModels() {
 function isAnimalClass(cls) {
     if (!cls || !cls.prototype) return false;
     if (!window.Animal) return false;
+    if (cls.name === 'Animal') return false; // Skip base Animal class
     
-    // Check prototype chain
     let proto = Object.getPrototypeOf(cls.prototype);
-    while (proto) {
-        if (proto instanceof Object && proto.constructor === window.Animal.prototype.constructor) {
-            return true;
-        }
-        if (proto === Object.prototype) break;
+    while (proto && proto !== Object.prototype) {
+        if (proto === window.Animal.prototype) return true;
         proto = Object.getPrototypeOf(proto);
     }
     
