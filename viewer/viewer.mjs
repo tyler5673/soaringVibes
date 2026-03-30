@@ -113,19 +113,30 @@ function loadModel(id) {
     
     try {
         const result = model.create();
-        const mesh = result.mesh || result;
+        let mesh = result.mesh || result;
         const instance = result.instance;
         
+        // Ensure we have a valid Three.js object
+        if (!mesh || typeof mesh.traverse !== 'function') {
+            console.warn('Invalid mesh, using placeholder');
+            mesh = createPlaceholder(model.category || 'animals');
+        }
+        
         // Center model
-        const box = new THREE.Box3().setFromObject(mesh);
-        const center = box.getCenter(new THREE.Vector3());
-        mesh.position.sub(center);
+        try {
+            const box = new THREE.Box3().setFromObject(mesh);
+            const center = box.getCenter(new THREE.Vector3());
+            mesh.position.sub(center);
+            var size = box.getSize(new THREE.Vector3());
+        } catch (e) {
+            console.warn('Box3 failed:', e);
+            var size = { x: 10, y: 10, z: 10 };
+        }
         
         currentModel = { mesh, instance, data: model };
         scene.add(mesh);
         
         // Fit camera
-        const size = box.getSize(new THREE.Vector3());
         const dist = Math.max(size.x, size.y, size.z) * 2;
         camera.position.set(dist, dist * 0.7, dist);
         controls.target.set(0, 0, 0);
@@ -329,6 +340,25 @@ function setupControls() {
     };
 }
 
+// Create a simple placeholder mesh
+function createPlaceholder(category) {
+    const group = new THREE.Group();
+    const colors = {
+        trees: 0x228B22,
+        animals: 0x888888,
+        aircraft: 0xffffff,
+        effects: 0xff6600
+    };
+    const color = colors[category] || 0x888888;
+    
+    const geo = new THREE.BoxGeometry(5, 5, 5);
+    const mat = new THREE.MeshStandardMaterial({ color });
+    const m = new THREE.Mesh(geo, mat);
+    group.add(m);
+    
+    return group;
+}
+
 // Load external models from manifest
 async function loadExternalModels() {
     try {
@@ -338,7 +368,7 @@ async function loadExternalModels() {
         // Load deps first
         const deps = ['../js/utils.js', '../js/animals/animal-base.js'];
         for (const dep of deps) {
-            await new Promise((resolve, reject) => {
+            await new Promise((resolve) => {
                 const s = document.createElement('script');
                 s.src = dep;
                 s.onload = resolve;
@@ -354,28 +384,29 @@ async function loadExternalModels() {
                 s.src = m.script;
                 s.onload = () => {
                     let cls = window[m.export];
-                    if (!cls && m.export === 'Aircraft') cls = window.Aircraft;
-                    if (!cls && m.export === 'Albatross') cls = window.Albatross;
-                    if (!cls && m.export === 'PalmGeometry') cls = window.PalmGeometry;
+                    
+                    // Try to find the class
+                    if (!cls) {
+                        // Try common alternatives
+                        const alternatives = [
+                            m.export.replace('Geometry', ''),
+                            m.export.replace('Palm', 'PalmTree'),
+                            'Animal'
+                        ];
+                        for (const alt of alternatives) {
+                            if (window[alt]) { cls = window[alt]; break; }
+                        }
+                    }
                     
                     if (cls) {
                         modelRegistry.register({
                             id: m.id,
                             name: m.name,
                             category: m.category,
-                            create: () => {
-                                let instance, mesh;
-                                if (cls.prototype) {
-                                    instance = new cls();
-                                    mesh = instance.mesh || instance;
-                                } else if (cls.getGeometry) {
-                                    mesh = cls.getGeometry();
-                                } else if (typeof cls === 'function') {
-                                    mesh = cls();
-                                }
-                                return { mesh, instance };
-                            }
+                            create: () => createFromClass(cls, m)
                         });
+                    } else {
+                        console.warn('Class not found:', m.export);
                     }
                     resolve();
                 };
@@ -386,6 +417,75 @@ async function loadExternalModels() {
     } catch (e) {
         console.error('Failed to load manifest:', e);
     }
+}
+
+// Create mesh from class using various patterns
+function createFromClass(cls, modelConfig) {
+    let mesh, instance = null;
+    
+    // Pattern 1: Animal class (needs scene + position)
+    if (cls.prototype && cls.prototype.createMesh) {
+        try {
+            // Create a mock scene for the animal
+            const mockScene = scene;
+            instance = new cls(mockScene, new THREE.Vector3(0, 0, 0));
+            mesh = instance.mesh;
+        } catch (e) {
+            console.warn('Animal creation failed:', e);
+            mesh = createPlaceholder(modelConfig.category);
+        }
+    }
+    // Pattern 2: Static getGeometry() method (like PalmGeometry)
+    else if (cls.getGeometry) {
+        mesh = cls.getGeometry();
+    }
+    // Pattern 3: Static createHighLOD() or similar
+    else if (cls.createHighLOD) {
+        mesh = cls.createHighLOD();
+    }
+    // Pattern 4: Simple class with createMesh() method
+    else if (cls.prototype && cls.prototype.createMesh) {
+        try {
+            instance = new cls();
+            mesh = instance.mesh || instance.createMesh();
+        } catch (e) {
+            mesh = createPlaceholder(modelConfig.category);
+        }
+    }
+    // Pattern 5: Just a function
+    else if (typeof cls === 'function') {
+        try {
+            mesh = cls();
+        } catch (e) {
+            mesh = createPlaceholder(modelConfig.category);
+        }
+    }
+    
+    // Validate we got a proper mesh
+    if (!mesh || !mesh.traverse) {
+        mesh = createPlaceholder(modelConfig.category);
+    }
+    
+    return { mesh, instance };
+}
+
+// Create a simple placeholder mesh
+function createPlaceholder(category) {
+    const group = new THREE.Group();
+    const colors = {
+        trees: 0x228B22,
+        animals: 0x888888,
+        aircraft: 0xffffff,
+        effects: 0xff6600
+    };
+    const color = colors[category] || 0x888888;
+    
+    const geo = new THREE.BoxGeometry(5, 5, 5);
+    const mat = new THREE.MeshStandardMaterial({ color });
+    const m = new THREE.Mesh(geo, mat);
+    group.add(m);
+    
+    return group;
 }
 
 // Init
