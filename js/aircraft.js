@@ -825,8 +825,8 @@ var spinnerStripeBottom = new THREE.Mesh(
         // Check if plane is below terrain
         // Plane wheels/bottom is about 1-2m below position point
         const groundClearance = 1.5; // Plane sits ~1.5m above its position point
-        const tolerance = 0.5; // Small tolerance
-        const isBelowTerrain = this.position.y < (terrainHeight - groundClearance + tolerance);
+        const tolerance = 2.0; // Allow 2m buffer above terrain
+        const isBelowTerrain = this.position.y < (terrainHeight + groundClearance + tolerance);
         
         // Check if there's significant velocity (crashing, not just sitting)
         const speed = this.velocity.length();

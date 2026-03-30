@@ -69,6 +69,8 @@ function getHeightFromData(data, width, height, x, y) {
 
 function getTerrainHeight(worldX, worldZ) {
     const terrainScale = 0.15;
+    const groupOffsetY = -50;
+    const WATER_LEVEL = 2;
     
     for (let i = 0; i < islandPositions.length; i++) {
         const islandInfo = islandPositions[i];
@@ -91,7 +93,6 @@ function getTerrainHeight(worldX, worldZ) {
         const u = (localX / terrainWidth) + 0.5;
         const v = (localZ / terrainHeight) + 0.5;
         
-        // Clamp to valid range and match createTerrainMesh sampling exactly
         const clampedU = Math.max(0, Math.min(1, u));
         const clampedV = Math.max(0, Math.min(1, v));
         
@@ -105,8 +106,40 @@ function getTerrainHeight(worldX, worldZ) {
         const normalizedHeight = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
         let height = minElev + normalizedHeight * elevRange;
         
-        // Apply the same terrainScale as createTerrainMesh
         height *= terrainScale;
+        
+        // Edge fade (same as createTerrainMesh and getTerrainMeshHeight)
+        const px = localX;
+        const pz = localZ;
+        const dist = Math.sqrt(px * px + pz * pz);
+        const maxDist = Math.min(terrainWidth, terrainHeight) * 0.45;
+        
+        let edgeFade = 1;
+        if (dist > maxDist * 0.7) {
+            edgeFade = Math.max(0, 1 - (dist - maxDist * 0.7) / (maxDist * 0.3));
+        }
+        
+        // Airport flattening (same as getTerrainMeshHeight)
+        if (islandInfo.hasAirport) {
+            const airportRadius = 100 * islandInfo.worldScale;
+            const airportTransition = 50 * islandInfo.worldScale;
+            const airportDist = Math.sqrt(px * px + pz * pz);
+            
+            if (airportDist < airportRadius) {
+                height = WATER_LEVEL + 0.5;
+            } else if (airportDist < airportRadius + airportTransition) {
+                const t = (airportDist - airportRadius) / airportTransition;
+                const smoothT = t * t * (3 - 2 * t);
+                height = height * smoothT + (WATER_LEVEL + 0.5) * (1 - smoothT);
+            }
+        }
+        
+        // Apply edge fade and water clamp (same as createTerrainMesh)
+        height *= edgeFade;
+        height = Math.max(WATER_LEVEL - 5, height);
+        
+        // Add group offset to get world Y position
+        height += groupOffsetY;
         
         return height;
     }
