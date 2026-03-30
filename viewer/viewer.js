@@ -138,7 +138,7 @@ function init() {
     }
     
     // Show loading initially
-    document.getElementById('model-tree').innerHTML = '<div style="padding: 20px; text-align: center; color: rgba(255,255,255,0.5);">Loading models...</div>';
+    document.getElementById('model-tree').innerHTML = '<div class="loading-message">Loading models...</div>';
     
     // Start trying to render
     setTimeout(tryRenderList, 500);
@@ -156,14 +156,14 @@ function renderModelList() {
         // Category header (starts expanded)
         const header = document.createElement('div');
         header.className = 'category-header';
-        header.textContent = category.name.charAt(0).toUpperCase() + category.name.slice(1);
+        header.innerHTML = '<span class="arrow">▼</span> ' + 
+            (category.name.charAt(0).toUpperCase() + category.name.slice(1));
         header.dataset.expanded = 'true';
         
         header.addEventListener('click', () => {
             const isExpanded = header.dataset.expanded === 'true';
             header.dataset.expanded = (!isExpanded).toString();
-            header.classList.toggle('collapsed', !isExpanded);
-            
+            header.querySelector('.arrow').textContent = isExpanded ? '▶' : '▼';
             const container = header.nextElementSibling;
             if (container) {
                 container.style.display = isExpanded ? 'none' : 'block';
@@ -174,6 +174,7 @@ function renderModelList() {
         
         // Model items container
         const container = document.createElement('div');
+        container.className = 'model-items';
         
         category.models.forEach(modelId => {
             const model = window.modelRegistry.get(modelId);
