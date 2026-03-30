@@ -1,13 +1,12 @@
 // ========== ENVIRONMENT ==========
 function createSky(scene) {
-    // Sun - positioned lower on horizon for nice lighting
     const sunGeo = new THREE.SphereGeometry(400, 32, 32);
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
     const sun = new THREE.Mesh(sunGeo, sunMat);
-    sun.position.set(8000, 3000, -10000);
+    sun.position.set(8000, 6000, -10000);
     scene.add(sun);
     
-    const sunLight = new THREE.DirectionalLight(0xffeedd, 1.0);
+    const sunLight = new THREE.DirectionalLight(0xffffee, 1.2);
     sunLight.position.copy(sun.position);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
@@ -20,7 +19,7 @@ function createSky(scene) {
     sunLight.shadow.camera.bottom = -2000;
     scene.add(sunLight);
     
-    const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x556644, 0.5);
+    const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x006994, 0.6);
     scene.add(hemiLight);
 }
 
