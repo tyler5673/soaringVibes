@@ -6,7 +6,11 @@ class FloraManager {
         this.camera = camera;
         this.allTrees = [];
         this.spatialLookup = new SpatialLookup();
-        this.maxVisibleTrees = 600; // Reduced for performance - still plenty visible
+        
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+        this.maxVisibleTrees = isMobile ? 200 : 600;
+        
         this.updateInterval = 0.1;
         this.lastUpdate = 0;
         this.perfManager = new PerformanceManager(camera);

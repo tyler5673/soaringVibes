@@ -2,29 +2,6 @@
 const heightmapCache = {};
 const islandMetadataCache = {};
 
-// Simple biome classification based on terrain (elevation, slope)
-const TERRAIN_BIOMES = {
-    WATER: 'water',
-    BEACH: 'beach',
-    GRASSLAND: 'grassland',
-    SHRUBLAND: 'shrubland',
-    FOREST: 'forest',
-    CLIFF: 'cliff',
-    ROCK: 'rock',
-    UNKNOWN: 'unknown'
-};
-
-const VEGETATION_BIOMES = new Set([
-    TERRAIN_BIOMES.BEACH,
-    TERRAIN_BIOMES.GRASSLAND,
-    TERRAIN_BIOMES.SHRUBLAND,
-    TERRAIN_BIOMES.FOREST
-]);
-
-const DENSE_VEGETATION_BIOMES = new Set([
-    TERRAIN_BIOMES.FOREST
-]);
-
 async function loadIslandData(islandName) {
     if (heightmapCache[islandName] && islandMetadataCache[islandName]) {
         return { data: heightmapCache[islandName], meta: islandMetadataCache[islandName] };
@@ -291,93 +268,7 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     return group;
 }
 
-function addVegetationFromLandcover(group, scale, islandName, islandWorldX, islandWorldZ, islandRadius) {
-    const halfSize = islandRadius;
-    const attempts = 4000;
-    
-    let palmCount = 0;
-    let treeCount = 0;
-    let shrubCount = 0;
-    let skippedTerrain = 0;
-    let biomeCounts = {};
-    
-    for (let i = 0; i < attempts; i++) {
-        const localX = (Math.random() - 0.5) * halfSize * 2;
-        const localZ = (Math.random() - 0.5) * halfSize * 2;
-        
-        const worldX = islandWorldX + localX;
-        const worldZ = islandWorldZ + localZ;
-        
-        const { biome, height: terrainY, slope } = getBiomeFromTerrain(worldX, worldZ);
-        
-        biomeCounts[biome] = (biomeCounts[biome] || 0) + 1;
-        
-        if (biome === 'water') {
-            skippedTerrain++;
-            continue;
-        }
-        
-        const rand = Math.random();
-        
-        if (biome === 'cliff' || biome === 'rock') {
-            if (rand < 0.05) {
-                createShrub(localX, localZ, terrainY, group, scale * 0.4);
-                shrubCount++;
-            }
-        } else if (biome === 'beach') {
-            continue;
-        } else if (biome === 'grassland') {
-            if (rand < 0.3) {
-                createShrub(localX, localZ, terrainY, group, scale * 0.6);
-                shrubCount++;
-            } else if (rand < 0.5) {
-                createPalmTree(localX, localZ, terrainY, group);
-                palmCount++;
-            }
-        } else if (biome === 'shrubland') {
-            if (rand < 0.4) {
-                createPalmTree(localX, localZ, terrainY, group, 'shrubland');
-                palmCount++;
-            } else if (rand < 0.7) {
-                createShrub(localX, localZ, terrainY, group, scale * 0.8, 'shrubland');
-                shrubCount++;
-            } else {
-                createDeciduousTree(localX, localZ, terrainY, group, scale * 0.7, 'shrubland');
-                treeCount++;
-            }
-        } else if (biome === 'forest') {
-            if (terrainY > 200) {
-                if (rand < 0.6) {
-                    createDeciduousTree(localX, localZ, terrainY, group, scale * 1.2, 'forest');
-                    treeCount++;
-                } else if (rand < 0.85) {
-                    createPalmTree(localX, localZ, terrainY, group, 'forest');
-                    palmCount++;
-                } else {
-                    createShrub(localX, localZ, terrainY, group, scale, 'forest');
-                    shrubCount++;
-                }
-            } else {
-                if (rand < 0.5) {
-                    createDeciduousTree(localX, localZ, terrainY, group, scale, 'forest');
-                    treeCount++;
-                } else if (rand < 0.8) {
-                    createPalmTree(localX, localZ, terrainY, group, 'forest');
-                    palmCount++;
-                } else {
-                    createShrub(localX, localZ, terrainY, group, scale, 'forest');
-                    shrubCount++;
-                }
-            }
-        }
-    }
-    
-    console.log(`Island ${islandName}: ${palmCount} palms, ${treeCount} trees, ${shrubCount} shrubs. Biomes:`, biomeCounts);
-}
-
-const treeMeshes = [];
-
-function createPalmTree(localX, localZ, terrainY, group, renderDistance = Infinity) {
+function createPalmTree(localX, localZ, terrainY, group) {
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
     const leafColors = {
         forest: 0x1B5E20,
@@ -390,7 +281,6 @@ function createPalmTree(localX, localZ, terrainY, group, renderDistance = Infini
     
     const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, palmHeight, 6);
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-    // terrainY is now the actual mesh Y position (matches terrain vertices)
     trunk.position.set(localX, terrainY + palmHeight / 2, localZ);
     trunk.rotation.z = (Math.random() - 0.5) * 0.15;
     trunk.castShadow = true;
@@ -411,19 +301,6 @@ function createPalmTree(localX, localZ, terrainY, group, renderDistance = Infini
         frond.rotation.z = frondAngle + Math.PI / 2;
         frond.castShadow = true;
         group.add(frond);
-        
-        if (renderDistance < Infinity) {
-            const worldPos = new THREE.Vector3();
-            frond.getWorldPosition(worldPos);
-            treeMeshes.push({ mesh: frond, worldPos: worldPos, renderDistance });
-        }
-    }
-}
-
-function updateTreeVisibility(cameraPosition) {
-    for (const tree of treeMeshes) {
-        const dist = cameraPosition.distanceTo(tree.worldPos);
-        tree.mesh.visible = dist < tree.renderDistance;
     }
 }
 
@@ -468,7 +345,6 @@ function createShrub(localX, localZ, terrainY, group, scale) {
     group.add(bush);
 }
 
-const TREE_SPACING = 50;
 const WATER_LEVEL = 2;
 const TREE_RENDER_DISTANCE = 450; // ~1500 feet - balance of visibility and performance
 const TERRAIN_SCALE = 0.15;
@@ -581,52 +457,6 @@ function getTerrainMeshHeight(worldX, worldZ, islandName) {
     return height;
 }
 
-function addTreesOnGrid(group, islandName, islandWorldX, islandWorldZ) {
-    const meta = islandMetadataCache[islandName];
-    const data = heightmapCache[islandName];
-    if (!meta || !data) return;
-    
-    console.log(`Island ${islandName}: group at (${group.position.x}, ${group.position.z}), worldX=${islandWorldX}, worldZ=${islandWorldZ}`);
-    console.log(`  terrain dims: ${meta.worldWidth * 0.08} x ${meta.worldHeight * 0.08}`);
-    
-    const terrainWidth = meta.worldWidth * 0.08;
-    const terrainHeight = meta.worldHeight * 0.08;
-    const halfWidth = terrainWidth / 2;
-    const halfHeight = terrainHeight / 2;
-    
-    const startX = islandWorldX - halfWidth;
-    const startZ = islandWorldZ - halfHeight;
-    const endX = islandWorldX + halfWidth;
-    const endZ = islandWorldZ + halfHeight;
-    
-    const gridStep = TREE_SPACING;
-    let treeCount = 0;
-    
-    console.log(`  grid bounds: x[${startX.toFixed(0)} to ${endX.toFixed(0)}] z[${startZ.toFixed(0)} to ${endZ.toFixed(0)}]`);
-    
-    for (let x = startX; x <= endX; x += gridStep) {
-        for (let z = startZ; z <= endZ; z += gridStep) {
-            if (!isPointOnIsland(x, z, islandName)) continue;
-            
-            const terrainY = getTerrainMeshHeight(x, z, islandName);
-            
-            if (terrainY <= WATER_LEVEL) continue;
-            
-            const localX = x - islandWorldX;
-            const localZ = z - islandWorldZ;
-            
-            if (treeCount < 3) {
-                console.log(`  Tree ${treeCount}: world=(${x.toFixed(0)}, ${z.toFixed(0)}) local=(${localX.toFixed(1)}, ${localZ.toFixed(1)}) meshY=${terrainY.toFixed(1)}`);
-            }
-            
-            createPalmTree(localX, localZ, terrainY, group, TREE_RENDER_DISTANCE);
-            treeCount++;
-        }
-    }
-    
-    console.log(`Island ${islandName}: placed ${treeCount} trees`);
-}
-
 function getBiomeFromTerrain(worldX, worldZ) {
     const terrainScale = 0.15;
     const groupOffsetY = -50;
@@ -705,34 +535,6 @@ function getBiomeFromTerrain(worldX, worldZ) {
     }
     
     return { biome: 'unknown', height: 0, slope: 0 };
-}
-
-function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius, islandName) {
-    const halfSize = islandRadius * 0.8;
-    
-    const attempts = 60;
-    let placed = 0;
-    
-    for (let i = 0; i < attempts; i++) {
-        const localX = (Math.random() - 0.5) * halfSize * 2;
-        const localZ = (Math.random() - 0.5) * halfSize * 2;
-        
-        const worldX = islandWorldX + localX;
-        const worldZ = islandWorldZ + localZ;
-        
-        // Use getTerrainMeshHeight to get the actual mesh Y position
-        const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
-        
-        if (terrainY <= WATER_LEVEL) continue;
-        
-        const biomeInfo = getBiomeFromTerrain(worldX, worldZ);
-        const biome = biomeInfo ? biomeInfo.biome : TERRAIN_BIOMES.UNKNOWN;
-        
-        if (!VEGETATION_BIOMES.has(biome)) continue;
-        
-        createPalmTree(localX, localZ, terrainY, group);
-        placed++;
-    }
 }
 
 function addRocks(group, scale, islandRadius, islandName) {
