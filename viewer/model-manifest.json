@@ -14,7 +14,135 @@
       "category": "trees",
       "script": "../js/trees/palm.js",
       "export": "PalmGeometry",
-      "description": "Hawaiian palm tree with LOD support"
+      "description": "Hawaiian palm tree with LOD"
+    },
+    {
+      "id": "coconut-palm",
+      "name": "Coconut Palm",
+      "category": "trees",
+      "script": "../js/trees/coconut-palm.js",
+      "export": "CoconutPalmGeometry",
+      "description": "Coconut palm with nuts"
+    },
+    {
+      "id": "koa",
+      "name": "Koa Tree",
+      "category": "trees",
+      "script": "../js/trees/koa.js",
+      "export": "KoaGeometry",
+      "description": "Native Hawaiian koa tree"
+    },
+    {
+      "id": "ohia",
+      "name": "Ōhiʻa Tree",
+      "category": "trees",
+      "script": "../js/trees/ohia.js",
+      "export": "OhiaGeometry",
+      "description": "Ōhiʻa lehua with red flowers"
+    },
+    {
+      "id": "banyan",
+      "name": "Banyan Tree",
+      "category": "trees",
+      "script": "../js/trees/banyan.js",
+      "export": "BanyanGeometry",
+      "description": "Large banyan with aerial roots"
+    },
+    {
+      "id": "bamboo",
+      "name": "Bamboo",
+      "category": "trees",
+      "script": "../js/trees/bamboo.js",
+      "export": "BambooGeometry",
+      "description": "Tropical bamboo clump"
+    },
+    {
+      "id": "beach-morning-glory",
+      "name": "Beach Morning Glory",
+      "category": "trees",
+      "script": "../js/trees/beach-morning-glory.js",
+      "export": "BeachMorningGloryGeometry",
+      "description": "Coastal vine plant"
+    },
+    {
+      "id": "driftwood",
+      "name": "Driftwood",
+      "category": "trees",
+      "script": "../js/trees/driftwood.js",
+      "export": "DriftwoodGeometry",
+      "description": "Weathered driftwood"
+    },
+    {
+      "id": "giant-koa",
+      "name": "Giant Koa",
+      "category": "trees",
+      "script": "../js/trees/giant-koa.js",
+      "export": "GiantKoaGeometry",
+      "description": "Ancient koa tree"
+    },
+    {
+      "id": "grass",
+      "name": "Grass",
+      "category": "trees",
+      "script": "../js/trees/grass.js",
+      "export": "GrassGeometry",
+      "description": "Hawaiian grass"
+    },
+    {
+      "id": "ground-fern",
+      "name": "Ground Fern",
+      "category": "trees",
+      "script": "../js/trees/ground-fern.js",
+      "export": "GroundFernGeometry",
+      "description": "Forest floor fern"
+    },
+    {
+      "id": "lava-rock",
+      "name": "Lava Rock",
+      "category": "trees",
+      "script": "../js/trees/lava-rock.js",
+      "export": "LavaRockGeometry",
+      "description": "Volcanic rock formation"
+    },
+    {
+      "id": "naupaka",
+      "name": "Naupaka",
+      "category": "trees",
+      "script": "../js/trees/naupaka.js",
+      "export": "NaupakaGeometry",
+      "description": "Coastal naupaka shrub"
+    },
+    {
+      "id": "shrub",
+      "name": "Shrub",
+      "category": "trees",
+      "script": "../js/trees/shrub.js",
+      "export": "ShrubGeometry",
+      "description": "Generic shrub"
+    },
+    {
+      "id": "ti-plant",
+      "name": "Ti Plant",
+      "category": "trees",
+      "script": "../js/trees/ti-plant.js",
+      "export": "TiPlantGeometry",
+      "description": "Ti (kī) plant"
+    },
+    {
+      "id": "tree-fern",
+      "name": "Tree Fern",
+      "category": "trees",
+      "script": "../js/trees/tree-fern.js",
+      "export": "TreeFernGeometry",
+      "description": "Hapu'u fern"
+    },
+    {
+      "id": "wiliwili",
+      "name": "Wiliwili",
+      "category": "trees",
+      "script": "../js/trees/wiliwili.js",
+      "export": "WiliwiliGeometry",
+      "description": "Native wiliwili tree"
     },
     {
       "id": "albatross",
@@ -23,6 +151,62 @@
       "script": "../js/animals/albatross.js",
       "export": "Albatross",
       "description": "Albatross with 3-3.5m wingspan"
+    },
+    {
+      "id": "dolphin",
+      "name": "Dolphin",
+      "category": "animals",
+      "script": "../js/animals/dolphin.js",
+      "export": "Dolphin",
+      "description": "Hawaiian spinner dolphin"
+    },
+    {
+      "id": "frigatebird",
+      "name": "Frigatebird",
+      "category": "animals",
+      "script": "../js/animals/frigatebird.js",
+      "export": "Frigatebird",
+      "description": "Great frigatebird"
+    },
+    {
+      "id": "honeycreeper",
+      "name": "Honeycreeper",
+      "category": "animals",
+      "script": "../js/animals/honeycreeper.js",
+      "export": "Honeycreeper",
+      "description": "Native honeycreeper bird"
+    },
+    {
+      "id": "nene",
+      "name": "Nēnē",
+      "category": "animals",
+      "script": "../js/animals/nene.js",
+      "export": "Nene",
+      "description": "Hawaiian goose"
+    },
+    {
+      "id": "seaturtle",
+      "name": "Sea Turtle",
+      "category": "animals",
+      "script": "../js/animals/seaturtle.js",
+      "export": "SeaTurtle",
+      "description": "Green sea turtle"
+    },
+    {
+      "id": "whale",
+      "name": "Humpback Whale",
+      "category": "animals",
+      "script": "../js/animals/whale.js",
+      "export": "Whale",
+      "description": "Humpback whale"
+    },
+    {
+      "id": "hot-air-balloon",
+      "name": "Hot Air Balloon",
+      "category": "effects",
+      "script": "../js/hot-air-balloons.js",
+      "export": "HotAirBalloon",
+      "description": "Colorful hot air balloon with burner effect"
     }
   ]
 }
