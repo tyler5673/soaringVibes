@@ -1,6 +1,6 @@
 // ========== AIRCRAFT ==========
 class Aircraft {
-    constructor() {
+    constructor(colors) {
         this.mass = 1100;
         this.wingArea = 16;
         this.maxThrust = 3500;
@@ -30,6 +30,7 @@ class Aircraft {
         this.rudder = null;
         this.elevator = null;
         
+        this.colors = colors || { main: '#ffffff', highlight: '#0066cc' };
         this.mesh = this.createMesh();
     }
     
@@ -114,8 +115,15 @@ class Aircraft {
     createMesh() {
         const group = new THREE.Group();
         
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, metalness: 0.1 });
-        const stripeMat = new THREE.MeshStandardMaterial({ color: 0x0066cc, roughness: 0.4 });
+        const bodyMat = new THREE.MeshStandardMaterial({ 
+            color: this.colors.main, 
+            roughness: 0.4, 
+            metalness: 0.1 
+        });
+        const stripeMat = new THREE.MeshStandardMaterial({ 
+            color: this.colors.highlight, 
+            roughness: 0.4 
+        });
         const glassMat = new THREE.MeshStandardMaterial({ 
             color: 0x4488cc, 
             transparent: true, 
@@ -518,14 +526,6 @@ var spinnerStripeBottom = new THREE.Mesh(
         );
         this.elevator.position.set(0, hStabY + 0.02, tailZ + hStabChord * 0.25);
         group.add(this.elevator);
-        
-        // Elevator stripe
-        const elevatorStripe = new THREE.Mesh(
-            new THREE.BoxGeometry(elevatorSpan * 0.5, 0.09, hStabChord * 0.3),
-            stripeMat
-        );
-        elevatorStripe.position.set(0, hStabY + 0.02, tailZ + hStabChord * 0.15);
-        group.add(elevatorStripe);
         
         // === LANDING GEAR ===
         // Properly angled struts connecting wheels to fuselage
