@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "id": "aircraft",
+      "name": "Cessna 182 Skylane",
+      "category": "aircraft",
+      "script": "../js/aircraft.js",
+      "export": "Aircraft",
+      "description": "Detailed Cessna 182 with animated control surfaces"
+    },
+    {
+      "id": "palm",
+      "name": "Palm Tree",
+      "category": "trees",
+      "script": "../js/trees/palm.js",
+      "export": "PalmGeometry",
+      "description": "Hawaiian palm tree with LOD support"
+    },
+    {
+      "id": "albatross",
+      "name": "Laysan Albatross",
+      "category": "animals",
+      "script": "../js/animals/albatross.js",
+      "export": "Albatross",
+      "description": "Albatross with 3-3.5m wingspan"
+    }
+  ]
+}
