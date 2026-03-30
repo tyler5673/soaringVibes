@@ -132,3 +132,191 @@ body { overflow: hidden; background: #000; }
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(255, 0, 0, 0.6);
 }
+
+/* Mobile Touch Controls - Only visible on touch devices */
+#touch-controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 150;
+    touch-action: none;
+}
+
+#touch-controls.visible {
+    display: block !important;
+}
+
+.touch-zone {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    pointer-events: auto;
+    touch-action: none;
+}
+
+#left-stick-zone {
+    left: 20px;
+    bottom: 100px;
+}
+
+#right-stick-zone {
+    right: 20px;
+    bottom: 100px;
+}
+
+.touch-stick {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(79, 195, 247, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
+    transition: none;
+}
+
+.touch-label {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.touch-button {
+    position: absolute;
+    padding: 15px 25px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    transition: all 0.1s ease;
+}
+
+.touch-button:active {
+    background: rgba(79, 195, 247, 0.4);
+    border-color: rgba(79, 195, 247, 0.8);
+    transform: scale(0.95);
+}
+
+#brake-btn {
+    right: 180px;
+    bottom: 20px;
+}
+
+#reset-btn-touch {
+    left: 20px;
+    top: 20px;
+    padding: 10px 20px;
+    font-size: 12px;
+}
+
+#reset-btn-touch.reset {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: rgba(255, 0, 0, 0.5);
+}
+
+#reset-btn-touch.reset:active {
+    background: rgba(255, 0, 0, 0.4);
+}
+
+/* Throttle Slider */
+.throttle-container {
+    position: absolute;
+    left: 20px;
+    bottom: 80px;
+    width: 80px;
+    height: 200px;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.throttle-track {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 180px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.throttle-handle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 60px;
+    background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(79, 195, 247, 0.6);
+    bottom: 0;
+    transition: none;
+}
+
+.throttle-container .touch-label {
+    bottom: -30px;
+}
+
+/* Yaw Controls */
+.yaw-container {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    display: flex;
+    gap: 15px;
+    pointer-events: auto;
+}
+
+.yaw-button {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    transition: all 0.1s ease;
+}
+
+.yaw-button:active {
+    background: rgba(79, 195, 247, 0.4);
+    border-color: rgba(79, 195, 247, 0.8);
+    transform: scale(0.95);
+}
+
+/* Hide desktop controls hint on mobile */
+@media (hover: none) and (pointer: coarse) {
+    #controls-hint {
+        display: none !important;
+    }
+}

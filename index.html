@@ -24,6 +24,30 @@
         <div class="crash-text">Crashed!</div>
         <button id="reset-btn" onclick="aircraft.reset(); hideCrashMessage();">Reset</button>
     </div>
+    <div id="touch-controls" style="display: none;">
+        <!-- Left side: Throttle slider -->
+        <div id="throttle-zone" class="throttle-container">
+            <div class="throttle-track">
+                <div id="throttle-handle" class="throttle-handle"></div>
+            </div>
+            <div class="touch-label">THROTTLE</div>
+        </div>
+        
+        <!-- Right stick: Pitch (vertical) + Roll (horizontal) + Yaw (requires new zone) -->
+        <div id="right-stick-zone" class="touch-zone">
+            <div id="right-stick" class="touch-stick"></div>
+            <div class="touch-label">Pitch/Roll</div>
+        </div>
+        
+        <!-- Yaw buttons below right stick -->
+        <div id="yaw-controls" class="yaw-container">
+            <div id="yaw-left-btn" class="yaw-button">↺</div>
+            <div id="yaw-right-btn" class="yaw-button">↻</div>
+        </div>
+        
+        <!-- Reset button -->
+        <div id="reset-btn-touch" class="touch-button reset">RESET</div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/controls.js"></script>
@@ -122,6 +146,9 @@
             
             orbitCamera = new OrbitCamera(camera, aircraft);
             
+            // Initialize touch camera controls for mobile
+            initTouchCameraControls(orbitCamera);
+            
             createSky(scene);
             createOcean(scene, camera);
             
@@ -192,8 +219,23 @@
             
             updateOceanWaves(time);
             
-            const input = getKeyboardInput();
+            const keyboardInput = getKeyboardInput();
+            const touchInputData = getTouchInput();
             const mouseInput = getMouseInput();
+            
+            // Merge keyboard and touch inputs (touch takes priority if active)
+            const input = {
+                pitchUp: keyboardInput.pitchUp || touchInputData.pitch < -0.1,
+                pitchDown: keyboardInput.pitchDown || touchInputData.pitch > 0.1,
+                rollLeft: keyboardInput.rollLeft || touchInputData.roll < -0.1,
+                rollRight: keyboardInput.rollRight || touchInputData.roll > 0.1,
+                yawLeft: keyboardInput.yawLeft || touchInputData.yaw < -0.1,
+                yawRight: keyboardInput.yawRight || touchInputData.yaw > 0.1,
+                throttleUp: keyboardInput.throttleUp,
+                throttleDown: keyboardInput.throttleDown,
+                brake: keyboardInput.brake,
+                reset: keyboardInput.reset || touchInputData.reset
+            };
             
             orbitCamera.handleMouseInput(mouseInput.deltaX, mouseInput.deltaY);
             orbitCamera.handleScroll(mouseInput.scrollDelta);
@@ -215,7 +257,14 @@
             
             if (!isCrashed) {
                 aircraft.setControlInput(controlInput);
-                aircraft.updateThrottle(input.throttleUp, input.throttleDown, delta);
+                
+                // Handle throttle - mobile uses direct slider value, desktop uses up/down buttons
+                if (isTouchDevice()) {
+                    aircraft.setThrottle(touchInputData.throttle);
+                } else {
+                    aircraft.updateThrottle(input.throttleUp, input.throttleDown, delta);
+                }
+                
                 aircraft.update(delta);
             }
             

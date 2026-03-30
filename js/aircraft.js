@@ -442,6 +442,29 @@ class Aircraft {
         this.controlInput.yaw = input.yaw;
     }
     
+    setThrottle(value) {
+        this.throttle = Math.max(0, Math.min(1, value));
+    }
+    
+    applyAutoBrake(delta) {
+        // Auto-brake when throttle is near zero and on ground
+        const speed = this.velocity.length();
+        if (this.throttle < 0.05 && speed > 1) {
+            // Check if on ground (within 5m of terrain)
+            let terrainHeight = -50;
+            if (typeof getTerrainHeight === 'function') {
+                terrainHeight = getTerrainHeight(this.position.x, this.position.z);
+            }
+            const heightAboveTerrain = this.position.y - terrainHeight;
+            
+            if (heightAboveTerrain < 5) {
+                // Apply braking force - stronger at lower speeds
+                const brakeForce = Math.min(speed, 15 * delta);
+                this.velocity.multiplyScalar(1 - (brakeForce / speed));
+            }
+        }
+    }
+    
     updateThrottle(throttleUp, throttleDown, delta) {
         const speed = 0.5;
         if (throttleUp) this.throttle = Math.min(1, this.throttle + speed * delta);
@@ -550,6 +573,9 @@ class Aircraft {
         
         this.mesh.position.copy(this.position);
         this.mesh.rotation.copy(this.rotation);
+        
+        // Apply auto-brake when on ground with low throttle
+        this.applyAutoBrake(delta);
     }
     
     updateRotation(delta, speed) {
