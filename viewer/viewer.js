@@ -77,11 +77,23 @@ function onWindowResize() {
     renderer.setSize(width, height);
 }
 
-function animate() {
+function animate(timestamp) {
     animationId = requestAnimationFrame(animate);
+    
+    const delta = lastTime ? (timestamp - lastTime) / 1000 : 0;
+    lastTime = timestamp;
+    
     controls.update();
+    
+    // Update animations
+    if (window.animationController) {
+        window.animationController.update(delta);
+    }
+    
     renderer.render(scene, camera);
 }
+
+let lastTime = 0;
 
 function init() {
     initScene();
@@ -181,13 +193,12 @@ function loadModel(modelId) {
         if (currentModel.mesh) {
             scene.remove(currentModel.mesh);
         }
-        if (currentModel.geometry) {
-            currentModel.geometry.dispose();
-        }
-        if (currentModel.material) {
-            currentModel.material.dispose();
-        }
         currentModel = null;
+        
+        // Clear animation handlers
+        if (window.animationController) {
+            window.animationController.clearHandlers();
+        }
     }
     
     // Load new model
@@ -199,13 +210,15 @@ function loadModel(modelId) {
     
     console.log(`Loading model: ${modelData.name}`);
     
-    try {
-        const mesh = modelData.create();
+    // Use Promise to handle async model creation
+    Promise.resolve(modelData.create()).then(result => {
+        const mesh = result.mesh;
+        const instance = result.instance;
+        
         currentModel = {
             mesh,
-            data: modelData,
-            geometry: mesh.geometry,
-            material: mesh.material
+            instance,
+            data: modelData
         };
         
         scene.add(mesh);
@@ -229,8 +242,59 @@ function loadModel(modelId) {
         // Update UI
         updateModelInfo(modelData);
         
-    } catch (error) {
+        // Detect and register animations
+        detectAndRegisterAnimations(instance, mesh);
+        
+    }).catch(error => {
         console.error(`Error loading model ${modelId}:`, error);
+    });
+}
+
+function detectAndRegisterAnimations(instance, mesh) {
+    if (!window.animationController) return;
+    
+    let animationCount = 0;
+    
+    // Pattern 1: Has update() method (e.g., Aircraft, Animals)
+    if (instance && typeof instance.update === 'function') {
+        window.animationController.registerHandler((time, delta) => {
+            instance.update(delta);
+        });
+        animationCount++;
+        console.log('Animation: registered instance.update()');
+    }
+    
+    // Pattern 2: Has animateable parts by name
+    if (mesh) {
+        mesh.traverse(child => {
+            // Propeller rotation
+            if (child.name?.toLowerCase().includes('propeller') || 
+                child.name === 'propeller') {
+                window.animationController.registerHandler((time, delta) => {
+                    child.rotation.z += delta * 10; // Rotate 10 rad/s
+                });
+                animationCount++;
+                console.log('Animation: registered propeller rotation');
+            }
+            
+            // Wing flapping (for birds)
+            if (child.name?.toLowerCase().includes('wing')) {
+                const initialRotX = child.rotation.x;
+                window.animationController.registerHandler((time, delta) => {
+                    child.rotation.x = initialRotX + Math.sin(time * 5) * 0.3;
+                });
+                animationCount++;
+                console.log('Animation: registered wing flapping');
+            }
+        });
+    }
+    
+    // Auto-play if animations were found
+    if (animationCount > 0) {
+        window.animationController.play();
+        console.log(`Animation: ${animationCount} animations registered, auto-playing`);
+    } else {
+        console.log('Animation: no animations detected for this model');
     }
 }
 
