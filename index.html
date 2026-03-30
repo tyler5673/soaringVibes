@@ -430,6 +430,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             orbitCamera = new OrbitCamera(camera, aircraft);
             
+            // Initialize multiplayer after aircraft is created
+            if (typeof initMultiplayer === 'function') {
+                initMultiplayer(scene);
+            }
+            
             // Initialize touch camera controls for mobile
             initTouchCameraControls(orbitCamera);
             

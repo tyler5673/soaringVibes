@@ -154,8 +154,8 @@ function initMultiplayer(gameScene) {
                 aircraft.position,
                 aircraft.rotation,
                 aircraft.velocity,
-                aircraft.mainColor,
-                aircraft.highlightColor,
+                aircraft.colors?.main || '#ffffff',
+                aircraft.colors?.highlight || '#0066cc',
                 name
             );
         }
