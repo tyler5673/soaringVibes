@@ -16,11 +16,9 @@ If you found this project compelling or useful and want to fuel the experiment, 
 
 This flight simulator is an **agentic engineering experiment** to see just how complete a casual flight simulator can be created **without writing a single line of code manually** — only using prompts to steer the project.
 
-Every line of code, every 3D model, the Cessna 182 aircraft, all palm trees and vegetation, every animation (propeller spin, control surfaces), the terrain, clouds, wildlife, airport buildings — all of it was generated through AI prompts. Zero manual coding.
+Every line of code, every 3D model, the Cessna 182 aircraft, all palm trees and vegetation, every animation (propeller spin, control surfaces), the terrain, clouds, wildlife, airport buildings, and even this README — all of it was generated through AI prompts. Zero manual coding.
 
 The models used were all locally hosted, primarily **Qwen3.5-27B** (with various smaller models) running on a home lab setup. All models are **open source**.
-
-The question isn't "can AI build a flight simulator?" — it's "what happens when you let AI run wild for months on end?"
 
 ## Features
 
