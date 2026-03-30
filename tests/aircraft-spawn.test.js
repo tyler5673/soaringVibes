@@ -59,10 +59,14 @@ class Aircraft {
             Math.sin(finalAngle) * speed
         );
         
-        // Set rotation.y to make forward point in velocity direction
-        // Use atan2 to compute the angle that makes forward point to velocity
+        // Set rotation to face velocity direction
+        // Simply compute angle from velocity components
+        // Initial spawn works: v=(0,60), rotY=PI, forward=(0,1)=velocity
+        // So: rotation.y = Math.atan2(vx, vz) + PI
+        const vx = this.velocity.x;
+        const vz = this.velocity.z;
         this.rotation.x = 0;
-        this.rotation.y = Math.atan2(-this.velocity.z, this.velocity.x);
+        this.rotation.y = Math.atan2(vx, vz) + Math.PI;
         this.rotation.z = 0;
         
         // Return debug info for testing

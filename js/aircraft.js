@@ -92,23 +92,11 @@ class Aircraft {
         );
         
         // Set rotation to face velocity direction
-        // Based on Three.js: forward at rotation.y = a points to (sin(a), -cos(a))
-        // So to get forward = (vx, vz), we need sin(a) = vx, cos(a) = -vz
-        // a = atan2(vx, -vz)
         const vx = this.velocity.x;
         const vz = this.velocity.z;
         this.rotation.x = 0;
-        this.rotation.y = Math.atan2(vx, -vz);
+        this.rotation.y = Math.atan2(vx, vz) + Math.PI;
         this.rotation.z = 0;
-        
-        // Verify: compute forward vector and compare to velocity direction
-        const forward = new THREE.Vector3(0, 0, -1);
-        forward.applyEuler(this.rotation);
-        const velocityDir = this.velocity.clone().normalize();
-        const dot = forward.dot(velocityDir);
-        
-        console.log(`Spawn: dirToIsland=(${dirToIsland.x.toFixed(2)},${dirToIsland.z.toFixed(2)}), angleToIsland=${(angleToIsland*180/Math.PI).toFixed(0)}deg, finalAngle=${(finalAngle*180/Math.PI).toFixed(0)}deg`);
-        console.log(`Spawn CHECK: forward=(${forward.x.toFixed(2)},${forward.z.toFixed(2)}), velDir=(${velocityDir.x.toFixed(2)},${velocityDir.z.toFixed(2)}), dot=${dot.toFixed(2)}`);
         
         // Update mesh position
         if (this.mesh) {
