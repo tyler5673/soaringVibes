@@ -19,8 +19,14 @@ class MultiplayerClient {
                         window.location.hostname.endsWith('.soaringvibes.com');
         const protocol = isHttps ? 'wss:' : 'ws:';
         const host = window.location.hostname;
-        const port = window.location.port || (protocol === 'wss:' ? 443 : 80);
-        return `${protocol}//${host}:${port !== 80 && port !== 443 ? ':' + port : ''}/ws`;
+        
+        let port = window.location.port ? parseInt(window.location.port, 10) : null;
+        if (!port) {
+            port = protocol === 'wss:' ? 443 : 80;
+        }
+        
+        const portString = (port !== 80 && port !== 443) ? ':' + port : '';
+        return `${protocol}//${host}${portString}/ws`;
     }
 
     connect() {
