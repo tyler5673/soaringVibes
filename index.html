@@ -15,9 +15,67 @@
         <div id="loading-progress">0%</div>
     </div>
     <div id="hud">
-        <div id="speed">Speed: <span id="speed-value">0</span> kts</div>
-        <div id="altitude">Altitude: <span id="altitude-value">0</span> ft</div>
-        <div id="throttle">Throttle: <span id="throttle-value">0</span>%</div>
+        <div class="gauges">
+            <div class="gauge-container">
+                <svg class="gauge" id="speed-gauge" viewBox="0 0 120 120">
+                    <defs>
+                        <linearGradient id="gaugeFace" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#f5f5f5"/>
+                            <stop offset="100%" stop-color="#d0d0d0"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="60" cy="60" r="55" fill="url(#gaugeFace)" stroke="#333" stroke-width="3"/>
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="#222" stroke-width="1"/>
+                    <!-- Speed markings -->
+                    <g class="gauge-marks" id="speed-marks"></g>
+                    <g class="gauge-labels" id="speed-labels"></g>
+                    <!-- Colored arcs -->
+                    <path class="gauge-green-arc" d="M 25 85 A 45 45 0 0 1 95 85" fill="none" stroke="rgba(0,128,0,0.3)" stroke-width="12"/>
+                    <path class="gauge-red-arc" d="M 95 85 A 45 45 0 0 1 95 45" fill="none" stroke="rgba(200,0,0,0.3)" stroke-width="12"/>
+                    <!-- Needle -->
+                    <g id="speed-needle">
+                        <polygon points="60,20 57,60 60,65 63,60" fill="#c00"/>
+                        <circle cx="60" cy="60" r="6" fill="#333"/>
+                    </g>
+                    <text x="60" y="100" text-anchor="middle" font-size="10" font-family="Arial" fill="#333">KTS</text>
+                </svg>
+            </div>
+            <div class="gauge-container">
+                <svg class="gauge" id="altitude-gauge" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="55" fill="url(#gaugeFace)" stroke="#333" stroke-width="3"/>
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="#222" stroke-width="1"/>
+                    <g class="gauge-marks" id="altitude-marks"></g>
+                    <g class="gauge-labels" id="altitude-labels"></g>
+                    <g id="altitude-needles">
+                        <g class="alt-needle" id="alt-needle-10k">
+                            <polygon points="60,25 58,60 60,63 62,60" fill="#333"/>
+                        </g>
+                        <g class="alt-needle" id="alt-needle-1k">
+                            <polygon points="60,30 57,60 60,68 63,60" fill="#111"/>
+                        </g>
+                        <g class="alt-needle" id="alt-needle-100">
+                            <polygon points="60,35 55,60 60,78 65,60" fill="#c00"/>
+                        </g>
+                        <circle cx="60" cy="60" r="6" fill="#333"/>
+                    </g>
+                    <text x="60" y="100" text-anchor="middle" font-size="10" font-family="Arial" fill="#333">FT</text>
+                </svg>
+            </div>
+            <div class="gauge-container">
+                <svg class="gauge" id="throttle-gauge" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="55" fill="url(#gaugeFace)" stroke="#333" stroke-width="3"/>
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="#222" stroke-width="1"/>
+                    <g class="gauge-marks" id="throttle-marks"></g>
+                    <g class="gauge-labels" id="throttle-labels"></g>
+                    <path d="M 25 85 A 45 45 0 0 1 95 85" fill="none" stroke="rgba(200,180,0,0.3)" stroke-width="12"/>
+                    <g id="throttle-needle">
+                        <polygon points="60,20 57,60 60,65 63,60" fill="#333"/>
+                        <circle cx="60" cy="60" r="6" fill="#c00"/>
+                    </g>
+                    <text x="60" y="100" text-anchor="middle" font-size="10" font-family="Arial" fill="#333">%</text>
+                </svg>
+            </div>
+        </div>
         <div id="controls-hint">WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset</div>
     </div>
     <div id="crash-message">
@@ -57,6 +115,7 @@
     <script src="js/islands.js"></script>
     <script src="js/airport.js"></script>
     <script src="js/wildlife.js"></script>
+    <script src="js/gauges.js"></script>
     <script src="js/performance.js"></script>
     <script src="js/spatial-grid.js"></script>
     
@@ -100,9 +159,6 @@
         let cloudSystem;
         let wildlife;
         let clock;
-        let speedEl, altitudeEl, throttleEl;
-        let loadedItems = 0;
-        let totalItems = 8;
         
         function updateLoading(progress) {
             const progressEl = document.getElementById('loading-progress');
@@ -176,6 +232,10 @@
                 const perfMonitor = new PerformanceMonitor();
                 window.perfMonitor = perfMonitor;
                 
+                // Initialize gauge system
+                const gaugeSystem = new GaugeSystem();
+                window.gaugeSystem = gaugeSystem;
+                
                 updateLoading(100);
                 setTimeout(hideLoading, 300);
             });
@@ -184,10 +244,6 @@
             wildlife = new Wildlife(scene);
             
             window.addEventListener('resize', onWindowResize);
-
-            speedEl = document.getElementById('speed-value');
-            altitudeEl = document.getElementById('altitude-value');
-            throttleEl = document.getElementById('throttle-value');
 
             animate();
         }
@@ -268,9 +324,11 @@
                 aircraft.update(delta);
             }
             
-            if (speedEl) speedEl.textContent = Math.round(aircraft.ias);
-            if (altitudeEl) altitudeEl.textContent = Math.round(aircraft.altitude * 3.281);
-            if (throttleEl) throttleEl.textContent = Math.round(aircraft.throttle * 100);
+            if (window.gaugeSystem) {
+                window.gaugeSystem.updateSpeed(aircraft.ias);
+                window.gaugeSystem.updateAltitude(aircraft.altitude * 3.281);
+                window.gaugeSystem.updateThrottle(aircraft.throttle * 100);
+            }
 
             if (input.reset) {
                 hideCrashMessage();
