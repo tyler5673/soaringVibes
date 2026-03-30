@@ -37,6 +37,7 @@ async function discoverModels() {
         // First load critical dependencies
         console.log('Loading dependencies...');
         const dependencies = [
+            '../js/utils.js',  // degreesToRadians, clamp
             '../js/animals/animal-base.js'
         ];
         
