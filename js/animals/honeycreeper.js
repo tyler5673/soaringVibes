@@ -22,10 +22,24 @@ class Honeycreeper extends Animal {
             { name: 'Kiwikiu', color: 0x4CAF50, beakCurve: 0.25 }
         ];
         this.species = species[Math.floor(Math.random() * species.length)];
+        
+        // Create mesh now that species is set
+        this.createMesh();
     }
 
     createMesh() {
         const group = new THREE.Group();
+        
+        // Ensure species is set before mesh creation (can happen if called from base class constructor)
+        if (!this.species) {
+            const species = [
+                { name: 'Apapane', color: 0xFF1744, beakCurve: 0.2 },
+                { name: 'Iiwi', color: 0xFF5722, beakCurve: 0.6 },
+                { name: 'Akekee', color: 0xFFC107, beakCurve: 0.3 },
+                { name: 'Kiwikiu', color: 0x4CAF50, beakCurve: 0.25 }
+            ];
+            this.species = species[Math.floor(Math.random() * species.length)];
+        }
 
         const bodyMat = new THREE.MeshStandardMaterial({ 
             color: this.species.color,
