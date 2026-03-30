@@ -116,6 +116,21 @@ body { overflow: hidden; background: #000; }
     font-weight: bold;
     text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
 }
+#loading-tribute {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    margin-top: 30px;
+    text-align: center;
+    line-height: 1.6;
+    font-style: italic;
+    letter-spacing: 1px;
+    opacity: 0;
+    animation: fadeInTribute 2s ease-out 1s forwards;
+}
+@keyframes fadeInTribute {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 #loading.hidden {
     opacity: 0;
     transition: opacity 0.5s ease-out;
