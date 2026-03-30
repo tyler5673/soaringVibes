@@ -301,12 +301,45 @@ function detectAndRegisterAnimations(instance, mesh) {
 function updateModelInfo(modelData) {
     document.getElementById('model-name').textContent = modelData.name;
     
+    const stats = currentModel ? calculateModelStats(currentModel.mesh) : null;
+    
     const details = document.getElementById('model-details');
     details.innerHTML = `
         <p><strong>Category:</strong> ${modelData.category}</p>
-        <p><strong>Animations:</strong> ${modelData.animations?.length || 0}</p>
+        <p><strong>Size:</strong> ${stats ? `${stats.boundingBox.x} × ${stats.boundingBox.y} × ${stats.boundingBox.z}m` : 'N/A'}</p>
+        <p><strong>Vertices:</strong> ${stats ? stats.vertices.toLocaleString() : 'N/A'}</p>
+        <p><strong>Faces:</strong> ${stats ? stats.faces.toLocaleString() : 'N/A'}</p>
         ${modelData.description ? `<p>${modelData.description}</p>` : ''}
     `;
+}
+
+function calculateModelStats(mesh) {
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = box.getSize(new THREE.Vector3());
+    
+    let vertexCount = 0;
+    let faceCount = 0;
+    
+    mesh.traverse(child => {
+        if (child.isMesh && child.geometry) {
+            vertexCount += child.geometry.attributes.position.count;
+            if (child.geometry.index) {
+                faceCount += child.geometry.index.count / 3;
+            } else {
+                faceCount += child.geometry.attributes.position.count / 3;
+            }
+        }
+    });
+    
+    return {
+        boundingBox: {
+            x: size.x.toFixed(2),
+            y: size.y.toFixed(2),
+            z: size.z.toFixed(2)
+        },
+        vertices: vertexCount,
+        faces: faceCount
+    };
 }
 
 function setupSearch() {
