@@ -5,7 +5,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     overflow: hidden;
     background: #1a1a2e;
     color: #fff;
@@ -17,8 +17,8 @@ body {
         "header header"
         "sidebar viewer"
         "footer footer";
-    grid-template-columns: 300px 1fr;
-    grid-template-rows: 60px 1fr 120px;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 50px 1fr 100px;
     height: 100vh;
     width: 100vw;
 }
@@ -29,18 +29,18 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 16px;
     border-bottom: 1px solid #0f3460;
 }
 
 .search-box input {
-    width: 300px;
-    padding: 8px 12px;
+    width: 200px;
+    padding: 6px 12px;
     border: 1px solid #0f3460;
     border-radius: 4px;
     background: #1a1a2e;
     color: #fff;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .search-box input:focus {
@@ -49,12 +49,12 @@ body {
 }
 
 .view-options select {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid #0f3460;
     border-radius: 4px;
     background: #1a1a2e;
     color: #fff;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 #model-list {
@@ -62,29 +62,37 @@ body {
     background: #16213e;
     border-right: 1px solid #0f3460;
     overflow-y: auto;
-    padding: 10px;
+    overflow-x: hidden;
+    padding: 12px;
+    min-width: 0;
 }
 
 #model-tree {
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .category-header {
-    font-weight: bold;
+    font-weight: 600;
     color: #4fc3f7;
-    margin-top: 10px;
-    margin-bottom: 5px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    padding: 4px 0;
     cursor: pointer;
     user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .category-header::before {
-    content: '▼ ';
-    font-size: 10px;
+    content: '▼';
+    font-size: 9px;
+    width: 12px;
+    text-align: center;
 }
 
 .category-header.collapsed::before {
-    content: '▶ ';
+    content: '▶';
 }
 
 .category-header + div {
@@ -96,19 +104,23 @@ body {
 }
 
 .model-item {
-    padding: 5px 10px;
+    padding: 6px 10px 6px 24px;
     cursor: pointer;
-    border-radius: 3px;
-    margin-left: 15px;
-    transition: background 0.2s;
+    border-radius: 4px;
+    margin: 2px 0;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .model-item:hover {
-    background: rgba(79, 195, 247, 0.2);
+    background: rgba(79, 195, 247, 0.15);
 }
 
 .model-item.selected {
-    background: rgba(79, 195, 247, 0.4);
+    background: rgba(79, 195, 247, 0.35);
+    font-weight: 500;
 }
 
 #viewer-container {
@@ -131,53 +143,87 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    gap: 20px;
+    padding: 0 16px;
+    gap: 16px;
 }
 
 .model-info {
     flex: 1;
+    min-width: 0;
 }
 
 .model-info h3 {
     color: #4fc3f7;
-    margin-bottom: 5px;
-    font-size: 16px;
+    margin-bottom: 6px;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .model-details {
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+}
+
+.model-details p {
+    margin: 2px 0;
 }
 
 .animation-controls {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .animation-controls button {
-    padding: 8px 16px;
+    padding: 6px 14px;
     background: #4fc3f7;
     color: #1a1a2e;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.15s ease;
 }
 
 .animation-controls button:hover {
     background: #29b6f6;
+    transform: translateY(-1px);
+}
+
+.animation-controls button:active {
+    transform: translateY(0);
 }
 
 .animation-controls label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .animation-controls input[type="range"] {
-    width: 100px;
+    width: 80px;
+    height: 4px;
+}
+
+/* Scrollbar styling */
+#model-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#model-list::-webkit-scrollbar-track {
+    background: #0f3460;
+}
+
+#model-list::-webkit-scrollbar-thumb {
+    background: #4fc3f7;
+    border-radius: 3px;
+}
+
+#model-list::-webkit-scrollbar-thumb:hover {
+    background: #29b6f6;
 }

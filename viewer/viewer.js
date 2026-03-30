@@ -122,10 +122,26 @@ function init() {
     loadModel('test-cube');
     
     // Wait for models to be discovered, then render list
-    setTimeout(() => {
-        renderModelList();
-        setupSearch();
-    }, 1000);
+    // Retry until models are loaded
+    function tryRenderList() {
+        const modelCount = window.modelRegistry.getAll().length;
+        const tree = document.getElementById('model-tree');
+        
+        if (modelCount > 1) { // More than just the test cube
+            renderModelList();
+            setupSearch();
+            console.log(`Rendered ${modelCount} models in sidebar`);
+        } else {
+            tree.innerHTML = '<div style="padding: 20px; text-align: center; color: rgba(255,255,255,0.5);">Loading models...</div>';
+            setTimeout(tryRenderList, 500); // Retry in 500ms
+        }
+    }
+    
+    // Show loading initially
+    document.getElementById('model-tree').innerHTML = '<div style="padding: 20px; text-align: center; color: rgba(255,255,255,0.5);">Loading models...</div>';
+    
+    // Start trying to render
+    setTimeout(tryRenderList, 500);
     
     animate();
 }
