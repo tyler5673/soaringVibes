@@ -131,6 +131,14 @@ body { overflow: hidden; background: #000; }
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+#loading-version {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    font-family: monospace;
+}
 #loading.hidden {
     opacity: 0;
     transition: opacity 0.5s ease-out;

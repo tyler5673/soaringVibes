@@ -1,6 +1,7 @@
 {
-  "name": "minimax2.5",
-  "version": "1.0.0",
+  "name": "soaring-vibes",
+  "version": "0.0.1",
+  "description": "Browser-based flight simulator featuring Hawaiian islands",
   "main": "index.js",
   "directories": {
     "doc": "docs"
@@ -9,10 +10,9 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "keywords": [],
+  "keywords": ["flight-simulator", "threejs", "hawaii"],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "sharp": "^0.34.5",
     "utm": "^1.1.1"
