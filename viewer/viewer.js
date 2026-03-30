@@ -129,19 +129,29 @@ function init() {
         const modelCount = window.modelRegistry.getAll().length;
         const tree = document.getElementById('model-tree');
         
-        if (modelCount > 1) { // More than just the test cube
+        // Show whatever we have (even just the test cube)
+        if (modelCount > 0) {
             renderModelList();
             setupSearch();
             console.log(`Rendered ${modelCount} models in sidebar`);
+            
+            // If we only have the test cube after a few attempts, show warning
+            if (modelCount === 1 && attempts > 5) {
+                const existingWarning = tree.querySelector('.warning-message');
+                if (!existingWarning) {
+                    const warning = document.createElement('div');
+                    warning.className = 'warning-message';
+                    warning.style.cssText = 'margin-top: 16px; padding: 10px; background: rgba(255,165,0,0.2); border-radius: 4px; font-size: 11px; color: orange;';
+                    warning.textContent = '⚠ Other models not loading. Are you running via http:// ? (file:// won\'t work)';
+                    tree.appendChild(warning);
+                }
+            }
         } else if (attempts < 20) { // Max 10 seconds of trying
-            tree.innerHTML = '<div class="loading-message">Loading models... (' + modelCount + ' loaded)</div>';
-            setTimeout(tryRenderList, 500); // Retry in 500ms
+            tree.innerHTML = '<div class="loading-message">Initializing... (' + modelCount + ')</div>';
+            setTimeout(tryRenderList, 500);
         } else {
-            // Fallback: show what we have (at least the test cube)
-            console.warn('Model discovery timed out, showing available models');
-            renderModelList();
-            setupSearch();
-            tree.innerHTML += '<div class="loading-message" style="margin-top: 20px; color: orange;">Some models failed to load. Check console.</div>';
+            // Fallback
+            tree.innerHTML = '<div class="loading-message">Failed to load models. Check browser console.</div>';
         }
     }
     
