@@ -1,196 +1,29 @@
 // ========== ISLANDS ==========
 const heightmapCache = {};
 const islandMetadataCache = {};
-const landcoverCache = {};
 
-const BIOME_TYPES = {
-    WET_FOREST: 'wet_forest',
-    WET_SHRUBLAND: 'wet_shrubland',
-    WET_GRASSLAND: 'wet_grassland',
-    MESIC_FOREST: 'mesic_forest',
-    MESIC_SHRUBLAND: 'mesic_shrubland',
-    MESIC_GRASSLAND: 'mesic_grassland',
-    DRY_FOREST: 'dry_forest',
-    DRY_SHRUBLAND: 'dry_shrubland',
-    DRY_GRASSLAND: 'dry_grassland',
-    AGRICULTURE: 'agriculture',
-    DEVELOPED: 'developed',
-    NOT_VEGETATED: 'not_vegetated',
+// Simple biome classification based on terrain (elevation, slope)
+const TERRAIN_BIOMES = {
     WATER: 'water',
+    BEACH: 'beach',
+    GRASSLAND: 'grassland',
+    SHRUBLAND: 'shrubland',
+    FOREST: 'forest',
+    CLIFF: 'cliff',
+    ROCK: 'rock',
     UNKNOWN: 'unknown'
 };
 
-const BIOME_COLORS = {
-    // Red tones = wet forest
-    '255,0,0': BIOME_TYPES.WET_FOREST,
-    '254,0,0': BIOME_TYPES.WET_FOREST,
-    '200,0,0': BIOME_TYPES.WET_FOREST,
-    '180,0,0': BIOME_TYPES.WET_FOREST,
-    '150,0,0': BIOME_TYPES.WET_FOREST,
-    '128,0,0': BIOME_TYPES.WET_FOREST,
-    
-    // Green tones = wet shrubland/grassland
-    '0,128,0': BIOME_TYPES.WET_SHRUBLAND,
-    '0,160,0': BIOME_TYPES.WET_SHRUBLAND,
-    '0,200,0': BIOME_TYPES.WET_SHRUBLAND,
-    '0,255,0': BIOME_TYPES.WET_GRASSLAND,
-    '50,200,50': BIOME_TYPES.WET_GRASSLAND,
-    '100,255,100': BIOME_TYPES.WET_GRASSLAND,
-    
-    // Blue/teal tones = mesic
-    '0,0,128': BIOME_TYPES.MESIC_FOREST,
-    '0,0,160': BIOME_TYPES.MESIC_FOREST,
-    '0,0,200': BIOME_TYPES.MESIC_FOREST,
-    '0,128,128': BIOME_TYPES.MESIC_SHRUBLAND,
-    '0,160,160': BIOME_TYPES.MESIC_SHRUBLAND,
-    '0,200,200': BIOME_TYPES.MESIC_SHRUBLAND,
-    '128,0,128': BIOME_TYPES.MESIC_GRASSLAND,
-    '128,128,200': BIOME_TYPES.MESIC_GRASSLAND,
-    
-    // Brown/tan tones = dry
-    '128,64,0': BIOME_TYPES.DRY_FOREST,
-    '150,75,0': BIOME_TYPES.DRY_FOREST,
-    '160,82,45': BIOME_TYPES.DRY_FOREST,
-    '128,128,0': BIOME_TYPES.DRY_SHRUBLAND,
-    '160,160,0': BIOME_TYPES.DRY_SHRUBLAND,
-    '180,180,50': BIOME_TYPES.DRY_SHRUBLAND,
-    '255,255,0': BIOME_TYPES.DRY_GRASSLAND,
-    '255,255,128': BIOME_TYPES.DRY_GRASSLAND,
-    '255,255,197': BIOME_TYPES.DRY_GRASSLAND,
-    '240,230,140': BIOME_TYPES.DRY_GRASSLAND,
-    
-    // Pink/magenta = agriculture
-    '255,0,255': BIOME_TYPES.AGRICULTURE,
-    '255,150,150': BIOME_TYPES.AGRICULTURE,
-    '255,200,150': BIOME_TYPES.AGRICULTURE,
-    '255,180,180': BIOME_TYPES.AGRICULTURE,
-    
-    // Gray tones = developed
-    '128,128,128': BIOME_TYPES.DEVELOPED,
-    '150,150,150': BIOME_TYPES.DEVELOPED,
-    '180,180,180': BIOME_TYPES.DEVELOPED,
-    '200,200,200': BIOME_TYPES.DEVELOPED,
-    
-    // White = not vegetated
-    '255,255,255': BIOME_TYPES.NOT_VEGETATED,
-    '240,240,240': BIOME_TYPES.NOT_VEGETATED,
-    '220,220,220': BIOME_TYPES.NOT_VEGETATED,
-    '200,200,200': BIOME_TYPES.NOT_VEGETATED,
-    '150,150,150': BIOME_TYPES.NOT_VEGETATED,
-    '100,100,100': BIOME_TYPES.NOT_VEGETATED,
-};
-
 const VEGETATION_BIOMES = new Set([
-    BIOME_TYPES.WET_FOREST,
-    BIOME_TYPES.WET_SHRUBLAND,
-    BIOME_TYPES.WET_GRASSLAND,
-    BIOME_TYPES.MESIC_FOREST,
-    BIOME_TYPES.MESIC_SHRUBLAND,
-    BIOME_TYPES.MESIC_GRASSLAND,
-    BIOME_TYPES.DRY_FOREST,
-    BIOME_TYPES.DRY_SHRUBLAND,
-    BIOME_TYPES.DRY_GRASSLAND,
-    BIOME_TYPES.AGRICULTURE
+    TERRAIN_BIOMES.BEACH,
+    TERRAIN_BIOMES.GRASSLAND,
+    TERRAIN_BIOMES.SHRUBLAND,
+    TERRAIN_BIOMES.FOREST
 ]);
 
 const DENSE_VEGETATION_BIOMES = new Set([
-    BIOME_TYPES.WET_FOREST,
-    BIOME_TYPES.MESIC_FOREST,
-    BIOME_TYPES.DRY_FOREST
+    TERRAIN_BIOMES.FOREST
 ]);
-
-async function loadLandcoverData(islandName) {
-    if (landcoverCache[islandName]) {
-        return landcoverCache[islandName];
-    }
-
-    const loader = new THREE.TextureLoader();
-    
-    try {
-        const texture = await new Promise((resolve, reject) => {
-            loader.load(
-                `assets/maps/${islandName}-landcover.png`,
-                resolve,
-                undefined,
-                reject
-            );
-        });
-        
-        texture.image.width = 1024;
-        texture.image.height = 1024;
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = 1024;
-        canvas.height = 1024;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(texture.image, 0, 0);
-        
-        const imageData = ctx.getImageData(0, 0, 1024, 1024);
-        const data = new Uint8Array(1024 * 1024 * 3);
-        
-        let nonZeroCount = 0;
-        for (let i = 0; i < imageData.data.length; i += 4) {
-            const idx = i / 4;
-            data[idx * 3] = imageData.data[i];
-            data[idx * 3 + 1] = imageData.data[i + 1];
-            data[idx * 3 + 2] = imageData.data[i + 2];
-            if (imageData.data[i] > 0 || imageData.data[i+1] > 0 || imageData.data[i+2] > 0) {
-                nonZeroCount++;
-            }
-        }
-        
-        console.log(`Landcover loaded for ${islandName}: ${nonZeroCount} non-black pixels out of ${1024*1024}`);
-        
-        landcoverCache[islandName] = data;
-        return data;
-    } catch (e) {
-        console.warn(`No landcover map found for ${islandName}, vegetation will be random`, e);
-        return null;
-    }
-}
-
-function getLandcoverAtPixel(data, x, y, debug = false) {
-    if (!data) return BIOME_TYPES.UNKNOWN;
-    
-    const ix = Math.floor(Math.max(0, Math.min(1023, x)));
-    const iy = Math.floor(Math.max(0, Math.min(1023, y)));
-    const idx = (iy * 1024 + ix) * 3;
-    
-    const r = data[idx];
-    const g = data[idx + 1];
-    const b = data[idx + 2];
-    
-    if (debug) {
-        console.log(`  Pixel at ${ix},${iy}: RGB(${r},${g},${b})`);
-    }
-    
-    if (r < 20 && g < 20 && b < 30) {
-        return BIOME_TYPES.WATER;
-    }
-    
-    const key = `${r},${g},${b}`;
-    
-    if (BIOME_COLORS[key]) {
-        return BIOME_COLORS[key];
-    }
-    
-    // Try approximate matching for similar colors
-    if (r > 200 && g < 50 && b < 50) return BIOME_TYPES.WET_FOREST;
-    if (r > 100 && r < 200 && g < 50 && b < 50) return BIOME_TYPES.WET_FOREST;
-    if (g > 100 && r < 50 && b < 50) return BIOME_TYPES.WET_SHRUBLAND;
-    if (g > 200 && r < 50 && b < 50) return BIOME_TYPES.WET_GRASSLAND;
-    if (b > 100 && r < 50 && g < 50) return BIOME_TYPES.MESIC_FOREST;
-    if (g > 50 && b > 50 && r < 50) return BIOME_TYPES.MESIC_SHRUBLAND;
-    if (r > 100 && b > 100 && g < 50) return BIOME_TYPES.MESIC_GRASSLAND;
-    if (r > 80 && g > 40 && g < 100 && b < 50) return BIOME_TYPES.DRY_FOREST;
-    if (r > 100 && g > 100 && g < 200 && b < 50) return BIOME_TYPES.DRY_SHRUBLAND;
-    if (r > 200 && g > 200 && g < 255 && b < 50) return BIOME_TYPES.DRY_GRASSLAND;
-    if (r > 200 && b > 200 && g < 50) return BIOME_TYPES.AGRICULTURE;
-    if (r > 100 && r < 180 && g > 100 && g < 180 && b > 100 && b < 180) return BIOME_TYPES.DEVELOPED;
-    if (r > 200 && g > 200 && b > 200) return BIOME_TYPES.NOT_VEGETATED;
-    
-    return BIOME_TYPES.UNKNOWN;
-}
 
 async function loadIslandData(islandName) {
     if (heightmapCache[islandName] && islandMetadataCache[islandName]) {
@@ -794,8 +627,6 @@ function addTreesOnGrid(group, islandName, islandWorldX, islandWorldZ) {
     console.log(`Island ${islandName}: placed ${treeCount} trees`);
 }
 
-let landcoverDebugLogged = false;
-
 function getBiomeFromTerrain(worldX, worldZ) {
     const terrainScale = 0.15;
     const groupOffsetY = -50;
@@ -894,7 +725,8 @@ function addPalmTrees(group, scale, islandWorldX, islandWorldZ, islandRadius, is
         
         if (terrainY <= WATER_LEVEL) continue;
         
-        const biome = getLandcoverAtPosition(worldX, worldZ);
+        const biomeInfo = getBiomeFromTerrain(worldX, worldZ);
+        const biome = biomeInfo ? biomeInfo.biome : TERRAIN_BIOMES.UNKNOWN;
         
         if (!VEGETATION_BIOMES.has(biome)) continue;
         
@@ -979,11 +811,6 @@ async function createAllIslands(scene, onProgress) {
     });
 
     const results = await Promise.all(loadPromises);
-    
-    const landcoverPromises = islandPositions.map(island => {
-        return loadLandcoverData(island.name);
-    });
-    await Promise.all(landcoverPromises);
     
     // Initialize FloraManager with global camera reference
     console.log('createAllIslands: window.camera =', window.camera);
