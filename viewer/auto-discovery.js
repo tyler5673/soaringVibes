@@ -2,6 +2,18 @@ async function loadModelScript(url) {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = url;
+        script.async = true;
+        script.onload = () => resolve(true);
+        script.onerror = () => reject(new Error(`Failed to load ${url}`));
+        document.head.appendChild(script);
+    });
+}
+
+async function loadDependencyScript(url) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = false; // Load synchronously to ensure order
         script.onload = () => resolve(true);
         script.onerror = () => reject(new Error(`Failed to load ${url}`));
         document.head.appendChild(script);
@@ -9,6 +21,9 @@ async function loadModelScript(url) {
 }
 
 async function discoverModels() {
+    let loaded = 0;
+    let failed = 0;
+    
     try {
         // Load manifest
         const manifestRes = await fetch('model-manifest.json');
@@ -16,6 +31,23 @@ async function discoverModels() {
         
         console.log(`Discovering ${manifest.models.length} models...`);
         
+        // First load critical dependencies
+        console.log('Loading dependencies...');
+        const dependencies = [
+            '../js/animals/animal-base.js',
+            '../js/trees/palm.js'  // Some trees might reference this
+        ];
+        
+        for (const dep of dependencies) {
+            try {
+                await loadDependencyScript(dep);
+                console.log(`✓ Dependency loaded: ${dep}`);
+            } catch (e) {
+                console.warn(`Dependency not loaded (may not be needed): ${dep}`);
+            }
+        }
+        
+        // Then load all models
         for (const model of manifest.models) {
             try {
                 // Load the script
@@ -26,6 +58,7 @@ async function discoverModels() {
                 
                 if (!exportedClass) {
                     console.warn(`Export '${model.export}' not found from ${model.script}`);
+                    failed++;
                     continue;
                 }
                 
@@ -38,17 +71,19 @@ async function discoverModels() {
                     create: async function() {
                         return createModelInstance(exportedClass, model);
                     },
-                    animations: [] // Will be populated later
+                    animations: []
                 });
                 
+                loaded++;
                 console.log(`✓ Loaded: ${model.name}`);
                 
             } catch (error) {
-                console.error(`Failed to load model ${model.id}:`, error);
+                failed++;
+                console.error(`✗ Failed to load model ${model.id}:`, error.message);
             }
         }
         
-        console.log(`Discovery complete: ${window.modelRegistry.getAll().length} models registered`);
+        console.log(`Discovery complete: ${loaded} models loaded, ${failed} failed`);
         
     } catch (error) {
         console.error('Model discovery failed:', error);
