@@ -59,7 +59,7 @@ body { overflow: hidden; background: #000; }
     font-family: 'Segoe UI', Arial, sans-serif;
 }
 #loading-logo {
-    width: 200px;
+    width: 400px;
     margin-bottom: 30px;
     filter: drop-shadow(0 0 20px rgba(79, 195, 247, 0.4));
     animation: pulse 2s ease-in-out infinite;
@@ -67,7 +67,7 @@ body { overflow: hidden; background: #000; }
 
 @media (max-width: 768px) {
     #loading-logo {
-        width: 280px;
+        width: 560px;
     }
 }
 
