@@ -20,6 +20,7 @@ class Aircraft {
         this.controlInput = { pitch: 0, roll: 0, yaw: 0 };
         this.ias = 0;
         this.groundSpeed = 0;
+        this.crashed = false;
         
         this.propeller = null;
         this.leftFlap = null;
@@ -30,6 +31,74 @@ class Aircraft {
         this.elevator = null;
         
         this.mesh = this.createMesh();
+    }
+    
+    setRandomStartPosition() {
+        // Pick a random island
+        const islandPositions = [
+            { name: 'maui', x: 0, z: 0 },
+            { name: 'big-island', x: 3200, z: -6400 },
+            { name: 'oahu', x: -6400, z: -2800 },
+            { name: 'kauai', x: -12000, z: -4000 },
+            { name: 'molokai', x: -1400, z: -3600 },
+            { name: 'lanai', x: 1400, z: -3200 },
+            { name: 'niihau', x: -9600, z: -4800 },
+            { name: 'kahoolawe', x: 2200, z: -2200 }
+        ];
+        
+        const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
+        
+        // Random offset from island center (0-2000m away)
+        const offsetDistance = Math.random() * 2000;
+        const offsetAngle = Math.random() * Math.PI * 2;
+        
+        const startX = island.x + Math.cos(offsetAngle) * offsetDistance;
+        const startZ = island.z + Math.sin(offsetAngle) * offsetDistance;
+        
+        // Get actual terrain height at this location to avoid spawning inside island
+        let terrainHeight = 0;
+        if (typeof getTerrainHeight === 'function') {
+            terrainHeight = getTerrainHeight(startX, startZ);
+        }
+        
+        // Random height: 500-3000 ft ABOVE the terrain (not sea level)
+        // 500 ft = 152m, 3000 ft = 914m
+        const altitudeAboveTerrain = 152 + Math.random() * 762;
+        const finalAltitude = Math.max(terrainHeight + altitudeAboveTerrain, 152);
+        
+        // Set position
+        this.position.set(startX, finalAltitude, startZ);
+        
+        // Set forward momentum - flying roughly toward/around the island
+        // Calculate direction to island center
+        const dirToIsland = new THREE.Vector3(island.x - startX, 0, island.z - startZ).normalize();
+        
+        // Add some randomness to direction (fly at slight angle toward island)
+        const angleVariation = (Math.random() - 0.5) * Math.PI * 0.5; // +/- 45 degrees
+        const cos = Math.cos(angleVariation);
+        const sin = Math.sin(angleVariation);
+        
+        const velocityX = dirToIsland.x * cos - dirToIsland.z * sin;
+        const velocityZ = dirToIsland.x * sin + dirToIsland.z * cos;
+        
+        // Forward speed: 60 m/s (same as original)
+        const speed = 60;
+        this.velocity.set(velocityX * speed, 0, velocityZ * speed);
+        
+        // Set rotation to face velocity direction
+        this.rotation.y = Math.atan2(velocityX, velocityZ);
+        
+        // Update mesh position
+        if (this.mesh) {
+            this.mesh.position.copy(this.position);
+            this.mesh.rotation.copy(this.rotation);
+        }
+        
+        // Reset control inputs
+        this.controlInput = { pitch: 0, roll: 0, yaw: 0 };
+        this.throttle = 0.5;
+        
+        console.log(`Aircraft spawned near ${island.name}: pos(${startX.toFixed(0)}, ${finalAltitude.toFixed(0)}m [${altitudeAboveTerrain.toFixed(0)}m above terrain at ${terrainHeight.toFixed(0)}m], ${startZ.toFixed(0)})`);
     }
     
     createMesh() {
@@ -508,9 +577,46 @@ class Aircraft {
     }
     
     reset() {
-        this.position.set(0, 760, -150);
-        this.velocity.set(0, 0, 60);
-        this.rotation.set(0, Math.PI, 0);
-        this.throttle = 0.5;
+        // Reset to a random location near an island with forward momentum
+        this.setRandomStartPosition();
+        this.crashed = false;
+    }
+    
+    checkCrash() {
+        if (this.crashed) return true;
+        
+        // Get terrain height at current position
+        // This now returns the actual mesh vertex height (scaled by 0.15)
+        let terrainHeight = -50; // Default ocean level
+        if (typeof getTerrainHeight === 'function') {
+            terrainHeight = getTerrainHeight(this.position.x, this.position.z);
+        }
+        
+        // Debug: Log heights when close to terrain
+        if (this.position.y < terrainHeight + 30) {
+            console.log(`Height check: plane=${this.position.y.toFixed(1)}, terrain=${terrainHeight.toFixed(1)}, diff=${(this.position.y - terrainHeight).toFixed(1)}`);
+        }
+        
+        // Check if plane is below terrain
+        // Plane wheels/bottom is about 1-2m below position point
+        const groundClearance = 1.5; // Plane sits ~1.5m above its position point
+        const tolerance = 0.5; // Small tolerance
+        const isBelowTerrain = this.position.y < (terrainHeight - groundClearance + tolerance);
+        
+        // Check if there's significant velocity (crashing, not just sitting)
+        const speed = this.velocity.length();
+        const isMoving = speed > 15; // More than 15 m/s (about 30 knots)
+        const isFalling = this.velocity.y < -5; // Falling downward at 5 m/s
+        
+        // Only crash if: significantly below terrain AND (moving fast OR falling hard)
+        if (isBelowTerrain && (isMoving || isFalling)) {
+            this.crashed = true;
+            this.velocity.set(0, 0, 0); // Stop the plane
+            this.throttle = 0;
+            console.log('CRASH! Aircraft hit terrain at', this.position.x.toFixed(0), this.position.y.toFixed(0), this.position.z.toFixed(0), 'terrain was', terrainHeight.toFixed(0));
+            return true;
+        }
+        
+        return false;
     }
 }

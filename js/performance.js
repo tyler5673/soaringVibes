@@ -21,8 +21,9 @@ class PerformanceManager {
     }
     
     getLODLevel(distance) {
-        if (distance < 300) return 'high';
-        if (distance < 800) return 'medium';
+        // Aggressive LOD for performance
+        if (distance < 200) return 'high';
+        if (distance < 500) return 'medium';
         return 'far';
     }
 }

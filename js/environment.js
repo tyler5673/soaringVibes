@@ -24,9 +24,13 @@ function createSky(scene) {
 }
 
 let oceanMesh;
+let cameraReference = null;
 
-function createOcean(scene) {
-    const geometry = new THREE.PlaneGeometry(20000, 20000, 128, 128);
+function createOcean(scene, camera) {
+    cameraReference = camera;
+    
+    // Create ocean that follows camera - much larger to cover all islands
+    const geometry = new THREE.PlaneGeometry(40000, 40000, 256, 256);
     const material = new THREE.MeshStandardMaterial({
         color: 0x006994,
         roughness: 0.3,
@@ -43,12 +47,22 @@ function createOcean(scene) {
 
 function updateOceanWaves(time) {
     if (!oceanMesh) return;
+    
+    // Make ocean follow camera horizontally (infinite ocean effect)
+    if (cameraReference && cameraReference.position) {
+        const camPos = cameraReference.position;
+        // Snap to grid to avoid jitter
+        const gridSize = 1000;
+        oceanMesh.position.x = Math.floor(camPos.x / gridSize) * gridSize;
+        oceanMesh.position.z = Math.floor(camPos.z / gridSize) * gridSize;
+    }
+    
     const positions = oceanMesh.geometry.attributes.position;
     const original = oceanMesh.userData.originalPositions;
     
     for (let i = 0; i < positions.count; i++) {
-        const x = original[i * 3];
-        const y = original[i * 3 + 1];
+        const x = original[i * 3] + oceanMesh.position.x;
+        const y = original[i * 3 + 1] + oceanMesh.position.z;
         
         const wave1 = Math.sin(x * 0.003 + time * 0.8) * Math.cos(y * 0.003 + time * 0.5) * 0.5;
         const wave2 = Math.sin(x * 0.008 + y * 0.006 + time * 1.2) * 0.25;

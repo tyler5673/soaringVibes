@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="loading">
-        <img src="assets/images/logo.png" id="loading-logo" alt="Flying Vibes">
+        <img src="assets/images/logo.svg" id="loading-logo" alt="Flying Vibes">
         <div class="loader"></div>
         <div id="loading-text">Loading Flight Simulator...</div>
         <div id="loading-bar"><div id="loading-bar-fill"></div></div>
@@ -20,6 +20,10 @@
         <div id="throttle">Throttle: <span id="throttle-value">0</span>%</div>
         <div id="controls-hint">WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset</div>
     </div>
+    <div id="crash-message">
+        <div class="crash-text">Crashed!</div>
+        <button id="reset-btn" onclick="aircraft.reset(); hideCrashMessage();">Reset</button>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/controls.js"></script>
@@ -30,8 +34,40 @@
     <script src="js/airport.js"></script>
     <script src="js/wildlife.js"></script>
     <script src="js/performance.js"></script>
-    <script src="js/flora.js"></script>
-    <script src="js/fauna.js"></script>
+    <script src="js/spatial-grid.js"></script>
+    
+    <!-- Tree Geometry Classes -->
+    <script src="js/trees/palm.js"></script>
+    <script src="js/trees/coconut-palm.js"></script>
+    <script src="js/trees/koa.js"></script>
+    <script src="js/trees/giant-koa.js"></script>
+    <script src="js/trees/ohia.js"></script>
+    <script src="js/trees/banyan.js"></script>
+    <script src="js/trees/tree-fern.js"></script>
+    <script src="js/trees/ti-plant.js"></script>
+    <script src="js/trees/bamboo.js"></script>
+    <script src="js/trees/wiliwili.js"></script>
+    <script src="js/trees/shrub.js"></script>
+    <script src="js/trees/grass.js"></script>
+    <script src="js/trees/ground-fern.js"></script>
+    <script src="js/trees/naupaka.js"></script>
+    <script src="js/trees/beach-morning-glory.js"></script>
+    <script src="js/trees/driftwood.js"></script>
+    <script src="js/trees/lava-rock.js"></script>
+    <script src="js/flora-manager.js"></script>
+    <script src="js/hot-air-balloons.js"></script>
+    
+    <!-- Animal Base Class -->
+    <script src="js/animals/animal-base.js"></script>
+    <!-- Animal Species -->
+    <script src="js/animals/whale.js"></script>
+    <script src="js/animals/dolphin.js"></script>
+    <script src="js/animals/seaturtle.js"></script>
+    <script src="js/animals/albatross.js"></script>
+    <script src="js/animals/frigatebird.js"></script>
+    <script src="js/animals/honeycreeper.js"></script>
+    <script src="js/animals/nene.js"></script>
+    <script src="js/fauna-manager.js"></script>
     <script>
         // ========== MAIN ==========
         let scene, camera, renderer;
@@ -87,7 +123,7 @@
             orbitCamera = new OrbitCamera(camera, aircraft);
             
             createSky(scene);
-            createOcean(scene);
+            createOcean(scene, camera);
             
             cloudSystem = new CloudSystem(scene);
             
@@ -97,10 +133,17 @@
             }).then(() => {
                 updateLoading(90);
                 
+                // Set aircraft to random start position near an island
+                aircraft.setRandomStartPosition();
+                
                 // Initialize fauna after islands are loaded
                 const faunaManager = new FaunaManager(scene, camera);
                 faunaManager.init();
                 window.faunaManager = faunaManager;
+                
+                // Initialize hot air balloon system
+                const balloonSystem = new HotAirBalloonSystem(scene, camera);
+                window.balloonSystem = balloonSystem;
                 
                 // Initialize performance monitor
                 const perfMonitor = new PerformanceMonitor();
@@ -128,6 +171,20 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
+        function hideCrashMessage() {
+            const crashMsg = document.getElementById('crash-message');
+            if (crashMsg) {
+                crashMsg.classList.remove('visible');
+            }
+        }
+
+        function showCrashMessage() {
+            const crashMsg = document.getElementById('crash-message');
+            if (crashMsg) {
+                crashMsg.classList.add('visible');
+            }
+        }
+
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
@@ -146,15 +203,28 @@
                 roll: (input.rollLeft ? -1 : 0) + (input.rollRight ? 1 : 0),
                 yaw: (input.yawLeft ? -1 : 0) + (input.yawRight ? 1 : 0)
             };
-            aircraft.setControlInput(controlInput);
-            aircraft.updateThrottle(input.throttleUp, input.throttleDown, delta);
-            aircraft.update(delta);
+            
+            // Check for crash
+            if (aircraft.checkCrash()) {
+                showCrashMessage();
+            }
+            
+            // If crashed, don't allow normal flight controls unless reset
+            const crashMsg = document.getElementById('crash-message');
+            const isCrashed = crashMsg && crashMsg.classList.contains('visible');
+            
+            if (!isCrashed) {
+                aircraft.setControlInput(controlInput);
+                aircraft.updateThrottle(input.throttleUp, input.throttleDown, delta);
+                aircraft.update(delta);
+            }
             
             if (speedEl) speedEl.textContent = Math.round(aircraft.ias);
             if (altitudeEl) altitudeEl.textContent = Math.round(aircraft.altitude * 3.281);
             if (throttleEl) throttleEl.textContent = Math.round(aircraft.throttle * 100);
 
             if (input.reset) {
+                hideCrashMessage();
                 aircraft.reset();
             }
             
@@ -170,6 +240,11 @@
             // Update fauna (animals)
             if (window.faunaManager) {
                 window.faunaManager.update(delta);
+            }
+            
+            // Update hot air balloons
+            if (window.balloonSystem) {
+                window.balloonSystem.update(delta);
             }
             
             // Update performance monitor

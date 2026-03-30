@@ -72,3 +72,63 @@ body { overflow: hidden; background: #000; }
     transition: opacity 0.5s ease-out;
     pointer-events: none;
 }
+
+/* Crash Message Styling */
+#crash-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0, 0, 0, 0.85);
+    border: 3px solid #ff0000;
+    border-radius: 20px;
+    padding: 40px 60px;
+    text-align: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+#crash-message.visible {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.crash-text {
+    color: #ff0000;
+    font-size: 72px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4);
+    animation: crashPulse 1.5s ease-in-out infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes crashPulse {
+    0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4); }
+    50% { transform: scale(1.05); text-shadow: 0 0 30px rgba(255, 0, 0, 1), 0 0 60px rgba(255, 0, 0, 0.6); }
+}
+
+#reset-btn {
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 24px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+}
+
+#reset-btn:hover {
+    background: linear-gradient(135deg, #ff3333 0%, #dd0000 100%);
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 0, 0, 0.6);
+}

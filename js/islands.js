@@ -259,7 +259,6 @@ function getHeightFromData(data, width, height, x, y) {
 
 function getTerrainHeight(worldX, worldZ) {
     const terrainScale = 0.15;
-    const groupOffsetY = -50;
     
     for (let i = 0; i < islandPositions.length; i++) {
         const islandInfo = islandPositions[i];
@@ -296,10 +295,13 @@ function getTerrainHeight(worldX, worldZ) {
         const normalizedHeight = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
         let height = minElev + normalizedHeight * elevRange;
         
+        // Apply the same terrainScale as createTerrainMesh
+        height *= terrainScale;
+        
         return height;
     }
     
-    return 0;
+    return -50; // Return ocean level when not on any island
 }
 
 function createIslandFromHeightmap(scene, islandName, worldX, worldZ, options = {}) {
@@ -635,7 +637,7 @@ function createShrub(localX, localZ, terrainY, group, scale) {
 
 const TREE_SPACING = 50;
 const WATER_LEVEL = 2;
-const TREE_RENDER_DISTANCE = 3000; // Increased from 1000 for better visibility
+const TREE_RENDER_DISTANCE = 450; // ~1500 feet - balance of visibility and performance
 const TERRAIN_SCALE = 0.15;
 const GROUP_OFFSET_Y = -50;
 
