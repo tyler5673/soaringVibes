@@ -1,43 +1,104 @@
-// js/animals/honeycreeper.js - Hawaiian Honeycreeper species
+// js/animals/honeycreeper.js - Hawaiian Honeycreeper (Drepanidinae)
+// Diverse family with curved nectar-feeding bills, vibrant colors
+// Size: 10-20cm, wingspan 15-25cm
 
 class Honeycreeper extends Animal {
     constructor(scene, initialPosition, forestCenter) {
         super(scene, initialPosition, {
-            speed: 8,
-            turnSpeed: 3,
+            speed: 9,
+            turnSpeed: 3.5,
             viewDistance: 300,
             updateDistance: 600
         });
 
         this.forestCenter = forestCenter;
 
-        const colors = [0xFF1744, 0xFFC107, 0x4CAF50, 0xFF9800];
-        this.birdColor = colors[Math.floor(Math.random() * colors.length)];
+        // Species variations: Apapane (red), I'iwi (red curved bill), 
+        // Akekee (yellow), various green/gray species
+        const species = [
+            { name: 'Apapane', color: 0xFF1744, beakCurve: 0.2 },
+            { name: 'Iiwi', color: 0xFF5722, beakCurve: 0.6 },  // Deeply curved
+            { name: 'Akekee', color: 0xFFC107, beakCurve: 0.3 },
+            { name: 'Kiwikiu', color: 0x4CAF50, beakCurve: 0.25 }
+        ];
+        this.species = species[Math.floor(Math.random() * species.length)];
     }
 
     createMesh() {
         const group = new THREE.Group();
 
-        const bodyGeo = new THREE.SphereGeometry(0.08, 6, 5);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: this.birdColor });
+        const bodyMat = new THREE.MeshStandardMaterial({ 
+            color: this.species.color,
+            roughness: 0.6
+        });
+        
+        const wingMat = new THREE.MeshStandardMaterial({
+            color: 0x2E7D32,
+            roughness: 0.7
+        });
+        
+        const beakMat = new THREE.MeshStandardMaterial({ 
+            color: 0x212121,
+            roughness: 0.5
+        });
+
+        // Small compact body - 10-20cm
+        const bodyGeo = new THREE.SphereGeometry(0.06, 6, 5);
         const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.scale.set(1.4, 0.85, 0.85);
         group.add(body);
 
-        const wingGeo = new THREE.BoxGeometry(0.15, 0.01, 0.1);
-        this.wingL = new THREE.Mesh(wingGeo, bodyMat);
-        this.wingL.position.set(0.05, 0, 0.08);
+        // Wings - darker than body
+        const wingGeo = new THREE.ConeGeometry(0.04, 0.12, 4);
+        this.wingL = new THREE.Mesh(wingGeo, wingMat);
+        this.wingL.position.set(0.04, 0.01, 0.06);
+        this.wingL.rotation.x = 0.3;
+        this.wingL.rotation.y = 0.5;
+        this.wingL.scale.z = 0.2;
         group.add(this.wingL);
 
-        this.wingR = new THREE.Mesh(wingGeo, bodyMat);
-        this.wingR.position.set(0.05, 0, -0.08);
+        this.wingR = new THREE.Mesh(wingGeo, wingMat);
+        this.wingR.position.set(0.04, 0.01, -0.06);
+        this.wingR.rotation.x = 0.3;
+        this.wingR.rotation.y = -0.5;
+        this.wingR.scale.z = 0.2;
         group.add(this.wingR);
 
-        const beakGeo = new THREE.ConeGeometry(0.02, 0.08, 4);
-        const beakMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-        const beak = new THREE.Mesh(beakGeo, beakMat);
-        beak.rotation.z = -Math.PI / 2;
-        beak.position.set(0.1, 0, 0);
-        group.add(beak);
+        // Distinctive curved beak - specialized for nectar feeding!
+        // Curve varies by species (I'iwi = deep curve, Apapane = slight curve)
+        const beakLength = 0.06 + this.species.beakCurve * 0.04;
+        const beakSegments = 3;
+        let lastPos = new THREE.Vector3(0.09, 0, 0);
+        
+        for (let i = 0; i < beakSegments; i++) {
+            const t = i / beakSegments;
+            const segLength = beakLength / beakSegments;
+            const curveAmount = this.species.beakCurve * 0.8;
+            
+            const segment = new THREE.Mesh(
+                new THREE.ConeGeometry(0.008 * (1 - t * 0.3), segLength, 5),
+                beakMat
+            );
+            
+            const curve = curveAmount * t;
+            segment.position.set(
+                lastPos.x + t * segLength * 0.8,
+                lastPos.y - curve * 0.04,
+                lastPos.z
+            );
+            segment.rotation.z = -curve - 0.2;
+            
+            group.add(segment);
+            lastPos = segment.position.clone();
+        }
+
+        // Tail feathers
+        const tailGeo = new THREE.ConeGeometry(0.02, 0.08, 4);
+        const tail = new THREE.Mesh(tailGeo, bodyMat);
+        tail.position.set(-0.07, 0, 0);
+        tail.rotation.z = 0.5;
+        tail.scale.z = 0.2;
+        group.add(tail);
 
         this.mesh = group;
         this.scene.add(this.mesh);

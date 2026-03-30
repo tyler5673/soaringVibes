@@ -33,14 +33,21 @@ class Dolphin extends Animal {
         const group = new THREE.Group();
 
         const bodyMat = new THREE.MeshStandardMaterial({ 
-            color: 0x708090,
+            color: 0x546E7A, // Dark gray dorsal
             roughness: 0.2,
             metalness: 0.3
         });
         
         const bellyMat = new THREE.MeshStandardMaterial({
-            color: 0xB0C4DE,
+            color: 0xECEFF1, // Light cream ventral
             roughness: 0.3
+        });
+        
+        // Spinner dolphins have distinctive pattern: dark gray back, light sides, cream belly
+        // Also lighter patch behind dorsal fin
+        const patchMat = new THREE.MeshStandardMaterial({
+            color: 0x90A4AE,
+            roughness: 0.25
         });
 
         // Main body - sleek torpedo shape
@@ -70,7 +77,7 @@ class Dolphin extends Animal {
         blowhole.position.set(1.5, 0.7, 0);
         group.add(blowhole);
 
-        // Dorsal fin
+        // Dorsal fin with lighter patch behind (characteristic of spinner dolphins)
         const dorsalGeo = new THREE.ConeGeometry(0.4, 1, 4);
         dorsalGeo.scale(0.2, 1, 0.8);
         this.dorsal = new THREE.Mesh(dorsalGeo, bodyMat);
@@ -78,6 +85,15 @@ class Dolphin extends Animal {
         this.dorsal.rotation.z = -0.3;
         this.dorsal.castShadow = true;
         group.add(this.dorsal);
+
+        // Light patch behind dorsal fin
+        const patch = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25, 6, 4),
+            patchMat
+        );
+        patch.position.set(-0.4, 0.8, 0);
+        patch.scale.set(0.8, 0.5, 0.6);
+        group.add(patch);
 
         // Pectoral fins
         const finGeo = new THREE.ConeGeometry(0.35, 1.2, 4);

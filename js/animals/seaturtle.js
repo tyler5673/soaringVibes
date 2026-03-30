@@ -1,4 +1,6 @@
-// js/animals/seaturtle.js - Sea Turtle species
+// js/animals/seaturtle.js - Hawaiian Green Sea Turtle (Honu)
+// Chelonia mydas: 3-4 ft (0.9-1.2m) carapace, 400-500 lbs
+// Hexagonal scute pattern on shell
 
 class SeaTurtle extends Animal {
     constructor(scene, initialPosition) {
@@ -16,49 +18,128 @@ class SeaTurtle extends Animal {
     createMesh() {
         const group = new THREE.Group();
 
-        const shellGeo = new THREE.SphereGeometry(1, 14, 10);
-        shellGeo.scale(1, 0.4, 1.1);
-        const shellMat = new THREE.MeshStandardMaterial({ color: 0x4A6741 });
+        // Shell has distinct scute pattern - hexagonal plates
+        const shellMat = new THREE.MeshStandardMaterial({ 
+            color: 0x4A6741,
+            roughness: 0.7
+        });
+        
+        const scuteMat = new THREE.MeshStandardMaterial({ 
+            color: 0x556B2F,
+            roughness: 0.6
+        });
+        
+        const skinMat = new THREE.MeshStandardMaterial({ 
+            color: 0x6B8E6B,
+            roughness: 0.5
+        });
+
+        // Main shell (carapace) - oval, domed
+        const shellGeo = new THREE.SphereGeometry(1, 16, 12);
+        shellGeo.scale(1.1, 0.35, 1);
         const shell = new THREE.Mesh(shellGeo, shellMat);
         group.add(shell);
 
-        const headGeo = new THREE.SphereGeometry(0.35, 10, 8);
-        headGeo.scale(1.2, 0.8, 0.9);
-        const headMat = new THREE.MeshStandardMaterial({ color: 0x6B8E6B });
-        const head = new THREE.Mesh(headGeo, headMat);
-        head.position.set(1.2, -0.1, 0);
+        // Add scute pattern - 13 scutes typical: 1 nuchal, 4 vertebrals, 4+4 marginals
+        // Central vertebral scutes (4 along midline)
+        for (let i = 0; i < 4; i++) {
+            const t = 0.2 + i * 0.2;
+            const scute = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.25, 0.28),
+                scuteMat
+            );
+            scute.position.set(t * 1.5, 0.28, 0);
+            scute.rotation.x = Math.PI / 2;
+            scute.scale.z = 0.02;
+            group.add(scute);
+        }
+
+        // Left costal scutes (4 on left side)
+        for (let i = 0; i < 4; i++) {
+            const t = 0.15 + i * 0.25;
+            const scute = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.22, 0.3),
+                scuteMat
+            );
+            const xPos = t * 1.4;
+            const zPos = Math.sin(t * Math.PI) * 0.7;
+            scute.position.set(xPos, 0.22, zPos + 0.2);
+            scute.rotation.x = Math.PI / 2 + 0.4;
+            scute.rotation.y = Math.random() * 0.2;
+            group.add(scute);
+        }
+
+        // Right costal scutes (4 on right side)
+        for (let i = 0; i < 4; i++) {
+            const t = 0.15 + i * 0.25;
+            const scute = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.22, 0.3),
+                scuteMat
+            );
+            const xPos = t * 1.4;
+            const zPos = Math.sin(t * Math.PI) * 0.7;
+            scute.position.set(xPos, 0.22, -zPos - 0.2);
+            scute.rotation.x = Math.PI / 2 + 0.4;
+            scute.rotation.y = -Math.random() * 0.2;
+            group.add(scute);
+        }
+
+        // Head with beak-like mouth
+        const headGeo = new THREE.SphereGeometry(0.28, 10, 8);
+        headGeo.scale(1.3, 0.9, 0.85);
+        const head = new THREE.Mesh(headGeo, skinMat);
+        head.position.set(1.4, -0.05, 0);
         group.add(head);
 
-        const flipperGeo = new THREE.BoxGeometry(0.6, 0.1, 0.4);
-        this.flippers = [];
+        // Snout/beak
+        const snout = new THREE.Mesh(
+            new THREE.ConeGeometry(0.1, 0.15, 6),
+            skinMat
+        );
+        snout.rotation.z = -Math.PI / 2 - 0.2;
+        snout.position.set(1.7, -0.03, 0);
+        group.add(snout);
 
-        const flipperFL = new THREE.Mesh(flipperGeo, headMat);
-        flipperFL.position.set(0.6, -0.2, 0.7);
-        flipperFL.rotation.y = 0.5;
-        group.add(flipperFL);
-        this.flippers.push(flipperFL);
+        // Flippers - powerful paddles
+        const flipperGeo = new THREE.ConeGeometry(0.35, 1.2, 6);
+        
+        // Front flippers
+        const frontL = new THREE.Mesh(flipperGeo, skinMat);
+        frontL.position.set(0.6, -0.1, 0.6);
+        frontL.rotation.y = 0.4;
+        frontL.rotation.x = 0.3;
+        frontL.scale.set(1, 0.18, 1);
+        group.add(frontL);
+        this.flippers = [frontL];
 
-        const flipperFR = new THREE.Mesh(flipperGeo, headMat);
-        flipperFR.position.set(0.6, -0.2, -0.7);
-        flipperFR.rotation.y = -0.5;
-        group.add(flipperFR);
-        this.flippers.push(flipperFR);
+        const frontR = new THREE.Mesh(flipperGeo, skinMat);
+        frontR.position.set(0.6, -0.1, -0.6);
+        frontR.rotation.y = -0.4;
+        frontR.rotation.x = 0.3;
+        frontR.scale.set(1, 0.18, 1);
+        group.add(frontR);
+        this.flippers.push(frontR);
 
-        const flipperBL = new THREE.Mesh(flipperGeo, headMat);
-        flipperBL.position.set(-0.7, -0.2, 0.5);
-        flipperBL.rotation.y = 2.5;
-        group.add(flipperBL);
-        this.flippers.push(flipperBL);
+        // Rear flippers (smaller)
+        const rearL = new THREE.Mesh(flipperGeo, skinMat);
+        rearL.position.set(-0.8, -0.1, 0.45);
+        rearL.rotation.y = 2.4;
+        rearL.rotation.x = 0.7;
+        rearL.scale.set(0.8, 0.15, 0.8);
+        group.add(rearL);
+        this.flippers.push(rearL);
 
-        const flipperBR = new THREE.Mesh(flipperGeo, headMat);
-        flipperBR.position.set(-0.7, -0.2, -0.5);
-        flipperBR.rotation.y = -2.5;
-        group.add(flipperBR);
-        this.flippers.push(flipperBR);
+        const rearR = new THREE.Mesh(flipperGeo, skinMat);
+        rearR.position.set(-0.8, -0.1, -0.45);
+        rearR.rotation.y = -2.4;
+        rearR.rotation.x = 0.7;
+        rearR.scale.set(0.8, 0.15, 0.8);
+        group.add(rearR);
+        this.flippers.push(rearR);
 
         this.mesh = group;
         this.scene.add(this.mesh);
-        this.mesh.scale.setScalar(0.8);
+        this.mesh.scale.setScalar(1.5);
     }
 
     chooseNewState() {

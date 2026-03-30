@@ -1,9 +1,11 @@
-// js/animals/nene.js - Hawaiian Nene (Goose) species
+// js/animals/nene.js - Hawaiian Nene Goose (Branta sandvicensis)
+// Endemic to Hawaii: brown speckled body, white eyebrow stripe, distinctive call
+// Size: 75-90cm length, 150cm wingspan
 
 class Nene extends Animal {
     constructor(scene, initialPosition) {
         super(scene, initialPosition, {
-            speed: 3,
+            speed: 3.5,
             turnSpeed: 1,
             viewDistance: 800,
             updateDistance: 1200
@@ -17,39 +19,131 @@ class Nene extends Animal {
     createMesh() {
         const group = new THREE.Group();
 
-        const bodyGeo = new THREE.SphereGeometry(0.3, 8, 6);
-        bodyGeo.scale(1.8, 1, 1);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8D6E63 });
+        // Main body colors - brown with gray speckling
+        const bodyMat = new THREE.MeshStandardMaterial({ 
+            color: 0x8D6E63,
+            roughness: 0.8
+        });
+        
+        const bellyMat = new THREE.MeshStandardMaterial({
+            color: 0x6D4C41,
+            roughness: 0.8
+        });
+        
+        // Black throat/upper neck with speckled pattern
+        const neckMat = new THREE.MeshStandardMaterial({ 
+            color: 0x5D4037,
+            roughness: 0.9
+        });
+        
+        const headMat = new THREE.MeshStandardMaterial({ 
+            color: 0x3E2723,
+            roughness: 0.9
+        });
+        
+        const beakMat = new THREE.MeshStandardMaterial({ color: 0x212121 });
+        const eyeMat = new THREE.MeshStandardMaterial({ color: 0xFFE082 });
+
+        // Plump body - 75-90cm
+        const bodyGeo = new THREE.SphereGeometry(0.4, 10, 8);
         const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.scale.set(1.8, 0.9, 1.1);
         group.add(body);
 
-        const neckGeo = new THREE.CylinderGeometry(0.12, 0.15, 0.5, 6);
-        const neck = new THREE.Mesh(neckGeo, bodyMat);
-        neck.position.set(0.4, 0.4, 0);
+        // Lighter belly
+        const bellyGeo = new THREE.SphereGeometry(0.35, 8, 6);
+        const belly = new THREE.Mesh(bellyGeo, bellyMat);
+        belly.scale.set(1.6, 0.7, 1);
+        belly.position.y = -0.15;
+        group.add(belly);
+
+        // Long neck - black at base, light brown speckled, gradient
+        const neckGeo = new THREE.CylinderGeometry(0.12, 0.18, 0.6, 6);
+        const neck = new THREE.Mesh(neckGeo, neckMat);
+        neck.position.set(0.45, 0.35, 0);
         neck.rotation.z = -0.3;
         group.add(neck);
 
-        const headGeo = new THREE.SphereGeometry(0.15, 8, 6);
-        const headMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
+        // Add speckling to neck (simulated with small dots)
+        for (let s = 0; s < 6; s++) {
+            const speckle = new THREE.Mesh(
+                new THREE.SphereGeometry(0.015, 4, 3),
+                new THREE.MeshStandardMaterial({ color: 0xA1887F })
+            );
+            const t = 0.2 + s * 0.12;
+            const angle = Math.random() * Math.PI * 2;
+            speckle.position.set(
+                0.45 + t * 0.5,
+                0.35 + t * 0.5,
+                Math.sin(angle) * 0.14
+            );
+            group.add(speckle);
+        }
+
+        // Small head with sloping forehead
+        const headGeo = new THREE.SphereGeometry(0.18, 8, 6);
         const head = new THREE.Mesh(headGeo, headMat);
-        head.position.set(0.55, 0.7, 0);
+        head.position.set(0.62, 0.65, 0);
+        head.scale.set(1.1, 0.95, 0.95);
         group.add(head);
 
-        const beakGeo = new THREE.ConeGeometry(0.05, 0.15, 4);
-        const beakMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+        // Characteristic white eyebrow stripe
+        const eyebrowL = new THREE.Mesh(
+            new THREE.SphereGeometry(0.025, 6, 4),
+            new THREE.MeshStandardMaterial({ color: 0xFAFAFA })
+        );
+        eyebrowL.position.set(0.62, 0.72, 0.14);
+        eyebrowL.scale.set(2.5, 0.6, 0.8);
+        group.add(eyebrowL);
+
+        const eyebrowR = new THREE.Mesh(
+            new THREE.SphereGeometry(0.025, 6, 4),
+            new THREE.MeshStandardMaterial({ color: 0xFAFAFA })
+        );
+        eyebrowR.position.set(0.62, 0.72, -0.14);
+        eyebrowR.scale.set(2.5, 0.6, 0.8);
+        group.add(eyebrowR);
+
+        // Eye
+        const eye = new THREE.Mesh(
+            new THREE.SphereGeometry(0.025, 6, 4),
+            eyeMat
+        );
+        eye.position.set(0.68, 0.68, 0.08);
+        group.add(eye);
+
+        // Short stout black beak - adapted for grazing
+        const beakGeo = new THREE.ConeGeometry(0.04, 0.12, 4);
         const beak = new THREE.Mesh(beakGeo, beakMat);
         beak.rotation.z = -Math.PI / 2;
-        beak.position.set(0.7, 0.7, 0);
+        beak.position.set(0.8, 0.64, 0);
         group.add(beak);
 
-        const wingGeo = new THREE.BoxGeometry(0.8, 0.05, 0.4);
+        // Wings folded at side
+        const wingGeo = new THREE.BoxGeometry(0.9, 0.06, 0.45);
         this.wingL = new THREE.Mesh(wingGeo, bodyMat);
-        this.wingL.position.set(0, 0.2, 0.4);
+        this.wingL.position.set(-0.05, 0.15, 0.42);
+        this.wingL.rotation.y = 0.1;
         group.add(this.wingL);
 
         this.wingR = new THREE.Mesh(wingGeo, bodyMat);
-        this.wingR.position.set(0, 0.2, -0.4);
+        this.wingR.position.set(-0.05, 0.15, -0.42);
+        this.wingR.rotation.y = -0.1;
         group.add(this.wingR);
+
+        // Strong legs for walking/climbing - adapted for volcanic terrain
+        const legGeo = new THREE.CylinderGeometry(0.04, 0.05, 0.25, 6);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x37474F });
+        
+        const leftLeg = new THREE.Mesh(legGeo, legMat);
+        leftLeg.position.set(-0.1, -0.35, 0.15);
+        leftLeg.rotation.x = 0.2;
+        group.add(leftLeg);
+
+        const rightLeg = new THREE.Mesh(legGeo, legMat);
+        rightLeg.position.set(-0.1, -0.35, -0.15);
+        rightLeg.rotation.x = -0.2;
+        group.add(rightLeg);
 
         this.mesh = group;
         this.scene.add(this.mesh);
