@@ -172,27 +172,36 @@
         function hideLoading() {
             const el = document.getElementById('loading');
             if (el) {
-                // First, fade out everything except the logo
+                // Fade out everything except the logo
                 const loader = el.querySelector('.loader');
                 const loadingText = el.querySelector('#loading-text');
                 const loadingBar = el.querySelector('#loading-bar');
                 const loadingProgress = el.querySelector('#loading-progress');
                 const loadingTribute = el.querySelector('#loading-tribute');
                 const loadingVersion = el.querySelector('#loading-version');
+                const background = el.querySelector('#loading-bg');
                 
+                // Fade out loading elements
                 [loader, loadingText, loadingBar, loadingProgress, loadingTribute, loadingVersion].forEach(item => {
                     if (item) item.style.transition = 'opacity 0.5s ease-out';
                 });
                 
-                // After fade out, wait 2 seconds then fade out logo
+                // Fade out background
+                if (background) {
+                    background.style.transition = 'opacity 0.8s ease-out';
+                    background.style.opacity = '0';
+                }
+                
+                // After 2 seconds, fade out the logo and remove everything
                 setTimeout(() => {
                     const logo = el.querySelector('#loading-logo');
                     if (logo) {
                         logo.style.transition = 'opacity 0.8s ease-out';
                         logo.style.opacity = '0';
                     }
-                    el.classList.add('hidden');
-                    setTimeout(() => el.style.display = 'none', 1300);
+                    setTimeout(() => {
+                        el.style.display = 'none';
+                    }, 800);
                 }, 2000);
             }
         }
