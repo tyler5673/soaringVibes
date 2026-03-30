@@ -27,6 +27,9 @@ async function discoverModels() {
     try {
         // Load manifest
         const manifestRes = await fetch('model-manifest.json');
+        if (!manifestRes.ok) {
+            throw new Error(`Failed to fetch manifest: ${manifestRes.status} ${manifestRes.statusText}`);
+        }
         const manifest = await manifestRes.json();
         
         console.log(`Discovering ${manifest.models.length} models...`);
@@ -34,8 +37,7 @@ async function discoverModels() {
         // First load critical dependencies
         console.log('Loading dependencies...');
         const dependencies = [
-            '../js/animals/animal-base.js',
-            '../js/trees/palm.js'  // Some trees might reference this
+            '../js/animals/animal-base.js'
         ];
         
         for (const dep of dependencies) {
@@ -52,6 +54,9 @@ async function discoverModels() {
             try {
                 // Load the script
                 await loadModelScript(model.script);
+                
+                // Small delay to let script execute
+                await new Promise(r => setTimeout(r, 50));
                 
                 // Get the exported class/function
                 const exportedClass = window[model.export];
@@ -87,6 +92,7 @@ async function discoverModels() {
         
     } catch (error) {
         console.error('Model discovery failed:', error);
+        console.error('Make sure you are running via a web server (not file://)');
     }
 }
 

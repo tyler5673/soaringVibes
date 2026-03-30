@@ -122,8 +122,10 @@ function init() {
     loadModel('test-cube');
     
     // Wait for models to be discovered, then render list
-    // Retry until models are loaded
+    // Retry until models are loaded (with fallback)
+    let attempts = 0;
     function tryRenderList() {
+        attempts++;
         const modelCount = window.modelRegistry.getAll().length;
         const tree = document.getElementById('model-tree');
         
@@ -131,16 +133,22 @@ function init() {
             renderModelList();
             setupSearch();
             console.log(`Rendered ${modelCount} models in sidebar`);
-        } else {
-            tree.innerHTML = '<div style="padding: 20px; text-align: center; color: rgba(255,255,255,0.5);">Loading models...</div>';
+        } else if (attempts < 20) { // Max 10 seconds of trying
+            tree.innerHTML = '<div class="loading-message">Loading models... (' + modelCount + ' loaded)</div>';
             setTimeout(tryRenderList, 500); // Retry in 500ms
+        } else {
+            // Fallback: show what we have (at least the test cube)
+            console.warn('Model discovery timed out, showing available models');
+            renderModelList();
+            setupSearch();
+            tree.innerHTML += '<div class="loading-message" style="margin-top: 20px; color: orange;">Some models failed to load. Check console.</div>';
         }
     }
     
-    // Show loading initially
-    document.getElementById('model-tree').innerHTML = '<div class="loading-message">Loading models...</div>';
+    // Show loading immediately
+    document.getElementById('model-tree').innerHTML = '<div class="loading-message">Initializing viewer...</div>';
     
-    // Start trying to render
+    // Start trying to render after a short delay
     setTimeout(tryRenderList, 500);
     
     animate();
