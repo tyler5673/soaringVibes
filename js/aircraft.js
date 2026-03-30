@@ -124,88 +124,94 @@ class Aircraft {
         const exhaustMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 });
         const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
         
-        // === FUSELAGE - Cylindrical with tapered ends ===
+        // Plane orientation: +X = right wing, -X = left wing, +Z = tail, -Z = nose
+        // Y is up
+        
         const fuselageLength = 8;
         const fuselageRadius = 0.65;
         
-        // Main fuselage body
-        const fuselageGeo = new THREE.CylinderGeometry(fuselageRadius, fuselageRadius * 0.7, fuselageLength, 20);
+        // Main fuselage - cylinder along Z axis
+        const fuselageGeo = new THREE.CylinderGeometry(fuselageRadius, fuselageRadius * 0.7, fuselageLength, 16);
         fuselageGeo.rotateX(Math.PI / 2);
         const fuselage = new THREE.Mesh(fuselageGeo, bodyMat);
         group.add(fuselage);
         
-        // Nose cowling - attached to front of fuselage
-        const noseCowlingGeo = new THREE.CylinderGeometry(fuselageRadius * 1.15, fuselageRadius, 1.5, 20);
-        noseCowlingGeo.rotateX(Math.PI / 2);
-        const noseCowling = new THREE.Mesh(noseCowlingGeo, bodyMat);
-        noseCowling.position.set(0, 0, -3.5);
+        // Nose cowling - wider at front
+        const noseGeo = new THREE.CylinderGeometry(fuselageRadius * 1.1, fuselageRadius, 1.8, 16);
+        noseGeo.rotateX(Math.PI / 2);
+        const noseCowling = new THREE.Mesh(noseGeo, bodyMat);
+        noseCowling.position.z = -3.6;
         group.add(noseCowling);
         
-        // Cowl ring (the characteristic 182 cowling flare)
-        const cowlRingGeo = new THREE.TorusGeometry(fuselageRadius * 1.1, 0.08, 12, 24);
+        // Cowl ring
+        const cowlRingGeo = new THREE.TorusGeometry(fuselageRadius * 1.05, 0.08, 8, 20);
         const cowlRing = new THREE.Mesh(cowlRingGeo, bodyMat);
-        cowlRing.position.set(0, 0, -3.0);
+        cowlRing.position.z = -2.95;
         cowlRing.rotation.x = Math.PI / 2;
         group.add(cowlRing);
         
         // Tail taper
-        const tailTaperGeo = new THREE.CylinderGeometry(fuselageRadius * 0.7, fuselageRadius * 0.35, 2, 16);
+        const tailTaperGeo = new THREE.CylinderGeometry(fuselageRadius * 0.65, fuselageRadius * 0.35, 2.0, 14);
         tailTaperGeo.rotateX(Math.PI / 2);
         const tailTaper = new THREE.Mesh(tailTaperGeo, bodyMat);
-        tailTaper.position.set(0, 0, 4.2);
+        tailTaper.position.z = 4.1;
         group.add(tailTaper);
         
         // Tail cone
-        const tailConeGeo = new THREE.ConeGeometry(fuselageRadius * 0.35, 1.5, 16);
-        tailConeGeo.rotateX(Math.PI / 2);
+        const tailConeGeo = new THREE.ConeGeometry(fuselageRadius * 0.35, 1.2, 14);
+        tailConeGeo.rotateX(-Math.PI / 2);
         const tailCone = new THREE.Mesh(tailConeGeo, bodyMat);
-        tailCone.position.set(0, 0, 5.2);
+        tailCone.position.z = 5.35;
         group.add(tailCone);
         
-        // === COCKPIT - Rectangular windows like real Cessna ===
+        // Firewall
+        const firewallGeo = new THREE.CircleGeometry(fuselageRadius * 0.85, 16);
+        const firewall = new THREE.Mesh(firewallGeo, exhaustMat);
+        firewall.position.z = -2.9;
+        group.add(firewall);
+        
         // Windshield frame
-        const windshieldFrameGeo = new THREE.BoxGeometry(1.0, 0.6, 0.1);
-        const windshieldFrame = new THREE.Mesh(windshieldFrameGeo, new THREE.MeshStandardMaterial({ color: 0x333333 }));
-        windshieldFrame.position.set(0, 0.5, -2.8);
+        const windshieldFrame = new THREE.Mesh(
+            new THREE.BoxGeometry(1.0, 0.55, 0.08),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        windshieldFrame.position.set(0, 0.5, -2.85);
         windshieldFrame.rotation.x = -0.3;
         group.add(windshieldFrame);
         
         // Windshield glass
-        const windshieldGeo = new THREE.BoxGeometry(0.9, 0.5, 0.05);
-        const windshield = new THREE.Mesh(windshieldGeo, glassMat);
-        windshield.position.set(0, 0.52, -2.85);
+        const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.45, 0.04), glassMat);
+        windshield.position.set(0, 0.52, -2.9);
         windshield.rotation.x = -0.3;
         group.add(windshield);
         
-        // Side windows - rectangular, angled back
-        const sideWindowGeo = new THREE.BoxGeometry(0.05, 0.35, 0.5);
+        // Side windows
+        const sideWindowGeo = new THREE.BoxGeometry(0.04, 0.32, 0.45);
         
-        // Pilot window
         const pilotWindow = new THREE.Mesh(sideWindowGeo, glassMat);
-        pilotWindow.position.set(-0.68, 0.45, -2.0);
+        pilotWindow.position.set(-0.66, 0.42, -2.0);
         group.add(pilotWindow);
         
-        // Copilot window
         const copilotWindow = new THREE.Mesh(sideWindowGeo, glassMat);
-        copilotWindow.position.set(0.68, 0.45, -2.0);
+        copilotWindow.position.set(0.66, 0.42, -2.0);
         group.add(copilotWindow);
         
-        // Passenger windows - smaller, 2 on each side
-        const passWindowGeo = new THREE.BoxGeometry(0.05, 0.3, 0.4);
+        // Passenger windows
+        const passWindowGeo = new THREE.BoxGeometry(0.04, 0.28, 0.35);
         for (let side of [-1, 1]) {
             for (let i = 0; i < 2; i++) {
-                const passWindow = new THREE.Mesh(passWindowGeo, glassMat);
-                passWindow.position.set(side * 0.68, 0.4, -0.5 + i * 0.8);
-                group.add(passWindow);
+                const pw = new THREE.Mesh(passWindowGeo, glassMat);
+                pw.position.set(side * 0.66, 0.38, -0.6 + i * 0.75);
+                group.add(pw);
             }
         }
         
-        // === EXHAUST ===
-        const exhaustGeo = new THREE.CylinderGeometry(0.05, 0.06, 0.4, 8);
-        [-0.25, 0.25].forEach(x => {
+        // Exhaust pipes
+        const exhaustGeo = new THREE.CylinderGeometry(0.045, 0.055, 0.35, 8);
+        [-0.22, 0.22].forEach(x => {
             const exhaust = new THREE.Mesh(exhaustGeo, exhaustMat);
-            exhaust.position.set(x, -0.25, -3.3);
-            exhaust.rotation.x = Math.PI / 4;
+            exhaust.position.set(x, -0.22, -3.25);
+            exhaust.rotation.x = Math.PI / 3;
             group.add(exhaust);
         });
         
@@ -216,14 +222,12 @@ class Aircraft {
         for (let i = 0; i < 3; i++) {
             const bladeGroup = new THREE.Group();
             
-            const bladeGeo = new THREE.BoxGeometry(0.1, 1.9, 0.18);
-            const blade = new THREE.Mesh(bladeGeo, bladeMat);
-            blade.position.y = 0.95;
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.85, 0.15), bladeMat);
+            blade.position.y = 0.92;
             bladeGroup.add(blade);
             
-            const tipGeo = new THREE.BoxGeometry(0.08, 0.2, 0.15);
-            const tip = new THREE.Mesh(tipGeo, bladeMat);
-            tip.position.y = 1.9;
+            const tip = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.18, 0.12), bladeMat);
+            tip.position.y = 1.85;
             bladeGroup.add(tip);
             
             bladeGroup.rotation.z = (i * Math.PI * 2) / 3;
@@ -231,210 +235,214 @@ class Aircraft {
         }
         
         // Spinner
-        const spinnerGeo = new THREE.SphereGeometry(0.22, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-        spinnerGeo.rotateX(-Math.PI / 2);
-        const spinner = new THREE.Mesh(spinnerGeo, stripeMat);
+        const spinner = new THREE.Mesh(
+            new THREE.SphereGeometry(0.2, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+            stripeMat
+        );
+        spinner.rotation.x = -Math.PI / 2;
         this.propeller.add(spinner);
         
-        this.propeller.position.set(0, 0, -4.3);
+        this.propeller.position.z = -4.35;
         group.add(this.propeller);
         
         // === HIGH WING ===
         const wingSpan = 11;
-        const wingChord = 1.6;
-        const wingThickness = 0.18;
-        const wingY = 0.95; // High wing position (above fuselage)
+        const wingChord = 1.5;
+        const wingThickness = 0.16;
+        const wingY = 0.72; // On top of fuselage
         
-        // Wing root - connects directly to top of fuselage
-        const wingRootGeo = new THREE.BoxGeometry(1.4, wingThickness, wingChord * 1.2);
+        // Wing root - connects to top of fuselage
+        const wingRootGeo = new THREE.BoxGeometry(1.35, wingThickness * 1.2, wingChord * 1.15);
+        
         const leftWingRoot = new THREE.Mesh(wingRootGeo, bodyMat);
-        leftWingRoot.position.set(-0.7, wingY, -0.3);
+        leftWingRoot.position.set(-0.68, wingY, -0.25);
         group.add(leftWingRoot);
         
         const rightWingRoot = new THREE.Mesh(wingRootGeo, bodyMat);
-        rightWingRoot.position.set(0.7, wingY, -0.3);
+        rightWingRoot.position.set(0.68, wingY, -0.25);
         group.add(rightWingRoot);
         
-        // Wing strut (characteristic of high wing Cessnas)
-        const strutGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 8);
-        
+        // Wing struts
+        const strutGeo = new THREE.CylinderGeometry(0.045, 0.04, 0.5, 8);
         [-1, 1].forEach(side => {
             const strut = new THREE.Mesh(strutGeo, strutMat);
-            strut.position.set(side * 1.3, wingY - 0.4, -0.3);
+            strut.position.set(side * 1.3, wingY - 0.28, -0.25);
             group.add(strut);
         });
         
         // Main wing panels
-        const wingPanelGeo = new THREE.BoxGeometry(wingSpan / 2 - 1.0, wingThickness, wingChord);
+        const wingPanelGeo = new THREE.BoxGeometry(wingSpan / 2 - 0.9, wingThickness, wingChord);
         
         const leftWing = new THREE.Mesh(wingPanelGeo, bodyMat);
-        leftWing.position.set(-wingSpan / 2 - 0.2, wingY, -0.3);
+        leftWing.position.set(-(wingSpan / 2 + 0.1), wingY, -0.25);
         group.add(leftWing);
         
         const rightWing = new THREE.Mesh(wingPanelGeo, bodyMat);
-        rightWing.position.set(wingSpan / 2 + 0.2, wingY, -0.3);
+        rightWing.position.set(wingSpan / 2 + 0.1, wingY, -0.25);
         group.add(rightWing);
         
         // Wing stripes
-        const stripeGeo = new THREE.BoxGeometry(wingSpan / 2 - 2.0, wingThickness + 0.02, wingChord * 0.5);
+        const stripeGeo = new THREE.BoxGeometry(wingSpan / 2 - 1.8, wingThickness + 0.015, wingChord * 0.45);
         
         const leftStripe = new THREE.Mesh(stripeGeo, stripeMat);
-        leftStripe.position.set(-wingSpan / 2 + 0.5, wingY + 0.01, -0.3);
+        leftStripe.position.set(-wingSpan / 2 + 0.6, wingY + 0.01, -0.25);
         group.add(leftStripe);
         
         const rightStripe = new THREE.Mesh(stripeGeo, stripeMat);
-        rightStripe.position.set(wingSpan / 2 - 0.5, wingY + 0.01, -0.3);
+        rightStripe.position.set(wingSpan / 2 - 0.6, wingY + 0.01, -0.25);
         group.add(rightStripe);
         
         // Flaps
-        const flapGeo = new THREE.BoxGeometry(wingSpan / 2 - 2.5, wingThickness + 0.05, wingChord * 0.35);
+        const flapGeo = new THREE.BoxGeometry(wingSpan / 2 - 2.4, wingThickness + 0.04, wingChord * 0.32);
         
         this.leftFlap = new THREE.Mesh(flapGeo, bodyMat);
-        this.leftFlap.position.set(-wingSpan / 2 + 0.3, wingY, wingChord * 0.3);
+        this.leftFlap.position.set(-wingSpan / 2 + 0.4, wingY, wingChord * 0.32);
         group.add(this.leftFlap);
         
         this.rightFlap = new THREE.Mesh(flapGeo, bodyMat);
-        this.rightFlap.position.set(wingSpan / 2 - 0.3, wingY, wingChord * 0.3);
+        this.rightFlap.position.set(wingSpan / 2 - 0.4, wingY, wingChord * 0.32);
         group.add(this.rightFlap);
         
         // Ailerons
-        const aileronGeo = new THREE.BoxGeometry(wingSpan / 2 - 3.0, wingThickness + 0.08, wingChord * 0.3);
+        const aileronGeo = new THREE.BoxGeometry(wingSpan / 2 - 2.8, wingThickness + 0.06, wingChord * 0.28);
         
         this.aileronL = new THREE.Mesh(aileronGeo, bodyMat);
-        this.aileronL.position.set(-wingSpan / 2 + 0.5, wingY, -wingChord * 0.35);
+        this.aileronL.position.set(-wingSpan / 2 + 0.55, wingY, -wingChord * 0.32);
         group.add(this.aileronL);
         
         this.aileronR = new THREE.Mesh(aileronGeo, bodyMat);
-        this.aileronR.position.set(wingSpan / 2 - 0.5, wingY, -wingChord * 0.35);
+        this.aileronR.position.set(wingSpan / 2 - 0.55, wingY, -wingChord * 0.32);
         group.add(this.aileronR);
         
-        // Wing tips - angled up
-        const tipGeo = new THREE.BoxGeometry(0.25, wingThickness * 2, wingChord * 0.5);
+        // Wing tips
+        const tipGeo = new THREE.BoxGeometry(0.22, wingThickness * 1.8, wingChord * 0.45);
         
         const leftTip = new THREE.Mesh(tipGeo, stripeMat);
-        leftTip.position.set(-wingSpan / 2 - 0.1, wingY + 0.15, -0.3);
-        leftTip.rotation.z = -0.2;
+        leftTip.position.set(-wingSpan / 2 - 0.08, wingY + 0.12, -0.25);
+        leftTip.rotation.z = -0.25;
         group.add(leftTip);
         
         const rightTip = new THREE.Mesh(tipGeo, stripeMat);
-        rightTip.position.set(wingSpan / 2 + 0.1, wingY + 0.15, -0.3);
-        rightTip.rotation.z = 0.2;
+        rightTip.position.set(wingSpan / 2 + 0.08, wingY + 0.12, -0.25);
+        rightTip.rotation.z = 0.25;
         group.add(rightTip);
         
         // Navigation lights
-        const navLightGeo = new THREE.SphereGeometry(0.05, 8, 6);
+        const navLightGeo = new THREE.SphereGeometry(0.045, 8, 6);
         const redLightMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.8 });
         const greenLightMat = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 0.8 });
         
         const leftNavLight = new THREE.Mesh(navLightGeo, redLightMat);
-        leftNavLight.position.set(-wingSpan / 2 - 0.1, wingY + 0.1, -0.3);
+        leftNavLight.position.set(-wingSpan / 2 - 0.08, wingY + 0.08, -0.25);
         group.add(leftNavLight);
         
         const rightNavLight = new THREE.Mesh(navLightGeo, greenLightMat);
-        rightNavLight.position.set(wingSpan / 2 + 0.1, wingY + 0.1, -0.3);
+        rightNavLight.position.set(wingSpan / 2 + 0.08, wingY + 0.08, -0.25);
         group.add(rightNavLight);
         
         // === TAIL SECTION ===
-        // Vertical stabilizer
-        const vStabHeight = 2.0;
-        const vStabChord = 1.3;
+        const tailZ = 3.95;
         
-        const vStabShape = new THREE.Shape();
-        vStabShape.moveTo(0, 0);
-        vStabShape.lineTo(vStabChord, 0);
-        vStabShape.lineTo(vStabChord * 0.75, vStabHeight);
-        vStabShape.lineTo(0, vStabHeight * 0.85);
+        // Vertical stabilizer - rises from top of tail section
+        const vStabHeight = 1.9;
+        const vStabChord = 1.25;
         
-        const vStabGeo = new THREE.ExtrudeGeometry(vStabShape, { depth: 0.12, bevelEnabled: false });
+        const vStabGeo = new THREE.BoxGeometry(vStabChord, vStabHeight, 0.1);
         const vStab = new THREE.Mesh(vStabGeo, bodyMat);
-        vStab.position.set(-0.06, 0.1, 4.0);
+        vStab.position.set(0, vStabHeight / 2 + 0.1, tailZ);
         group.add(vStab);
         
-        // Rudder
-        this.rudder = new THREE.Mesh(new THREE.BoxGeometry(0.1, vStabHeight * 0.6, vStabChord * 0.5), bodyMat);
-        this.rudder.position.set(0, vStabHeight * 0.3 + 0.1, 4.6);
+        // Rudder - below vertical stabilizer
+        this.rudder = new THREE.Mesh(
+            new THREE.BoxGeometry(vStabChord * 0.45, vStabHeight * 0.55, 0.1),
+            bodyMat
+        );
+        this.rudder.position.set(0, vStabHeight * 0.28 + 0.1, tailZ + vStabChord * 0.22);
         group.add(this.rudder);
         
         // Rudder stripe
-        const rudderStripeGeo = new THREE.BoxGeometry(0.11, vStabHeight * 0.45, vStabChord * 0.28);
-        const rudderStripe = new THREE.Mesh(rudderStripeGeo, stripeMat);
-        rudderStripe.position.set(0, vStabHeight * 0.25 + 0.1, 4.5);
+        const rudderStripe = new THREE.Mesh(
+            new THREE.BoxGeometry(vStabChord * 0.25, vStabHeight * 0.4, 0.11),
+            stripeMat
+        );
+        rudderStripe.position.set(0, vStabHeight * 0.22 + 0.1, tailZ + vStabChord * 0.22);
         group.add(rudderStripe);
         
         // Horizontal stabilizer
-        const hStabSpan = 3.2;
-        const hStabChord = 0.95;
+        const hStabSpan = 3.0;
+        const hStabChord = 0.9;
         
-        const hStabShape = new THREE.Shape();
-        hStabShape.moveTo(0, 0);
-        hStabShape.lineTo(hStabChord, 0);
-        hStabShape.lineTo(hStabChord * 0.65, hStabSpan / 2);
-        hStabShape.lineTo(0, hStabSpan / 2);
-        
-        const hStabGeo = new THREE.ExtrudeGeometry(hStabShape, { depth: 0.1, bevelEnabled: false });
+        const hStabGeo = new THREE.BoxGeometry(hStabSpan / 2 - 0.1, 0.08, hStabChord);
         
         const leftHStab = new THREE.Mesh(hStabGeo, bodyMat);
-        leftHStab.position.set(-hStabSpan / 2, 0.12, 4.0);
+        leftHStab.position.set(-hStabSpan / 2, 0.12, tailZ);
         group.add(leftHStab);
         
         const rightHStab = new THREE.Mesh(hStabGeo, bodyMat);
-        rightHStab.scale.x = -1;
-        rightHStab.position.set(hStabSpan / 2, 0.12, 4.0);
+        rightHStab.position.set(hStabSpan / 2, 0.12, tailZ);
         group.add(rightHStab);
         
         // Elevator
-        this.elevator = new THREE.Mesh(new THREE.BoxGeometry(hStabSpan * 0.88, 0.1, hStabChord * 0.58), bodyMat);
-        this.elevator.position.set(0, 0.14, 4.55);
+        this.elevator = new THREE.Mesh(
+            new THREE.BoxGeometry(hStabSpan * 0.85, 0.08, hStabChord * 0.55),
+            bodyMat
+        );
+        this.elevator.position.set(0, 0.14, tailZ + hStabChord * 0.28);
         group.add(this.elevator);
         
         // Elevator stripe
-        const elevatorStripe = new THREE.Mesh(new THREE.BoxGeometry(hStabSpan * 0.45, 0.11, hStabChord * 0.32), stripeMat);
-        elevatorStripe.position.set(0, 0.14, 4.4);
+        const elevatorStripe = new THREE.Mesh(
+            new THREE.BoxGeometry(hStabSpan * 0.4, 0.09, hStabChord * 0.3),
+            stripeMat
+        );
+        elevatorStripe.position.set(0, 0.14, tailZ + hStabChord * 0.22);
         group.add(elevatorStripe);
         
         // === LANDING GEAR ===
-        const noseWheelY = -0.6;
-        const noseWheelZ = -2.4;
-        const mainWheelY = -0.65;
-        const mainWheelZ = 0.9;
-        const mainWheelSpread = 1.5;
+        const noseWheelY = -0.52;
+        const noseWheelZ = -2.45;
+        const mainWheelY = -0.52;
+        const mainWheelZ = 1.0;
+        const mainWheelSpread = 1.35;
         
         // Nose gear strut
-        const noseStrutGeo = new THREE.CylinderGeometry(0.05, 0.06, 0.75, 8);
+        const noseStrutGeo = new THREE.CylinderGeometry(0.045, 0.055, 0.7, 8);
         const noseStrut = new THREE.Mesh(noseStrutGeo, strutMat);
-        noseStrut.position.set(0, noseWheelY + 0.35, noseWheelZ - 0.25);
-        noseStrut.rotation.x = Math.PI / 5;
+        noseStrut.position.set(0, noseWheelY + 0.32, noseWheelZ - 0.2);
+        noseStrut.rotation.x = Math.PI / 4.5;
         group.add(noseStrut);
         
         // Nose wheel
-        const noseWheelGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.12, 16);
+        const noseWheelGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.1, 14);
         noseWheelGeo.rotateZ(Math.PI / 2);
         const noseWheel = new THREE.Mesh(noseWheelGeo, wheelMat);
         noseWheel.position.set(0, noseWheelY, noseWheelZ);
         group.add(noseWheel);
         
         // Nose gear fairing
-        const noseFairingGeo = new THREE.CylinderGeometry(0.14, 0.1, 0.4, 8);
-        const noseFairing = new THREE.Mesh(noseFairingGeo, bodyMat);
-        noseFairing.rotation.x = Math.PI / 5;
-        noseFairing.position.set(0, noseWheelY + 0.5, noseWheelZ - 0.4);
+        const noseFairing = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.09, 0.35, 8),
+            bodyMat
+        );
+        noseFairing.rotation.x = Math.PI / 4.5;
+        noseFairing.position.set(0, noseWheelY + 0.45, noseWheelZ - 0.35);
         group.add(noseFairing);
         
         // Main gear struts
-        const mainStrutGeo = new THREE.CylinderGeometry(0.06, 0.07, 0.9, 8);
+        const mainStrutGeo = new THREE.CylinderGeometry(0.055, 0.065, 0.85, 8);
         
         const leftMainStrut = new THREE.Mesh(mainStrutGeo, strutMat);
-        leftMainStrut.position.set(-mainWheelSpread, mainWheelY + 0.4, mainWheelZ);
-        leftMainStrut.rotation.z = 0.1;
+        leftMainStrut.position.set(-mainWheelSpread, mainWheelY + 0.38, mainWheelZ);
+        leftMainStrut.rotation.z = 0.08;
         group.add(leftMainStrut);
         
         const rightMainStrut = new THREE.Mesh(mainStrutGeo, strutMat);
-        rightMainStrut.position.set(mainWheelSpread, mainWheelY + 0.4, mainWheelZ);
-        rightMainStrut.rotation.z = -0.1;
+        rightMainStrut.position.set(mainWheelSpread, mainWheelY + 0.38, mainWheelZ);
+        rightMainStrut.rotation.z = -0.08;
         group.add(rightMainStrut);
         
         // Main wheels
-        const mainWheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.14, 16);
+        const mainWheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.12, 14);
         mainWheelGeo.rotateZ(Math.PI / 2);
         
         const leftMainWheel = new THREE.Mesh(mainWheelGeo, wheelMat);
@@ -446,30 +454,29 @@ class Aircraft {
         group.add(rightMainWheel);
         
         // Axle
-        const axleGeo = new THREE.CylinderGeometry(0.04, 0.04, mainWheelSpread * 2 + 0.2, 8);
-        axleGeo.rotateZ(Math.PI / 2);
-        const axle = new THREE.Mesh(axleGeo, strutMat);
+        const axle = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.035, 0.035, mainWheelSpread * 2 + 0.15, 8),
+            strutMat
+        );
         axle.position.set(0, mainWheelY, mainWheelZ);
+        axle.rotation.z = Math.PI / 2;
         group.add(axle);
         
         // === ANTENNAS ===
-        // VOR antenna on top
-        const vorGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 6);
-        const vor = new THREE.Mesh(vorGeo, metalMat);
-        vor.position.set(0, 0.85, 0.6);
+        // VOR antenna on top of vertical stabilizer
+        const vor = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.3, 6), metalMat);
+        vor.position.set(0, vStabHeight + 0.15, tailZ + vStabChord * 0.35);
         group.add(vor);
         
-        // Pitot tube
-        const pitotGeo = new THREE.CylinderGeometry(0.02, 0.015, 0.25, 6);
-        const pitot = new THREE.Mesh(pitotGeo, blackMat);
+        // Pitot tube - left wing
+        const pitot = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, 0.22, 6), blackMat);
         pitot.rotation.z = Math.PI / 2;
-        pitot.position.set(-0.78, 0.3, -1.6);
+        pitot.position.set(-0.72, wingY + 0.08, -wingChord * 0.45);
         group.add(pitot);
         
-        // Stall warning horn
-        const stallHornGeo = new THREE.BoxGeometry(0.08, 0.04, 0.1);
-        const stallHorn = new THREE.Mesh(stallHornGeo, blackMat);
-        stallHorn.position.set(0.78, wingY - 0.12, 0);
+        // Stall warning horn - left wing
+        const stallHorn = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.09), blackMat);
+        stallHorn.position.set(-0.72, wingY - 0.08, wingChord * 0.1);
         group.add(stallHorn);
         
         group.castShadow = true;

@@ -338,7 +338,7 @@ class HotAirBalloonSystem {
         this.balloons = [];
         
         // Spawning configuration
-        this.maxBalloons = 8;
+        this.maxBalloons = 16;
         this.spawnRadius = 8000;
         this.altitudeMin = 400;
         this.altitudeMax = 1200;

@@ -8,11 +8,15 @@
 </head>
 <body>
     <div id="loading">
+        <a href="https://ko-fi.com/tylereastman" target="_blank" id="kofi-button">
+            <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
+        </a>
         <img src="assets/images/logo.png" id="loading-logo" alt="Soaring Vibes">
         <div class="loader"></div>
         <div id="loading-text">Loading Flight Simulator...</div>
         <div id="loading-bar"><div id="loading-bar-fill"></div></div>
         <div id="loading-progress">0%</div>
+        <button id="start-button" style="display: none;">Let's Soar!</button>
         <div id="loading-tribute">For Bessie...<br>may your sacrifice never be forgotten</div>
         <div id="loading-version">v0.0.1</div>
     </div>
@@ -173,37 +177,11 @@
         function hideLoading() {
             const el = document.getElementById('loading');
             if (el) {
-                // Fade out everything except the logo
-                const loader = el.querySelector('.loader');
-                const loadingText = el.querySelector('#loading-text');
-                const loadingBar = el.querySelector('#loading-bar');
-                const loadingProgress = el.querySelector('#loading-progress');
-                const loadingTribute = el.querySelector('#loading-tribute');
-                const loadingVersion = el.querySelector('#loading-version');
-                const background = el.querySelector('#loading-bg');
+                el.classList.add('hidden');
                 
-                // Fade out loading elements
-                [loader, loadingText, loadingBar, loadingProgress, loadingTribute, loadingVersion].forEach(item => {
-                    if (item) item.style.transition = 'opacity 0.5s ease-out';
-                });
-                
-                // Fade out background
-                if (background) {
-                    background.style.transition = 'opacity 0.8s ease-out';
-                    background.style.opacity = '0';
-                }
-                
-                // After 2 seconds, fade out the logo and remove everything
                 setTimeout(() => {
-                    const logo = el.querySelector('#loading-logo');
-                    if (logo) {
-                        logo.style.transition = 'opacity 0.8s ease-out';
-                        logo.style.opacity = '0';
-                    }
-                    setTimeout(() => {
-                        el.style.display = 'none';
-                    }, 800);
-                }, 2000);
+                    el.style.display = 'none';
+                }, 800);
             }
         }
 
@@ -269,8 +247,26 @@
                 const gaugeSystem = new GaugeSystem();
                 window.gaugeSystem = gaugeSystem;
                 
-                updateLoading(100);
-                setTimeout(hideLoading, 300);
+                updateLoading(90);
+                
+                // Show "Let's Soar!" button while final systems initialize
+                const startButton = document.getElementById('start-button');
+                const loadingBar = document.getElementById('loading-bar');
+                const loader = document.querySelector('.loader');
+                const loadingProgress = document.getElementById('loading-progress');
+                const loadingText = document.getElementById('loading-text');
+                
+                if (startButton && loadingBar && loader && loadingProgress && loadingText) {
+                    loadingBar.style.display = 'none';
+                    loader.style.display = 'none';
+                    loadingProgress.textContent = '100%';
+                    loadingText.textContent = 'Ready to fly!';
+                    startButton.style.display = 'block';
+                    
+                    startButton.onclick = () => {
+                        hideLoading();
+                    };
+                }
             });
             
             // Keep old wildlife for backward compatibility (balloons)

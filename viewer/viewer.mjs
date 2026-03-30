@@ -403,12 +403,30 @@ async function loadExternalModels() {
     }
 }
 
+// Check if class is an Animal subclass
+function isAnimalClass(cls) {
+    if (!cls || !cls.prototype) return false;
+    if (!window.Animal) return false;
+    
+    // Check prototype chain
+    let proto = Object.getPrototypeOf(cls.prototype);
+    while (proto) {
+        if (proto instanceof Object && proto.constructor === window.Animal.prototype.constructor) {
+            return true;
+        }
+        if (proto === Object.prototype) break;
+        proto = Object.getPrototypeOf(proto);
+    }
+    
+    return false;
+}
+
 // Create mesh from class using various patterns
 function createFromClass(cls, modelConfig) {
     let mesh, instance = null;
     
-    // Pattern 1: Animal class - don't call update() in viewer (complex scene logic)
-    if (cls.prototype && cls.prototype.createMesh && cls.name === 'Animal') {
+    // Pattern 1: Animal subclass - check prototype chain for Animal
+    if (cls.prototype && cls.prototype.createMesh && cls.name !== 'Animal' && isAnimalClass(cls)) {
         try {
             const mockScene = scene;
             instance = new cls(mockScene, new THREE.Vector3(0, 0, 0));
