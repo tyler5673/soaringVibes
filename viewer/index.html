@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Viewer - Soaring Vibes</title>
+    <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+    <div id="ui-container">
+        <header id="top-bar">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search models...">
+            </div>
+            <div class="view-options">
+                <select id="category-filter">
+                    <option value="all">All Categories</option>
+                    <option value="aircraft">Aircraft</option>
+                    <option value="trees">Trees</option>
+                    <option value="animals">Animals</option>
+                    <option value="structures">Structures</option>
+                    <option value="effects">Effects</option>
+                </select>
+            </div>
+        </header>
+        
+        <aside id="model-list">
+            <div id="model-tree"></div>
+        </aside>
+        
+        <main id="viewer-container">
+            <canvas id="webgl-canvas"></canvas>
+        </main>
+        
+        <footer id="info-panel">
+            <div class="model-info">
+                <h3 id="model-name">Select a model</h3>
+                <div id="model-details"></div>
+            </div>
+            <div class="animation-controls">
+                <button id="play-btn">▶ Play</button>
+                <button id="pause-btn">⏸ Pause</button>
+                <label>Speed: <input type="range" id="speed-slider" min="0" max="3" step="0.1" value="1"></label>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="model-registry.js"></script>
+    <script src="auto-discovery.js"></script>
+    <script src="controls.js"></script>
+    <script src="viewer.js"></script>
+</body>
+</html>
