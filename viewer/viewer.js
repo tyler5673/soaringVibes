@@ -109,7 +109,69 @@ function init() {
     // Load and display test cube
     loadModel('test-cube');
     
+    // Wait for models to be discovered, then render list
+    setTimeout(() => {
+        renderModelList();
+    }, 1000);
+    
     animate();
+}
+
+function renderModelList() {
+    const tree = document.getElementById('model-tree');
+    tree.innerHTML = '';
+    
+    const categories = window.modelRegistry.getCategories();
+    
+    categories.forEach(category => {
+        // Category header (starts expanded)
+        const header = document.createElement('div');
+        header.className = 'category-header';
+        header.textContent = category.name.charAt(0).toUpperCase() + category.name.slice(1);
+        header.dataset.expanded = 'true';
+        
+        header.addEventListener('click', () => {
+            const isExpanded = header.dataset.expanded === 'true';
+            header.dataset.expanded = (!isExpanded).toString();
+            header.classList.toggle('collapsed', !isExpanded);
+            
+            const container = header.nextElementSibling;
+            if (container) {
+                container.style.display = isExpanded ? 'none' : 'block';
+            }
+        });
+        
+        tree.appendChild(header);
+        
+        // Model items container
+        const container = document.createElement('div');
+        
+        category.models.forEach(modelId => {
+            const model = window.modelRegistry.get(modelId);
+            if (!model) return;
+            
+            const item = document.createElement('div');
+            item.className = 'model-item';
+            item.textContent = model.name;
+            item.dataset.modelId = modelId;
+            
+            item.addEventListener('click', () => {
+                // Deselect previous
+                document.querySelectorAll('.model-item.selected')
+                    .forEach(el => el.classList.remove('selected'));
+                
+                // Select this
+                item.classList.add('selected');
+                
+                // Load model
+                loadModel(modelId);
+            });
+            
+            container.appendChild(item);
+        });
+        
+        tree.appendChild(container);
+    });
 }
 
 function loadModel(modelId) {
