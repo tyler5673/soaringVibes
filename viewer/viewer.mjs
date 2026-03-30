@@ -2,6 +2,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+// Make THREE available globally for external scripts
+window.THREE = THREE;
+
 console.log('Asset Viewer loaded');
 
 // State
