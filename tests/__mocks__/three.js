@@ -56,6 +56,39 @@ class Vector3 {
     }
     return this;
   }
+  
+  applyEuler(euler) {
+    const cy = Math.cos(euler.y);
+    const sy = Math.sin(euler.y);
+    const nx = this.x * cy + this.z * sy;
+    const nz = -this.x * sy + this.z * cy;
+    this.x = nx;
+    this.z = nz;
+    
+    if (euler.x !== 0) {
+      const cx = Math.cos(euler.x);
+      const sx = Math.sin(euler.x);
+      const ny = this.y * cx - nz * sx;
+      const nz2 = this.y * sx + nz * cx;
+      this.y = ny;
+      this.z = nz2;
+    }
+    
+    return this;
+  }
+  
+  dot(v) {
+    return this.x * v.x + this.y * v.y + this.z * v.z;
+  }
+}
+
+class Euler {
+  constructor(x = 0, y = 0, z = 0, order = 'XYZ') {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.order = order;
+  }
 }
 
 class Group {
@@ -206,6 +239,7 @@ class Scene extends Group {
 
 const THREE = {
   Vector3,
+  Euler,
   Group,
   Mesh,
   SphereGeometry,

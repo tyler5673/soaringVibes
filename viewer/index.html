@@ -8,49 +8,63 @@
     <link rel="stylesheet" href="viewer.css">
 </head>
 <body>
-    <div id="ui-container">
+    <div id="app">
+        <!-- Header -->
         <header id="top-bar">
+            <div class="logo">Asset Viewer</div>
             <div class="search-box">
-                <input type="text" id="search-input" placeholder="Search models...">
+                <input type="text" id="search-input" placeholder="Search...">
             </div>
-            <div class="view-options">
+            <div class="filter-box">
                 <select id="category-filter">
-                    <option value="all">All Categories</option>
+                    <option value="all">All</option>
                     <option value="aircraft">Aircraft</option>
                     <option value="trees">Trees</option>
                     <option value="animals">Animals</option>
-                    <option value="structures">Structures</option>
                     <option value="effects">Effects</option>
                 </select>
             </div>
         </header>
         
-        <aside id="model-list">
-            <div id="model-tree"></div>
-        </aside>
+        <!-- Main content -->
+        <div id="main-content">
+            <!-- Model list sidebar -->
+            <aside id="sidebar">
+                <div class="sidebar-header">Models</div>
+                <div id="model-list"></div>
+            </aside>
+            
+            <!-- 3D Viewer -->
+            <main id="viewer-container">
+                <canvas id="webgl-canvas"></canvas>
+            </main>
+        </div>
         
-        <main id="viewer-container">
-            <canvas id="webgl-canvas"></canvas>
-        </main>
-        
-        <footer id="info-panel">
+        <!-- Footer with info -->
+        <footer id="info-bar">
             <div class="model-info">
-                <h3 id="model-name">Select a model</h3>
-                <div id="model-details"></div>
+                <span id="model-name">Select a model</span>
+                <span id="model-category"></span>
             </div>
-            <div class="animation-controls">
-                <button id="play-btn">▶ Play</button>
-                <button id="pause-btn">⏸ Pause</button>
+            <div class="stats">
+                <span id="model-stats"></span>
+            </div>
+            <div class="controls">
+                <button id="play-btn">Play</button>
+                <button id="pause-btn">Pause</button>
                 <label>Speed: <input type="range" id="speed-slider" min="0" max="3" step="0.1" value="1"></label>
             </div>
         </footer>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="model-registry.js"></script>
-    <script src="auto-discovery.js"></script>
-    <script src="controls.js"></script>
-    <script src="viewer.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="viewer.mjs"></script>
 </body>
 </html>

@@ -85,18 +85,20 @@ class Aircraft {
         const speed = 60;
         
         // Set velocity based on angle
-        // angle = direction from island center to spawn point
         this.velocity.set(
-            Math.sin(finalAngle) * speed,
+            Math.cos(finalAngle) * speed,
             0,
-            Math.cos(finalAngle) * speed
+            Math.sin(finalAngle) * speed
         );
         
-        // Set rotation to face the direction of travel
-        // In Three.js: rotation.y = 0 faces -Z (north), increases clockwise
-        // To face velocity direction (vx, vz): rotation.y = -Math.atan2(vx, vz)
+        // Set rotation to face velocity direction
+        // Based on Three.js: forward at rotation.y = a points to (sin(a), -cos(a))
+        // So to get forward = (vx, vz), we need sin(a) = vx, cos(a) = -vz
+        // a = atan2(vx, -vz)
+        const vx = this.velocity.x;
+        const vz = this.velocity.z;
         this.rotation.x = 0;
-        this.rotation.y = -Math.atan2(velocity.x, velocity.z);
+        this.rotation.y = Math.atan2(vx, -vz);
         this.rotation.z = 0;
         
         // Verify: compute forward vector and compare to velocity direction

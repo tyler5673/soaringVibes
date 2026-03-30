@@ -58,4 +58,26 @@ class OrbitCamera {
         this.camera.position.copy(this.currentPosition);
         this.camera.lookAt(this.currentLookAt);
     }
+    
+    resetBehindTarget() {
+        if (!this.target) return;
+        
+        const targetRotation = this.target.rotation.y || 0;
+        this.azimuth = targetRotation;
+        this.elevation = 0.35;
+        
+        const targetPos = this.target.position.clone();
+        const offset = new THREE.Vector3(
+            Math.sin(this.azimuth) * Math.cos(this.elevation) * this.distance,
+            Math.sin(this.elevation) * this.distance,
+            Math.cos(this.azimuth) * Math.cos(this.elevation) * this.distance
+        );
+        offset.y += this.heightOffset;
+        
+        this.currentPosition.copy(targetPos.clone().add(offset));
+        this.currentLookAt.copy(targetPos);
+        
+        this.camera.position.copy(this.currentPosition);
+        this.camera.lookAt(this.currentLookAt);
+    }
 }
