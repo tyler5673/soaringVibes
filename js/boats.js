@@ -1,4 +1,5 @@
 // ========== SAILBOATS & CRUISE SHIPS ==========
+if (typeof Sailboat === 'undefined') {
 class Sailboat {
     constructor(scene, position) {
         this.scene = scene;
@@ -75,7 +76,9 @@ class Sailboat {
         return group;
     }
 }
+}
 
+if (typeof CruiseShip === 'undefined') {
 class CruiseShip {
     constructor(scene, position) {
         this.scene = scene;
@@ -180,6 +183,7 @@ class CruiseShip {
         
         return group;
     }
+}
 }
 
 class BoatManager {
