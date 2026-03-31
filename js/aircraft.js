@@ -875,28 +875,26 @@ var spinnerStripeBottom = new THREE.Mesh(
             terrainHeight = getTerrainHeight(this.position.x, this.position.z);
         }
         
-        // Debug: Log heights when close to terrain
-        if (this.position.y < terrainHeight + 30) {
-            console.log(`Height check: plane=${this.position.y.toFixed(1)}, terrain=${terrainHeight.toFixed(1)}, diff=${(this.position.y - terrainHeight).toFixed(1)}`);
-        }
+        // Check for water collision (ocean crash)
+        const WATER_LEVEL = 2;
+        const isBelowWater = this.position.y < WATER_LEVEL;
         
-        // Check if plane is below terrain
-        // Plane wheels/bottom is about 1-2m below position point
-        const groundClearance = 1.5; // Plane sits ~1.5m above its position point
-        const tolerance = 2.0; // Allow 2m buffer above terrain
+        // Check if plane is below terrain (land collision)
+        const groundClearance = 1.5;
+        const tolerance = 2.0;
         const isBelowTerrain = this.position.y < (terrainHeight + groundClearance + tolerance);
         
         // Check if there's significant velocity (crashing, not just sitting)
         const speed = this.velocity.length();
-        const isMoving = speed > 15; // More than 15 m/s (about 30 knots)
-        const isFalling = this.velocity.y < -5; // Falling downward at 5 m/s
+        const isMoving = speed > 15;
+        const isFalling = this.velocity.y < -5;
         
-        // Only crash if: significantly below terrain AND (moving fast OR falling hard)
-        if (isBelowTerrain && (isMoving || isFalling)) {
+        // Crash if: below water OR below terrain (and moving or falling)
+        if ((isBelowWater || isBelowTerrain) && (isMoving || isFalling)) {
             this.crashed = true;
-            this.velocity.set(0, 0, 0); // Stop the plane
+            this.velocity.set(0, 0, 0);
             this.throttle = 0;
-            console.log('CRASH! Aircraft hit terrain at', this.position.x.toFixed(0), this.position.y.toFixed(0), this.position.z.toFixed(0), 'terrain was', terrainHeight.toFixed(0));
+            console.log('CRASH! Aircraft at', this.position.x.toFixed(0), this.position.y.toFixed(0), this.position.z.toFixed(0), 'terrain was', terrainHeight.toFixed(0));
             return true;
         }
         
