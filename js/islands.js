@@ -639,17 +639,24 @@ async function loadAirportPositions() {
 }
 
 const islandPositions = [
-    { name: 'maui', x: 0, z: 0, hasAirport: true, worldScale: 0.08, bounds: { north: 21.031, south: 20.574, east: -155.979, west: -156.697 } },
-    { name: 'big-island', x: 3200, z: -6400, hasAirport: false, worldScale: 0.08, bounds: { north: 20.310, south: 18.861, east: -154.756, west: -156.124 } },
-    { name: 'oahu', x: -6400, z: -2800, hasAirport: false, worldScale: 0.08, bounds: { north: 21.712, south: 21.254, east: -157.648, west: -158.280 } },
-    { name: 'kauai', x: -12000, z: -4000, hasAirport: false, worldScale: 0.08, bounds: { north: 22.238, south: 21.855, east: -159.281, west: -159.798 } },
-    { name: 'molokai', x: -1400, z: -3600, hasAirport: false, worldScale: 0.08, bounds: { north: 21.224, south: 21.046, east: -156.709, west: -157.310 } },
-    { name: 'lanai', x: 1400, z: -3200, hasAirport: false, worldScale: 0.08, bounds: { north: 20.929, south: 20.731, east: -156.805, west: -157.062 } },
-    { name: 'niihau', x: -9600, z: -4800, hasAirport: false, worldScale: 0.08, bounds: { north: 22.028, south: 21.778, east: -160.049, west: -160.247 } },
-    { name: 'kahoolawe', x: 2200, z: -2200, hasAirport: false, worldScale: 0.08, bounds: { north: 20.637, south: 20.496, east: -156.490, west: -156.704 } }
+    { name: 'maui', x: 0, z: 0, hasAirport: true, airports: [], worldScale: 0.08, bounds: { north: 21.031, south: 20.574, east: -155.979, west: -156.697 } },
+    { name: 'big-island', x: 3200, z: -6400, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 20.310, south: 18.861, east: -154.756, west: -156.124 } },
+    { name: 'oahu', x: -6400, z: -2800, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 21.712, south: 21.254, east: -157.648, west: -158.280 } },
+    { name: 'kauai', x: -12000, z: -4000, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 22.238, south: 21.855, east: -159.281, west: -159.798 } },
+    { name: 'molokai', x: -1400, z: -3600, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 21.224, south: 21.046, east: -156.709, west: -157.310 } },
+    { name: 'lanai', x: 1400, z: -3200, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 20.929, south: 20.731, east: -156.805, west: -157.062 } },
+    { name: 'niihau', x: -9600, z: -4800, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 22.028, south: 21.778, east: -160.049, west: -160.247 } },
+    { name: 'kahoolawe', x: 2200, z: -2200, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 20.637, south: 20.496, east: -156.490, west: -156.704 } }
 ];
 
 async function createAllIslands(scene, onProgress) {
+    console.log('Loading airport positions...');
+    const airportPositions = await loadAirportPositions();
+    
+    for (const island of islandPositions) {
+        island.airports = airportPositions[island.name] || [];
+    }
+    
     const total = islandPositions.length;
     let loaded = 0;
     
