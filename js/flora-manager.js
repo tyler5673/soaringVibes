@@ -24,6 +24,10 @@ class FloraManager {
         this.cellSize = 15; // Smaller cells for denser placement
         this.populatedCells = new Set();
         
+        // Configurable draw distance and density
+        this.treeMaxDist = 1300;
+        this.densityMultiplier = 1.0;
+        
         // Island groups reference for adding new trees
         this.islandGroups = new Map();
         
@@ -119,16 +123,15 @@ class FloraManager {
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
         const mobileMultiplier = isMobile ? 0 : 1.0;
         
-        // SPARSE DENSITIES - 3/4 of previous
         switch(biome) {
-            case 'forest': return 0.26 * mobileMultiplier;      // 26%
-            case 'dry-forest': return 0.15 * mobileMultiplier;   // 15%
-            case 'beach': return 0.15 * mobileMultiplier;        // 15%
-            case 'shrubland': return 0.22 * mobileMultiplier;    // 22%
-            case 'grassland': return 0.15 * mobileMultiplier;    // 15%
-            case 'cliff': return 0.08 * mobileMultiplier;        // 8%
-            case 'rock': return 0.06 * mobileMultiplier;        // 6%
-            default: return 0.11 * mobileMultiplier;
+            case 'forest': return 0.26 * mobileMultiplier * this.densityMultiplier;
+            case 'dry-forest': return 0.15 * mobileMultiplier * this.densityMultiplier;
+            case 'beach': return 0.15 * mobileMultiplier * this.densityMultiplier;
+            case 'shrubland': return 0.22 * mobileMultiplier * this.densityMultiplier;
+            case 'grassland': return 0.15 * mobileMultiplier * this.densityMultiplier;
+            case 'cliff': return 0.08 * mobileMultiplier * this.densityMultiplier;
+            case 'rock': return 0.06 * mobileMultiplier * this.densityMultiplier;
+            default: return 0.11 * mobileMultiplier * this.densityMultiplier;
         }
     }
 
@@ -372,7 +375,7 @@ class FloraManager {
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
-        const treeMaxDist = isMobile ? 800 : 1300; // 800m mobile, 1300m desktop (+500)
+        const treeMaxDist = this.treeMaxDist;
 
         this.allTrees.forEach(treeData => {
             const dist = camPos.distanceTo(treeData.worldPos);

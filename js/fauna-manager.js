@@ -31,6 +31,10 @@ class FaunaManager {
             nene: 20
         };
         
+        // Configurable draw distance and density
+        this.animalMaxDist = 6000;
+        this.densityMultiplier = 1.0;
+        
         this.spawnedCount = {
             whale: 0,
             dolphin: 0,
@@ -61,13 +65,17 @@ class FaunaManager {
         console.log(`FaunaManager: Initial spawn complete. Total animals: ${this.animals.length}`);
     }
 
+    getEffectiveMax(type) {
+        return Math.max(0, Math.floor(this.maxAnimalsPerType[type] * this.densityMultiplier));
+    }
+
     spawnAnimalsAroundCamera() {
         if (!this.camera) return;
         
         const camPos = this.camera.position;
         
         // Spawn whales in ocean areas
-        for (let i = this.spawnedCount.whale; i < this.maxAnimalsPerType.whale; i++) {
+        for (let i = this.spawnedCount.whale; i < this.getEffectiveMax('whale'); i++) {
             const pos = this.getSpawnPositionInFrontOfCamera(5000, 0, 500);
             if (pos) {
                 const whale = new Whale(this.scene, pos);
@@ -86,7 +94,7 @@ class FaunaManager {
             
             const dolphinsInPod = 4;
             for (let i = 0; i < dolphinsInPod; i++) {
-                if (this.spawnedCount.dolphin >= this.maxAnimalsPerType.dolphin) break;
+                if (this.spawnedCount.dolphin >= this.getEffectiveMax('dolphin')) break;
                 
                 const offset = new THREE.Vector3(
                     (Math.random() - 0.5) * 200,
@@ -103,7 +111,7 @@ class FaunaManager {
         }
 
         // Spawn sea turtles
-        for (let i = this.spawnedCount.turtle; i < this.maxAnimalsPerType.turtle; i++) {
+        for (let i = this.spawnedCount.turtle; i < this.getEffectiveMax('turtle'); i++) {
             const pos = this.getSpawnPositionInFrontOfCamera(2500, 0, 200);
             if (pos) {
                 const turtle = new SeaTurtle(this.scene, pos);
@@ -115,7 +123,7 @@ class FaunaManager {
         }
 
         // Spawn albatross
-        for (let i = this.spawnedCount.albatross; i < this.maxAnimalsPerType.albatross; i++) {
+        for (let i = this.spawnedCount.albatross; i < this.getEffectiveMax('albatross'); i++) {
             const pos = this.getSpawnPositionInFrontOfCamera(6000, 200, 500);
             if (pos) {
                 pos.y = 150 + Math.random() * 200;
@@ -128,7 +136,7 @@ class FaunaManager {
         }
 
         // Spawn frigatebirds
-        for (let i = this.spawnedCount.frigatebird; i < this.maxAnimalsPerType.frigatebird; i++) {
+        for (let i = this.spawnedCount.frigatebird; i < this.getEffectiveMax('frigatebird'); i++) {
             const pos = this.getSpawnPositionInFrontOfCamera(4000, 100, 300);
             if (pos) {
                 pos.y = 100 + Math.random() * 150;
@@ -141,7 +149,7 @@ class FaunaManager {
         }
 
         // Spawn honeycreepers in forest areas
-        for (let i = this.spawnedCount.honeycreeper; i < this.maxAnimalsPerType.honeycreeper; i++) {
+        for (let i = this.spawnedCount.honeycreeper; i < this.getEffectiveMax('honeycreeper'); i++) {
             // Try to spawn near forest biomes
             const islandInfo = this.getRandomNearbyIsland(2000);
             if (!islandInfo) continue;
@@ -165,7 +173,7 @@ class FaunaManager {
         }
 
         // Spawn nene in grassland areas
-        for (let i = this.spawnedCount.nene; i < this.maxAnimalsPerType.nene; i++) {
+        for (let i = this.spawnedCount.nene; i < this.getEffectiveMax('nene'); i++) {
             const islandInfo = this.getRandomNearbyIsland(2500);
             if (!islandInfo) continue;
             
@@ -274,7 +282,7 @@ class FaunaManager {
 
     checkAnimalDistances() {
         const camPos = this.camera.position;
-        const maxDist = 6000;
+        const maxDist = this.animalMaxDist;
         
         this.animals.forEach(animal => {
             const dist = animal.position.distanceTo(camPos);

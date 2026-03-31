@@ -48,7 +48,7 @@ class Sailboat {
             bevelEnabled: false 
         });
         hullGeo.rotateX(-Math.PI / 2);       // Lay flat
-        hullGeo.translate(0, -1.8, -2.5);     // Center and position
+        hullGeo.translate(0, 1.8, -2.5);     // Center and position (lift to water level)
         
         const hullMat = new THREE.MeshStandardMaterial({ 
             color: 0xFFFFFF,
@@ -73,7 +73,7 @@ class Sailboat {
             bevelEnabled: false 
         });
         keelGeo.rotateX(-Math.PI / 2);
-        keelGeo.translate(-1, -3.5, 0);
+        keelGeo.translate(-1, -1.7, 0);
         
         const keelMat = new THREE.MeshStandardMaterial({ 
             color: 0x333333,
@@ -88,14 +88,14 @@ class Sailboat {
         const deckStripeGeo = new THREE.BoxGeometry(16, 0.15, 4.8);
         const deckStripeMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
         const deckStripe = new THREE.Mesh(deckStripeGeo, deckStripeMat);
-        deckStripe.position.set(7, 2.6, 0);
+        deckStripe.position.set(7, 6.2, 0);
         group.add(deckStripe);
         
         // Cabin structure (simplified) - sits on deck near stern
         const cabinTopGeo = new THREE.BoxGeometry(5, 0.3, 3.8);
         const cabinTopMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
         const cabinTop = new THREE.Mesh(cabinTopGeo, cabinTopMat);
-        cabinTop.position.set(1.5, 2.9, 0);
+        cabinTop.position.set(1.5, 6.5, 0);
         group.add(cabinTop);
         
         // Mast - single central mast with slight aft rake (correct for sloop)
@@ -105,8 +105,8 @@ class Sailboat {
         const mainMastGeo = new THREE.CylinderGeometry(mastRadius * 0.7, mastRadius, mastHeight, 10);
         const mastMat = new THREE.MeshStandardMaterial({ color: 0xEEEEEE, roughness: 0.5 });
         const mainMast = new THREE.Mesh(mainMastGeo, mastMat);
-        // Mast base at deck level (y=2.6), centered on hull width, ~2 units from stern
-        mainMast.position.set(2, mastHeight / 2 + 2.6 - 1, 0);
+        // Mast base at deck level (y=6.2), centered on hull width, ~2 units from stern
+        mainMast.position.set(2, mastHeight / 2 + 6.2 - 1, 0);
         group.add(mainMast);
         
         // Standing rigging - shrouds (side support) and stays (fore/aft support)
@@ -176,14 +176,14 @@ class Sailboat {
         const boomMat = new THREE.MeshStandardMaterial({ color: 0x3D2817 });
         const boom = new THREE.Mesh(boomGeo, boomMat);
         // Boom extends from gooseneck (near mast) to sail clew
-        boom.position.set(-3.5, 4, 0.3);
+        boom.position.set(-3.5, 7.6, 0.3);
         boom.rotation.z = -Math.PI / 12; // Slight down angle
         group.add(boom);
         
         // Gooseneck - connection point of boom to mast
         const gooseneckGeo = new THREE.BoxGeometry(0.3, 0.4, 0.3);
         const gooseneck = new THREE.Mesh(gooseneckGeo, mastMat);
-        gooseneck.position.set(-1, 4, 0.3);
+        gooseneck.position.set(-1, 7.6, 0.3);
         group.add(gooseneck);
         
         // Headsail/Jib - triangular sail forward of mast (cutter rig adds versatility)
@@ -789,7 +789,17 @@ class BoatManager {
             { x: 8000, z: -15000 },
             { x: -15000, z: -8000 },
             { x: 18000, z: 12000 },
-            { x: -20000, z: 5000 }
+            { x: -20000, z: 5000 },
+            { x: 10000, z: 18000 },
+            { x: -6000, z: -12000 },
+            { x: 22000, z: -3000 },
+            { x: -18000, z: 15000 },
+            { x: 14000, z: -9000 },
+            { x: -10000, z: 20000 },
+            { x: 25000, z: 6000 },
+            { x: -7000, z: -18000 },
+            { x: 3000, z: 22000 },
+            { x: -22000, z: -6000 }
         ];
         
         for (let i = 0; i < count; i++) {

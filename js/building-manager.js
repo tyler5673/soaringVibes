@@ -13,6 +13,10 @@ class BuildingManager {
         this.lastUpdate = 0;
         this.perfManager = new PerformanceManager(camera);
         
+        // Configurable draw distance and density
+        this.buildingMaxDist = 3500;
+        this.densityMultiplier = 1.0;
+        
         this.islandGroups = new Map();
     }
     
@@ -46,12 +50,12 @@ class BuildingManager {
     }
     
     getDensityForZone(zone) {
-        switch(zone) {
-            case 'airport': return 0.15;
-            case 'inland': return 0.05;
-            case 'beach': return 0;
-            default: return 0.02;
-        }
+        const base = {
+            airport: 0.15,
+            inland: 0.05,
+            beach: 0,
+        }[zone] || 0.02;
+        return base * this.densityMultiplier;
     }
     
     selectBuildingType(buildingTypes) {
@@ -270,7 +274,7 @@ class BuildingManager {
         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
-        const maxDist = isMobile ? 1500 : 3500;
+        const maxDist = this.buildingMaxDist;
         
         this.allBuildings.forEach(buildingData => {
             const dist = camPos.distanceTo(buildingData.worldPos);

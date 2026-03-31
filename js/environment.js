@@ -174,4 +174,36 @@ class CloudSystem {
             if (cloud.position.z < -b) cloud.position.z = b;
         });
     }
+    
+    rebuild(count) {
+        const islandPositions = [
+            { x: 0, z: 0 },
+            { x: 3200, z: -6400 },
+            { x: -6400, z: -2800 },
+            { x: -12000, z: -4000 },
+            { x: -1400, z: -3600 },
+            { x: 1400, z: -3200 },
+            { x: -9600, z: -4800 },
+            { x: 2200, z: -2200 }
+        ];
+        
+        while (this.clouds.length > count) {
+            const cloud = this.clouds.pop();
+            this.scene.remove(cloud);
+            cloud.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) child.material.dispose();
+            });
+        }
+        
+        while (this.clouds.length < count) {
+            const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
+            const radius = 1000 + Math.random() * 4000;
+            const angle = Math.random() * Math.PI * 2;
+            this.createCloud(
+                island.x + Math.cos(angle) * radius,
+                island.z + Math.sin(angle) * radius
+            );
+        }
+    }
 }

@@ -79,6 +79,8 @@
                 </div>
         </div>
         
+        </div>
+        
         <div id="loading-top-left">
             <div id="loading-links">
                 <a href="/viewer" id="asset-viewer-button">Open Asset Viewer</a>
@@ -89,11 +91,95 @@
         <div id="loading-tagline">Built with prompts. Fueled by vibes. Powered by open source.</div>
         <div id="loading-version">v0.0.1</div>
     </div>
+    
+    <!-- Settings modal - outside loading so it shows during gameplay -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content settings-container">
+            <button id="settings-close-btn" class="settings-close-btn">&times;</button>
+            <h2 class="settings-title">Configuration</h2>
+            
+            <div class="settings-section">
+                <h3 class="settings-section-title">Vegetation</h3>
+                
+                <div class="setting-row">
+                    <label for="veg-distance-slider">Draw Distance</label>
+                    <div class="setting-control">
+                        <input type="range" id="veg-distance-slider" min="200" max="5000" value="1300" step="50">
+                        <span id="veg-distance-value" class="setting-value">1300m</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="veg-density-slider">Density</label>
+                    <div class="setting-control">
+                        <input type="range" id="veg-density-slider" min="0" max="200" value="100" step="5">
+                        <span id="veg-density-value" class="setting-value">100%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3 class="settings-section-title">Buildings</h3>
+                
+                <div class="setting-row">
+                    <label for="building-distance-slider">Draw Distance</label>
+                    <div class="setting-control">
+                        <input type="range" id="building-distance-slider" min="200" max="10000" value="3500" step="100">
+                        <span id="building-distance-value" class="setting-value">3500m</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="building-density-slider">Density</label>
+                    <div class="setting-control">
+                        <input type="range" id="building-density-slider" min="0" max="200" value="100" step="5">
+                        <span id="building-density-value" class="setting-value">100%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3 class="settings-section-title">Fauna</h3>
+                
+                <div class="setting-row">
+                    <label for="fauna-distance-slider">Draw Distance</label>
+                    <div class="setting-control">
+                        <input type="range" id="fauna-distance-slider" min="1000" max="20000" value="6000" step="500">
+                        <span id="fauna-distance-value" class="setting-value">6000m</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="fauna-density-slider">Count</label>
+                    <div class="setting-control">
+                        <input type="range" id="fauna-density-slider" min="0" max="200" value="100" step="5">
+                        <span id="fauna-density-value" class="setting-value">100%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3 class="settings-section-title">Clouds</h3>
+                
+                <div class="setting-row">
+                    <label for="cloud-count-slider">Cloud Count</label>
+                    <div class="setting-control">
+                        <input type="range" id="cloud-count-slider" min="0" max="300" value="100" step="10">
+                        <span id="cloud-count-value" class="setting-value">100</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Desktop buttons - outside loading so they show during gameplay -->
     <div id="desktop-menu-btn" class="desktop-menu-button" title="Change name or colors">
         <img src="assets/images/icon.png" alt="Menu">
     </div>
     <button id="desktop-reset-btn" class="desktop-reset-button" title="Reset Aircraft (R)">↻</button>
+    <button id="desktop-settings-btn" class="desktop-settings-button" title="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
+    </button>
     <div id="hud">
         <div class="gauges">
             <!-- Airspeed Indicator -->
@@ -188,7 +274,7 @@
             
 
         </div>
-        <div id="controls-hint">WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset</div>
+        <div id="controls-hint">WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset | C: Config</div>
     </div>
     <div id="crash-message">
         <div class="crash-text">Crashed!</div>
@@ -765,6 +851,168 @@ document.addEventListener('DOMContentLoaded', function() {
             window.openColorPicker(this, 'highlight-color-display');
         });
     }
+    
+    // ========== SETTINGS MODAL ==========
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsBtn = document.getElementById('desktop-settings-btn');
+    const settingsCloseBtn = document.getElementById('settings-close-btn');
+    
+    const vegDistSlider = document.getElementById('veg-distance-slider');
+    const vegDistValue = document.getElementById('veg-distance-value');
+    const vegDensitySlider = document.getElementById('veg-density-slider');
+    const vegDensityValue = document.getElementById('veg-density-value');
+    
+    const bldDistSlider = document.getElementById('building-distance-slider');
+    const bldDistValue = document.getElementById('building-distance-value');
+    const bldDensitySlider = document.getElementById('building-density-slider');
+    const bldDensityValue = document.getElementById('building-density-value');
+    
+    const faunaDistSlider = document.getElementById('fauna-distance-slider');
+    const faunaDistValue = document.getElementById('fauna-distance-value');
+    const faunaDensitySlider = document.getElementById('fauna-density-slider');
+    const faunaDensityValue = document.getElementById('fauna-density-value');
+    
+    const cloudCountSlider = document.getElementById('cloud-count-slider');
+    const cloudCountValue = document.getElementById('cloud-count-value');
+    
+    function syncSlidersFromManagers() {
+        const fm = window.floraManager;
+        const bm = window.buildingManager;
+        const fm2 = window.faunaManager;
+        const cs = window.cloudSystem;
+        
+        if (fm) {
+            vegDistSlider.value = fm.treeMaxDist;
+            vegDistValue.textContent = fm.treeMaxDist + 'm';
+            vegDensitySlider.value = Math.round(fm.densityMultiplier * 100);
+            vegDensityValue.textContent = Math.round(fm.densityMultiplier * 100) + '%';
+        }
+        
+        if (bm) {
+            bldDistSlider.value = bm.buildingMaxDist;
+            bldDistValue.textContent = bm.buildingMaxDist + 'm';
+            bldDensitySlider.value = Math.round(bm.densityMultiplier * 100);
+            bldDensityValue.textContent = Math.round(bm.densityMultiplier * 100) + '%';
+        }
+        
+        if (fm2) {
+            faunaDistSlider.value = fm2.animalMaxDist;
+            faunaDistValue.textContent = fm2.animalMaxDist + 'm';
+            faunaDensitySlider.value = Math.round(fm2.densityMultiplier * 100);
+            const totalAnimals = Object.values(fm2.spawnedCount).reduce((a, b) => a + b, 0);
+            faunaDensityValue.textContent = Math.round(fm2.densityMultiplier * 100) + '% (' + totalAnimals + ')';
+        }
+        
+        if (cs) {
+            cloudCountSlider.value = cs.clouds.length;
+            cloudCountValue.textContent = cs.clouds.length;
+        }
+    }
+    
+    function openSettings() {
+        syncSlidersFromManagers();
+        settingsModal.style.display = 'flex';
+    }
+    
+    function closeSettings() {
+        settingsModal.style.display = 'none';
+    }
+    
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', openSettings);
+    }
+    
+    if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener('click', closeSettings);
+    }
+    
+    settingsModal.addEventListener('click', function(e) {
+        if (e.target === settingsModal) {
+            closeSettings();
+        }
+    });
+    
+    // Vegetation draw distance
+    vegDistSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        vegDistValue.textContent = val + 'm';
+        if (window.floraManager) {
+            window.floraManager.treeMaxDist = val;
+        }
+    });
+    
+    // Vegetation density
+    vegDensitySlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        vegDensityValue.textContent = val + '%';
+        if (window.floraManager) {
+            window.floraManager.densityMultiplier = val / 100;
+        }
+    });
+    
+    // Building draw distance
+    bldDistSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        bldDistValue.textContent = val + 'm';
+        if (window.buildingManager) {
+            window.buildingManager.buildingMaxDist = val;
+        }
+    });
+    
+    // Building density
+    bldDensitySlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        bldDensityValue.textContent = val + '%';
+        if (window.buildingManager) {
+            window.buildingManager.densityMultiplier = val / 100;
+        }
+    });
+    
+    // Fauna draw distance
+    faunaDistSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        faunaDistValue.textContent = val + 'm';
+        if (window.faunaManager) {
+            window.faunaManager.animalMaxDist = val;
+        }
+    });
+    
+    // Fauna density
+    faunaDensitySlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        faunaDensityValue.textContent = val + '%';
+        if (window.faunaManager) {
+            window.faunaManager.densityMultiplier = val / 100;
+        }
+    });
+    
+    // Cloud count - rebuild clouds
+    cloudCountSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        cloudCountValue.textContent = val;
+    });
+    
+    cloudCountSlider.addEventListener('change', function() {
+        const val = parseInt(this.value);
+        if (window.cloudSystem && val !== window.cloudSystem.clouds.length) {
+            window.cloudSystem.rebuild(val);
+        }
+    });
+    
+    // C key opens settings
+    window.addEventListener('keydown', function(e) {
+        if (e.code === 'KeyC' && !e.ctrlKey && !e.metaKey) {
+            const activeEl = document.activeElement;
+            const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+            if (!isInputFocused) {
+                if (settingsModal.style.display === 'flex') {
+                    closeSettings();
+                } else {
+                    openSettings();
+                }
+            }
+        }
+    });
 });
 
 // ========== MAIN =======
@@ -1005,8 +1253,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 reset: keyboardInput.reset || touchInputData.reset
             };
             
-            orbitCamera.handleMouseInput(mouseInput.deltaX, mouseInput.deltaY);
-            orbitCamera.handleScroll(mouseInput.scrollDelta);
+            const settingsOpen = document.getElementById('settings-modal').style.display === 'flex';
+            const loadingVisible = document.getElementById('loading').style.display !== 'none' && !document.getElementById('loading').classList.contains('hidden');
+            if (!settingsOpen && !loadingVisible) {
+                orbitCamera.handleMouseInput(mouseInput.deltaX, mouseInput.deltaY);
+                orbitCamera.handleScroll(mouseInput.scrollDelta);
+            }
             
             const controlInput = {
                 pitch: (input.pitchUp ? -1 : 0) + (input.pitchDown ? 1 : 0),

@@ -92,10 +92,37 @@ body { overflow: hidden; background: #000; }
     display: flex;
 }
 
+/* Settings button */
+.desktop-settings-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    z-index: 1001;
+    color: #fff;
+}
+
+.desktop-settings-button:hover {
+    background: rgba(79, 195, 247, 0.3);
+    border-color: rgba(79, 195, 247, 0.8);
+    transform: scale(1.05);
+}
+
 /* Hide on touch devices */
 @media (hover: none) and (pointer: coarse) {
     .desktop-menu-button,
-    .desktop-reset-button {
+    .desktop-reset-button,
+    .desktop-settings-button {
         display: none !important;
     }
 }
@@ -1174,4 +1201,132 @@ body { overflow: hidden; background: #000; }
     #hex-display {
         font-size: 16px;
     }
+}
+
+/* Settings Modal */
+.settings-container {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 30px 35px 35px;
+    width: 420px;
+    max-width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(79, 195, 247, 0.15);
+    position: relative;
+}
+
+.settings-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 28px;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+    padding: 4px 8px;
+}
+
+.settings-close-btn:hover {
+    color: #4fc3f7;
+    transform: scale(1.1);
+}
+
+.settings-title {
+    color: #fff;
+    font-size: 22px;
+    font-weight: bold;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0 0 24px;
+    padding-right: 40px;
+}
+
+.settings-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.settings-section-title {
+    color: #4fc3f7;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 16px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.setting-row:last-child {
+    margin-bottom: 0;
+}
+
+.setting-row label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-width: 100px;
+}
+
+.setting-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.setting-control input[type="range"] {
+    width: 160px;
+    height: 6px;
+    border-radius: 3px;
+    background: #2a2a4e;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.setting-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #4fc3f7;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.setting-control input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #4fc3f7;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    border: none;
+}
+
+.setting-value {
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: bold;
+    min-width: 50px;
+    text-align: right;
 }
