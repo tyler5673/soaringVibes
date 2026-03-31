@@ -353,73 +353,77 @@ class CruiseShip {
     createMesh() {
         const group = new THREE.Group();
         
-        const hullGeo = new THREE.BoxGeometry(60, 12, 15);
+        const hullGeo = new THREE.BoxGeometry(300, 20, 45);
         const hullMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.3 });
         const hull = new THREE.Mesh(hullGeo, hullMat);
-        hull.position.y = 4;
+        hull.position.y = 12;
         hull.castShadow = true;
         group.add(hull);
         
-        const stripeGeo = new THREE.BoxGeometry(60, 2, 15.1);
+        const stripeGeo = new THREE.BoxGeometry(280, 4, 45.1);
         const stripeMat = new THREE.MeshStandardMaterial({ color: 0xCC0000 });
         const stripe = new THREE.Mesh(stripeGeo, stripeMat);
-        stripe.position.y = 7;
+        stripe.position.y = 15;
         group.add(stripe);
         
-        for (let i = 0; i < 3; i++) {
-            const deckGeo = new THREE.BoxGeometry(55, 3, 14);
+        for (let i = 0; i < 7; i++) {
+            const deckWidth = 42 - i * 1.5;
+            const deckHeight = 6;
+            const deckGeo = new THREE.BoxGeometry(280, deckHeight, deckWidth);
             const deckMat = new THREE.MeshStandardMaterial({ color: 0xDDDDDD });
             const deck = new THREE.Mesh(deckGeo, deckMat);
-            deck.position.set(0, 11 + i * 3.5, 0);
+            deck.position.set(0, 23 + i * 6.5, 0);
             deck.castShadow = true;
             group.add(deck);
             
-            for (let w = 0; w < 10; w++) {
-                const windowGeo = new THREE.BoxGeometry(2, 1.5, 0.2);
+            for (let w = 0; w < 24; w++) {
+                const windowGeo = new THREE.BoxGeometry(6, 3, 0.5);
                 const windowMat = new THREE.MeshStandardMaterial({ 
                     color: 0xFFFFAA, 
                     emissive: 0xFFFFAA,
                     emissiveIntensity: this.windowLightsOn ? 0.5 : 0
                 });
                 const windowMesh = new THREE.Mesh(windowGeo, windowMat);
-                windowMesh.position.set(-25 + w * 5.5, 12 + i * 3.5, 7.1);
+                windowMesh.position.set(-120 + w * 10, 26 + i * 6.5, deckWidth / 2 + 0.3);
                 group.add(windowMesh);
             }
         }
         
-        const bridgeGeo = new THREE.BoxGeometry(15, 10, 12);
+        const bridgeGeo = new THREE.BoxGeometry(40, 18, 35);
         const bridgeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
         const bridge = new THREE.Mesh(bridgeGeo, bridgeMat);
-        bridge.position.set(-20, 16, 0);
+        bridge.position.set(-90, 76, 0);
         bridge.castShadow = true;
         group.add(bridge);
         
-        for (let i = 0; i < 2; i++) {
-            const stackGeo = new THREE.CylinderGeometry(2, 2.5, 8, 8);
+        for (let i = 0; i < 3; i++) {
+            const stackHeight = 15 + i * 3;
+            const stackGeo = new THREE.CylinderGeometry(6, 8, stackHeight, 12);
             const stackMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
             const stack = new THREE.Mesh(stackGeo, stackMat);
-            stack.position.set(15 + i * 5, 22, 0);
+            stack.position.set(70 + i * 15, 61 + stackHeight / 2, -15);
             group.add(stack);
         }
         
         for (let side = -1; side <= 1; side += 2) {
-            for (let i = 0; i < 3; i++) {
-                const boatGeo = new THREE.BoxGeometry(4, 1.5, 2);
+            for (let i = 0; i < 6; i++) {
+                const boatGeo = new THREE.BoxGeometry(12, 3, 5);
                 const boatMat = new THREE.MeshStandardMaterial({ color: 0xFF6600 });
                 const boat = new THREE.Mesh(boatGeo, boatMat);
-                boat.position.set(-10 + i * 10, 10.5, side * 8);
+                boat.position.set(-80 + i * 40, 34.5, side * 18);
                 group.add(boat);
             }
         }
         
-        for (let i = 0; i < 20; i++) {
-            const personGeo = new THREE.BoxGeometry(0.5, 1.5, 0.3);
+        for (let i = 0; i < 100; i++) {
+            const personGeo = new THREE.BoxGeometry(1.5, 4, 1);
             const personMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
             const person = new THREE.Mesh(personGeo, personMat);
+            const deckLevel = Math.floor(Math.random() * 3);
             person.position.set(
-                (Math.random() - 0.5) * 40,
-                24 + Math.floor(Math.random() * 3) * 3.5,
-                (Math.random() - 0.5) * 8
+                (Math.random() - 0.5) * 200,
+                23 + deckLevel * 6.5 + 4,
+                (Math.random() - 0.5) * 25
             );
             person.userData.walkOffset = Math.random() * Math.PI * 2;
             group.add(person);
@@ -776,16 +780,23 @@ class BoatManager {
     
     createCruiseShips(count) {
         const positions = [
-            { x: 1500, z: 500 },
-            { x: -500, z: -800 },
-            { x: 3500, z: -6000 },
-            { x: -6000, z: -2500 },
-            { x: 2000, z: -4000 }
+            { x: 2000, z: 1500 },
+            { x: -3000, z: 2000 },
+            { x: 5000, z: -2000 },
+            { x: -8000, z: -5000 },
+            { x: 15000, z: 8000 },
+            { x: -12000, z: 10000 },
+            { x: 8000, z: -15000 },
+            { x: -15000, z: -8000 },
+            { x: 18000, z: 12000 },
+            { x: -20000, z: 5000 }
         ];
         
         for (let i = 0; i < count; i++) {
-            const pos = positions[i] || this.getOpenWaterPosition();
-            const ship = new CruiseShip(this.scene, new THREE.Vector3(pos.x, BOAT_WATER_LEVEL, pos.z));
+            const pos = positions[i % positions.length];
+            const offsetX = (Math.random() - 0.5) * 1000;
+            const offsetZ = (Math.random() - 0.5) * 1000;
+            const ship = new CruiseShip(this.scene, new THREE.Vector3(pos.x + offsetX, BOAT_WATER_LEVEL, pos.z + offsetZ));
             this.cruiseShips.push(ship);
         }
     }

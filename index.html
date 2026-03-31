@@ -55,24 +55,27 @@
         <!-- Color picker modal -->
         <div id="color-picker-modal" class="modal">
                 <div class="modal-content color-picker-container">
-                    <!-- RGB sliders only - no swatch in dialog -->
-                    <div class="rgb-color-picker">
-                        <div class="slider-row">
-                            <label style="color: #ff6b6b;">R</label>
-                            <input type="range" id="red-slider" min="0" max="255" value="79">
-                            <span id="red-value" style="color: #ff6b6b;">79</span>
-                        </div>
-                        <div class="slider-row">
-                            <label style="color: #4ecdc4;">G</label>
-                            <input type="range" id="green-slider" min="0" max="255" value="195">
-                            <span id="green-value" style="color: #4ecdc4;">195</span>
-                        </div>
-                        <div class="slider-row">
-                            <label style="color: #45b7d1;">B</label>
-                            <input type="range" id="blue-slider" min="0" max="255" value="247">
-                            <span id="blue-value" style="color: #45b7d1;">247</span>
+                    <div class="color-picker-layout">
+                        <div id="color-picker-preview"></div>
+                        <div class="rgb-color-picker">
+                            <div class="slider-row">
+                                <label style="color: #ff6b6b;">R</label>
+                                <input type="range" id="red-slider" min="0" max="255" value="79">
+                                <span id="red-value" style="color: #ff6b6b;">79</span>
+                            </div>
+                            <div class="slider-row">
+                                <label style="color: #4ecdc4;">G</label>
+                                <input type="range" id="green-slider" min="0" max="255" value="195">
+                                <span id="green-value" style="color: #4ecdc4;">195</span>
+                            </div>
+                            <div class="slider-row">
+                                <label style="color: #45b7d1;">B</label>
+                                <input type="range" id="blue-slider" min="0" max="255" value="247">
+                                <span id="blue-value" style="color: #45b7d1;">247</span>
+                            </div>
                         </div>
                     </div>
+                    <button id="color-picker-ok" class="color-picker-ok-btn">Ok!</button>
                 </div>
         </div>
         
@@ -565,12 +568,8 @@ document.addEventListener('DOMContentLoaded', function() {
         greenValue.textContent = g;
         blueValue.textContent = b;
         
-        // Update label colors to match slider color
-        redValue.style.color = `rgb(${r}, 107, 107)`;
-        greenValue.style.color = `rgb(78, 205, 196)`;
-        blueValue.style.color = `rgb(69, 183, 209)`;
-        
         const hex = rgbToHex(r, g, b);
+        colorPickerPreview.style.backgroundColor = hex;
     }
     
     // Make function globally accessible for clicking on color displays
@@ -593,35 +592,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         updateColorFromSliders();
         
-        // Position modal above the clicked element
-        const rect = element.getBoundingClientRect();
         const modal = document.getElementById('color-picker-modal');
-        const content = modal.querySelector('.modal-content.color-picker-container');
-        
-        // Temporarily show to measure, then reposition
-        content.style.display = 'block';
-        content.style.left = '0';
-        content.style.top = '0';
-        // Force reflow to get accurate dimensions
-        const actualHeight = content.offsetHeight;
-        const actualWidth = content.offsetWidth;
-        
-        let leftPos = rect.left + (rect.width / 2) - (actualWidth / 2);
-        let topPos = rect.top - actualHeight - 8;
-        
-        // Keep within viewport bounds
-        if (leftPos < 10) leftPos = 10;
-        if (window.innerWidth - leftPos < actualWidth) {
-            leftPos = window.innerWidth - actualWidth - 10;
-        }
-        if (topPos < 10) topPos = rect.bottom + 10;
-        
-        content.style.left = leftPos + 'px';
-        content.style.top = topPos + 'px';
-        
         modal.style.display = 'flex';
         
-        // Focus on first slider for keyboard input
         redSlider.focus();
     };
     
@@ -762,18 +735,17 @@ document.addEventListener('DOMContentLoaded', function() {
     colorPickerModal.addEventListener('click', function(e) {
         if (e.target === colorPickerModal) {
             colorPickerModal.style.display = 'none';
-            const content = colorPickerModal.querySelector('.modal-content.color-picker-container');
-            if (content) content.style.display = 'none';
             currentColorSelector = null;
         }
     });
     
-    // Update display when modal closes and user clicks arrow buttons
-    function closeModalAndReset() {
-        colorPickerModal.style.display = 'none';
-        const content = colorPickerModal.querySelector('.modal-content.color-picker-container');
-        if (content) content.style.display = 'none';
-        currentColorSelector = null;
+    // Ok button closes the modal
+    const colorPickerOk = document.getElementById('color-picker-ok');
+    if (colorPickerOk) {
+        colorPickerOk.addEventListener('click', function() {
+            colorPickerModal.style.display = 'none';
+            currentColorSelector = null;
+        });
     }
     
     // Add click handlers to color displays to open picker
