@@ -221,6 +221,9 @@ class MultiplayerClient {
         const maxLabelDistance = 1219.2; // 4000ft in meters (4000 * 0.3048)
         const dotThreshold = 1524; // 5000ft in meters (5000 * 0.3048)
         
+        // Camera FOV-based scaling factor for 40px dots
+        const PIXEL_SCALE_FACTOR = 0.025;
+        
         for (const [playerId, mesh] of this.otherPlayers) {
             if (!mesh.userData.label) continue;
             
@@ -234,11 +237,15 @@ class MultiplayerClient {
             const showLabel = distance <= maxLabelDistance && !showDot;
             const showDetailed = !showDot;
             
+            // Debug logging for dot visibility changes
+            if (distanceDot && distanceDot.visible !== showDot) {
+                console.log(`Player ${mesh.userData.name || playerId}: distance=${distance.toFixed(0)}m, showDot=${showDot}, showDetailed=${showDetailed}`);
+            }
+            
             // Update label visibility
             label.visible = showLabel;
             
             if (label.visible) {
-                // Scale label based on distance (smaller when far, minimum size when close)
                 const scale = Math.max(1.5, distance / 50);
                 label.scale.set(scale * 3, scale * 0.75, 1);
             }
@@ -247,10 +254,10 @@ class MultiplayerClient {
             if (distanceDot) {
                 distanceDot.visible = showDot;
                 
-                // Update dot color if needed
-                if (showDot && mesh.userData.colors) {
-                    // We could update the dot color here if colors changed
-                    // For now, the dot is created with the initial color
+                if (showDot) {
+                    // Scale dot to maintain ~40px on screen
+                    const worldScale = Math.max(15, distance * PIXEL_SCALE_FACTOR);
+                    distanceDot.scale.set(worldScale, worldScale, 1);
                 }
             }
             
@@ -762,18 +769,16 @@ class MultiplayerClient {
             map: texture,
             transparent: true,
             opacity: 0.9,
-            sizeAttenuation: false // Keep constant size on screen
+            sizeAttenuation: true // Use world space positioning
         });
         const sprite = new THREE.Sprite(material);
         
-        // Scale to approximately 40 pixels (at typical FOV)
-        // Three.js sprites are in world units, but with sizeAttenuation=false
-        // they're in normalized device coordinates. We need to convert.
-        // At standard 50 degree vertical FOV, 40 pixels is roughly:
-        const pixelSize = 40;
-        const screenHeight = window.innerHeight || 1080;
-        const normalizedSize = (pixelSize / screenHeight) * 2; // Approximate NDC size
-        sprite.scale.set(normalizedSize * 1.5, normalizedSize * 1.5, 1);
+        // Initial scale - will be updated dynamically in updateLabels
+        // At 1524m distance, we want it to appear as ~40px
+        // scale = (desired_screen_pixels / screen_height) * distance * 2 * tan(fov/2)
+        // Simplified: at 1524m distance, scale of 25 world units = ~40px on typical screen
+        sprite.scale.set(25, 25, 1);
+        sprite.userData.isDistanceDot = true;
         
         return sprite;
     }
@@ -824,8 +829,8 @@ function updateMultiplayer(aircraft) {
             aircraft.position,
             aircraft.rotation,
             aircraft.velocity,
-            aircraft.mainColor,
-            aircraft.highlightColor,
+            aircraft.colors?.main || '#ffffff',
+            aircraft.colors?.highlight || '#0066cc',
             name
         );
     }
