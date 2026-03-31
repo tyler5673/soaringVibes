@@ -919,6 +919,8 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     z-index: 100;
+    pointer-events: auto;
+    touch-action: none;
 }
 
 #reset-btn-touch:hover {
