@@ -491,13 +491,8 @@ document.addEventListener('DOMContentLoaded', function() {
         menuBtn.addEventListener('click', handleMenuClick);
     }
     
-    // Color picker modal functionality with hue/saturation picker
+    // Color picker modal functionality - simple RGB picker
     const colorPickerModal = document.getElementById('color-picker-modal');
-    const saturationField = document.getElementById('saturation-field');
-    const hueSlider = document.getElementById('hue-slider');
-    const hueSatCursor = document.createElement('div');
-    hueSatCursor.id = 'hue-sat-cursor';
-    saturationField.appendChild(hueSatCursor);
     
     const redSlider = document.getElementById('red-slider');
     const greenSlider = document.getElementById('green-slider');
@@ -510,91 +505,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeBtn = colorPickerModal.querySelector('.close-btn');
     
     let currentColorSelector = null;
-    let hue = 195; // Blue-ish default
-    let saturation = 73; // Percentage (0-100)
-    let lightness = 64; // Percentage (0-100)
     
-    function hslToRgb(h, s, l) {
-        s /= 100;
-        l /= 100;
-        const c = (1 - Math.abs(2 * l - 1)) * s;
-        const x = c * (1 - Math.abs((h / 60) % 2 - 1));
-        const m = l - c / 2;
-        let r = 0, g = 0, b = 0;
-        
-        if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
-        else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
-        else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
-        else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
-        else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
-        else if (h >= 300 && h < 360) { r = c; g = 0; b = x; }
-        
-        return {
-            r: Math.round((r + m) * 255),
-            g: Math.round((g + m) * 255),
-            b: Math.round((b + m) * 255)
-        };
-    }
-    
-    function rgbToHsl(r, g, b) {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        let h = 0, s = 0;
-        const l = (max + min) / 2;
-        
-        if (max !== min) {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-                case g: h = ((b - r) / d + 2) / 6; break;
-                case b: h = ((r - g) / d + 4) / 6; break;
-            }
-        }
-        
-        return {
-            h: Math.round(h * 360),
-            s: Math.round(s * 100),
-            l: Math.round(l * 100)
-        };
-    }
-    
-    function updateColorFromHSL() {
-        const rgb = hslToRgb(hue, saturation, lightness);
-        
-        // Update sliders
-        redSlider.value = rgb.r;
-        greenSlider.value = rgb.g;
-        blueSlider.value = rgb.b;
-        redValue.textContent = rgb.r;
-        greenValue.textContent = rgb.g;
-        blueValue.textContent = rgb.b;
-        
-        // Update cursor position in hue/saturation field
-        const satX = (saturation / 100) * saturationField.offsetWidth;
-        const hueY = ((360 - hue) / 360) * hueSlider.offsetHeight;
-        hueSatCursor.style.left = (satX - 10) + 'px';
-        hueSatCursor.style.top = (hueY - 10) + 'px';
-        
-        // Update preview and hex display
-        const colorHex = '#' + rgb.r.toString(16).padStart(2, '0') + 
-                        rgb.g.toString(16).padStart(2, '0') + 
-                        rgb.b.toString(16).padStart(2, '0');
-        colorPickerPreview.style.backgroundColor = colorHex;
-        hexDisplay.textContent = colorHex.toUpperCase();
-        
-        return colorHex.toLowerCase();
-    }
-    
-    function setColorFromRGB(r, g, b) {
-        const hsl = rgbToHsl(r, g, b);
-        hue = hsl.h;
-        saturation = hsl.s;
-        lightness = hsl.l;
-        return updateColorFromHSL();
+    function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => {
+            const hex = x.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('').toUpperCase();
     }
     
     function hexToRgb(hex) {
@@ -604,6 +520,39 @@ document.addEventListener('DOMContentLoaded', function() {
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16)
         } : null;
+    }
+    
+    function updateColorDisplay() {
+        const r = parseInt(redSlider.value);
+        const g = parseInt(greenSlider.value);
+        const b = parseInt(blueSlider.value);
+        
+        redValue.textContent = r;
+        greenValue.textContent = g;
+        blueValue.textContent = b;
+        
+        const hex = rgbToHex(r, g, b);
+        colorPickerPreview.style.backgroundColor = hex;
+        hexDisplay.textContent = hex;
+    }
+    
+    function updateColorFromSliders() {
+        const r = parseInt(redSlider.value);
+        const g = parseInt(greenSlider.value);
+        const b = parseInt(blueSlider.value);
+        
+        redValue.textContent = r;
+        greenValue.textContent = g;
+        blueValue.textContent = b;
+        
+        // Update label colors to match slider color
+        redValue.style.color = `rgb(${r}, 107, 107)`;
+        greenValue.style.color = `rgb(78, 205, 196)`;
+        blueValue.style.color = `rgb(69, 183, 209)`;
+        
+        const hex = rgbToHex(r, g, b);
+        colorPickerPreview.style.backgroundColor = hex;
+        hexDisplay.textContent = hex;
     }
     
     // Make function globally accessible for clicking on color displays
@@ -617,96 +566,69 @@ document.addEventListener('DOMContentLoaded', function() {
             initialColor = hexToRgb(highlightColors[highlightColorIndex]) || { r: 79, g: 195, b: 247 };
         }
         
-        const rgb = rgbToHsl(initialColor.r, initialColor.g, initialColor.b);
-        hue = rgb.h;
-        saturation = rgb.s;
-        lightness = rgb.l;
+        redSlider.value = initialColor.r;
+        greenSlider.value = initialColor.g;
+        blueSlider.value = initialColor.b;
         
-        updateColorFromHSL();
+        updateColorFromSliders();
         colorPickerModal.classList.add('show');
     };
     
-    // Hue/saturation field click
-    saturationField.addEventListener('click', function(e) {
-        const rect = this.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-        
-        x = Math.max(0, Math.min(x, rect.width));
-        y = Math.max(0, Math.min(y, rect.height * 0.75)); // Only in saturation field
-        
-        saturation = (x / rect.width) * 100;
-        hue = 360 - ((y / (rect.height * 0.75)) * 360);
-        
-        updateColorFromHSL();
-    });
-    
-    // Hue slider click
-    hueSlider.addEventListener('click', function(e) {
-        const rect = this.getBoundingClientRect();
-        let y = e.clientY - rect.top;
-        
-        y = Math.max(0, Math.min(y, rect.height));
-        
-        hue = 360 - ((y / rect.height) * 360);
-        saturationField.style.background = `linear-gradient(90deg, hsl(${hue}, 100%, ${50 + (lightness - 50)}%), transparent)`;
-        
-        updateColorFromHSL();
-    });
-    
-    // RGB sliders
+    // RGB sliders - update display on input
     redSlider.addEventListener('input', function() {
-        setColorFromRGB(parseInt(this.value), parseInt(greenSlider.value), parseInt(blueSlider.value));
+        updateColorFromSliders();
     });
     
     greenSlider.addEventListener('input', function() {
-        setColorFromRGB(parseInt(redSlider.value), parseInt(this.value), parseInt(blueSlider.value));
+        updateColorFromSliders();
     });
     
     blueSlider.addEventListener('input', function() {
-        setColorFromRGB(parseInt(redSlider.value), parseInt(greenSlider.value), parseInt(this.value));
+        updateColorFromSliders();
     });
     
-    // Apply selected color when clicking on preview
-    colorPickerPreview.addEventListener('click', function() {
+    // Apply selected color when clicking preview or close button
+    const applyColor = function() {
         if (!currentColorSelector) return;
         
-        const newColor = hexDisplay.textContent.toLowerCase();
+        const hex = hexDisplay.textContent.toLowerCase();
         
         if (currentColorSelector === 'main-color-display') {
-            mainColors[mainColorIndex] = newColor;
-            document.getElementById('main-color-display').style.backgroundColor = newColor;
+            mainColors[mainColorIndex] = hex;
+            document.getElementById('main-color-display').style.backgroundColor = hex;
             
             // Update aircraft colors if exists
             if (typeof aircraft !== 'undefined' && aircraft && typeof aircraft.setColors === 'function') {
                 aircraft.setColors({
-                    main: newColor,
+                    main: hex,
                     highlight: highlightColors[highlightColorIndex]
                 });
             }
         } else if (currentColorSelector === 'highlight-color-display') {
-            highlightColors[highlightColorIndex] = newColor;
-            document.getElementById('highlight-color-display').style.backgroundColor = newColor;
+            highlightColors[highlightColorIndex] = hex;
+            document.getElementById('highlight-color-display').style.backgroundColor = hex;
             
             // Update aircraft colors if exists
             if (typeof aircraft !== 'undefined' && aircraft && typeof aircraft.setColors === 'function') {
                 aircraft.setColors({
                     main: mainColors[mainColorIndex],
-                    highlight: newColor
+                    highlight: hex
                 });
             }
         }
         
         colorPickerModal.classList.remove('show');
         currentColorSelector = null;
-    });
+    };
     
-    // Close modal when clicking close button
+    // Click on preview to apply
+    if (colorPickerPreview) {
+        colorPickerPreview.addEventListener('click', applyColor);
+    }
+    
+    // Close button also applies color
     if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            colorPickerModal.classList.remove('show');
-            currentColorSelector = null;
-        });
+        closeBtn.addEventListener('click', applyColor);
     }
     
     // Close modal when clicking outside
