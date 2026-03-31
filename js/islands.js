@@ -697,5 +697,41 @@ async function createAllIslands(scene, onProgress) {
         console.warn('No window.camera available, FloraManager not created');
     }
 
+    // Create airports for all islands
+    console.log('Creating airports...');
+    for (const { island: islandGroup, info } of results) {
+        if (!info.airports || info.airports.length === 0) {
+            console.log(`No airports found for ${info.name}`);
+            continue;
+        }
+        
+        for (const airport of info.airports) {
+            const meta = islandMetadataCache[info.name];
+            if (!meta) {
+                console.warn(`No metadata for ${info.name}, skipping airport`);
+                continue;
+            }
+            
+            const terrainWidth = meta.worldWidth * info.worldScale;
+            const terrainHeight = meta.worldHeight * info.worldScale;
+            
+            const u = airport.x / 1023;
+            const v = airport.y / 1023;
+            
+            const localX = (u - 0.5) * terrainWidth;
+            const localZ = (v - 0.5) * terrainHeight;
+            
+            const worldX = info.x + localX;
+            const worldZ = info.z + localZ;
+            
+            const isLarge = ['maui', 'oahu', 'kauai', 'big-island'].includes(info.name);
+            
+            const terrainY = getTerrainHeight(worldX, worldZ);
+            
+            createAirport(scene, worldX, worldZ, islandGroup, { isLarge });
+            console.log(`Created ${isLarge ? 'large' : 'small'} airport on ${info.name} at`, { worldX, worldZ, terrainY });
+        }
+    }
+
     return results.map(r => r.island);
 }
