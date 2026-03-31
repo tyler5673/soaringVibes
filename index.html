@@ -287,6 +287,14 @@ function updateColorDisplay() {
     if (highlightDisplay) {
         highlightDisplay.style.backgroundColor = highlightColors[highlightColorIndex];
     }
+    
+    // Update aircraft colors if aircraft exists
+    if (typeof aircraft !== 'undefined' && aircraft && typeof aircraft.setColors === 'function') {
+        aircraft.setColors({
+            main: mainColors[mainColorIndex],
+            highlight: highlightColors[highlightColorIndex]
+        });
+    }
 }
 
 function setRandomColors() {
@@ -434,6 +442,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof initMultiplayer === 'function') {
                 initMultiplayer(scene);
             }
+            
+            console.log('Aircraft created with colors:', {
+                main: selectedMainColor,
+                highlight: selectedHighlightColor
+            });
             
             // Initialize touch camera controls for mobile
             initTouchCameraControls(orbitCamera);

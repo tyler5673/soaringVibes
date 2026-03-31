@@ -150,7 +150,7 @@ class Aircraft {
         
         // ====== FUSELAGE ======
         // Main fuselage body - smooth cylinder with taper for Cessna shape
-        const fuselageLength = 7.5;
+        const fuselageLength = 6.8;
         const fuselageRadius = 0.6;
         const fuselageGeo = new THREE.CylinderGeometry(fuselageRadius * 0.7, fuselageRadius, fuselageLength, 16);
         fuselageGeo.rotateX(Math.PI / 2);
@@ -159,11 +159,11 @@ class Aircraft {
         group.add(fuselage);
         
         // Nose section - tapers to a point
-        const noseLength = 1.4;
+        const noseLength = 1.2;
         const noseGeo = new THREE.CylinderGeometry(fuselageRadius * 0.95, fuselageRadius * 0.3, noseLength, 16);
         noseGeo.rotateX(Math.PI / 2);
         const nose = new THREE.Mesh(noseGeo, bodyMat);
-        nose.position.z = -4.0;
+        nose.position.z = -3.6;
         group.add(nose);
         
         // ====== ENGINE COWLING ======
@@ -173,8 +173,9 @@ class Aircraft {
         // Main cowling - elliptical cross-section
         const cowlingGeo = new THREE.CylinderGeometry(cowlingRadius, cowlingRadius * 0.9, cowlingLength, 16);
         cowlingGeo.rotateX(Math.PI / 2);
-        const cowling = new THREE.Mesh(cowlingGeo, cowlingMat);
-        cowling.position.z = -3.2;
+        const cowling = new THREE.Mesh(cowlingGeo, stripeMat);
+        cowling.position.z = -2.9;
+        cowling.userData = { isStripe: true };
         group.add(cowling);
         
         // Cowling cowl flap (visible line)
@@ -182,7 +183,7 @@ class Aircraft {
             new THREE.TorusGeometry(cowlingRadius, 0.02, 8, 16),
             metalMat
         );
-        cowlFlap.position.z = -2.75;
+        cowlFlap.position.z = -2.45;
         cowlFlap.rotation.x = Math.PI / 2;
         group.add(cowlFlap);
         
@@ -192,7 +193,7 @@ class Aircraft {
             silverMat
         );
         spinnerBody.scale.set(1.8, 1, 1);
-        spinnerBody.position.z = -3.6;
+        spinnerBody.position.z = -3.3;
         spinnerBody.rotation.x = Math.PI / 2;
         group.add(spinnerBody);
         
@@ -201,8 +202,9 @@ var spinnerStripeTop = new THREE.Mesh(
             stripeMat
         );
         spinnerStripeTop.scale.set(1.68, 0.95, 0.95);
-        spinnerStripeTop.position.z = -3.35;
+        spinnerStripeTop.position.z = -3.05;
         spinnerStripeTop.rotation.x = Math.PI * 0.38;
+        spinnerStripeTop.userData = { isStripe: true };
         group.add(spinnerStripeTop);
         
 var spinnerStripeBottom = new THREE.Mesh(
@@ -210,8 +212,9 @@ var spinnerStripeBottom = new THREE.Mesh(
             stripeMat
         );
         spinnerStripeBottom.scale.set(1.68, 0.95, 0.95);
-        spinnerStripeBottom.position.z = -3.35;
+        spinnerStripeBottom.position.z = -3.05;
         spinnerStripeBottom.rotation.x = Math.PI * 0.62;
+        spinnerStripeBottom.userData = { isStripe: true };
         group.add(spinnerStripeBottom);
         
         // ====== COCKPIT AREA ======
@@ -227,6 +230,7 @@ var spinnerStripeBottom = new THREE.Mesh(
             glassMat
         );
         cockpit.position.set(0, cockpitY, -0.1);
+        cockpit.userData = { isGlass: true };
         group.add(cockpit);
         
         // ====== EXHAUST MANIFOLD (Lycoming O-320/IO-360 style) ======
@@ -236,11 +240,13 @@ var spinnerStripeBottom = new THREE.Mesh(
             const exhaust = new THREE.Mesh(exhaustGeo, metalMat);
             exhaust.position.set(x, -0.12, -2.45);
             exhaust.rotation.x = Math.PI * 0.22;
+            exhaust.userData = { isMetal: true };
             group.add(exhaust);
         });
         
         // === PROPELLER (3-bladed McCauley/Faure-style) ===
         this.propeller = new THREE.Group();
+        this.propeller.userData = { isPropeller: true };
         const bladeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.3 });
         
         for (let i = 0; i < 3; i++) {
@@ -250,18 +256,20 @@ var spinnerStripeBottom = new THREE.Mesh(
             blade.position.y = 0.95;
             // Tapered blade shape
             blade.scale.z = 0.85;
+            blade.userData = { isPropeller: true };
             bladeGroup.add(blade);
             
             // Blade tip (rounded)
             const tip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.22, 0.11), bladeMat);
             tip.position.y = 1.9;
+            tip.userData = { isPropeller: true };
             bladeGroup.add(tip);
             
             bladeGroup.rotation.z = (i * Math.PI * 2) / 3;
             this.propeller.add(bladeGroup);
         }
         
-        this.propeller.position.z = -4.3;
+        this.propeller.position.z = -4.0;
         group.add(this.propeller);
         
         // === HIGH WING (Cessna 172 signature high-wing design) ===
@@ -371,11 +379,13 @@ var spinnerStripeBottom = new THREE.Mesh(
         const leftTip = new THREE.Mesh(tipGeo, stripeMat);
         leftTip.position.set(-wingSpan / 2, wingY + 0.12, -0.25);
         leftTip.rotation.z = -0.25;
+        leftTip.userData = { isStripe: true };
         group.add(leftTip);
         
         const rightTip = new THREE.Mesh(tipGeo, stripeMat);
         rightTip.position.set(wingSpan / 2, wingY + 0.12, -0.25);
         rightTip.rotation.z = 0.25;
+        rightTip.userData = { isStripe: true };
         group.add(rightTip);
         
         // Navigation & marker lights at wingtips
@@ -398,11 +408,13 @@ var spinnerStripeBottom = new THREE.Mesh(
         // Left wing - red nav light
         const leftNav = new THREE.Mesh(navLightGeo, redNavMat);
         leftNav.position.set(-wingTipX, wingY + 0.06, -0.25);
+        leftNav.userData = { isNavLight: true };
         group.add(leftNav);
         
         // Right wing - green nav light
         const rightNav = new THREE.Mesh(navLightGeo, greenNavMat);
         rightNav.position.set(wingTipX, wingY + 0.06, -0.25);
+        rightNav.userData = { isNavLight: true };
         group.add(rightNav);
         
         // Anti-collision strobe lights (white, blinky)
@@ -416,16 +428,18 @@ var spinnerStripeBottom = new THREE.Mesh(
         // Left wingtip strobe
         const leftStrobe = new THREE.Mesh(strobeGeo, strobeMat);
         leftStrobe.position.set(-wingTipX - 0.05, wingY + 0.1, -0.35);
+        leftStrobe.userData = { isNavLight: true };
         group.add(leftStrobe);
         
         // Right wingtip strobe
         const rightStrobe = new THREE.Mesh(strobeGeo, strobeMat);
         rightStrobe.position.set(wingTipX + 0.05, wingY + 0.1, -0.35);
+        rightStrobe.userData = { isNavLight: true };
         group.add(rightStrobe);
         
         
         // === TAIL SECTION ===
-        const tailZ = 4.2;
+        const tailZ = 3.6;
         
         // Vertical stabilizer (fin) - Cessna style tapered fin
         const vStabHeight = 1.85;
@@ -470,6 +484,7 @@ var spinnerStripeBottom = new THREE.Mesh(
         );
         rudderStripe.position.set(0, vStabY + rudderHeight * 0.4, tailZ + vStabChord * 0.22);
         rudderStripe.rotation.y = -0.15;
+        rudderStripe.userData = { isStripe: true };
         group.add(rudderStripe);
         
         // Tail beacon on vertical stabilizer
@@ -482,6 +497,7 @@ var spinnerStripeBottom = new THREE.Mesh(
             })
         );
         tailBeacon.position.set(0, vStabY + vStabHeight + 0.15, tailZ - vStabChord * 0.2);
+        tailBeacon.userData = { isNavLight: true };
         group.add(tailBeacon);
         
         // Horizontal stabilizer
@@ -554,6 +570,7 @@ var spinnerStripeBottom = new THREE.Mesh(
         );
         noseStrut.position.set(0, (noseAttachY + noseWheelY) / 2, (noseAttachZ + noseWheelZ) / 2);
         noseStrut.rotation.x = noseStrutAngle + Math.PI / 2;
+        noseStrut.userData = { isStrut: true };
         group.add(noseStrut);
         
         // Nose wheel
@@ -563,6 +580,7 @@ var spinnerStripeBottom = new THREE.Mesh(
         );
         noseWheel.rotation.z = Math.PI / 2;
         noseWheel.position.set(0, noseWheelY, noseWheelZ);
+        noseWheel.userData = { isWheel: true };
         group.add(noseWheel);
         
         // Main gear struts (left and right)
@@ -588,6 +606,7 @@ var spinnerStripeBottom = new THREE.Mesh(
             );
             // Rotate to angle outward and down
             strut.rotation.z = side * outwardAngle;
+            strut.userData = { isStrut: true };
             group.add(strut);
             
             // Main wheel
@@ -597,6 +616,7 @@ var spinnerStripeBottom = new THREE.Mesh(
             );
             wheel.rotation.z = Math.PI / 2;
             wheel.position.set(side * mainWheelSpread, mainWheelY, mainWheelZ);
+            wheel.userData = { isWheel: true };
             group.add(wheel);
         });
         
@@ -604,17 +624,20 @@ var spinnerStripeBottom = new THREE.Mesh(
         // VOR antenna on top of vertical stabilizer
         const vor = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.3, 6), metalMat);
         vor.position.set(-0.05, vStabY + vStabHeight + 0.2, tailZ - vStabChord * 0.2);
+        vor.userData = { isMetal: true };
         group.add(vor);
         
         // Pitot tube - left wing (further out, past the strut attach)
         const pitot = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, 0.22, 6), blackMat);
         pitot.rotation.z = Math.PI / 2;
         pitot.position.set(-3.5, wingY + 0.08, -wingChord * 0.45);
+        pitot.userData = { isMetal: true };
         group.add(pitot);
         
         // Stall warning horn - left wing
         const stallHorn = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.09), blackMat);
         stallHorn.position.set(-3.5, wingY - 0.08, wingChord * 0.1);
+        stallHorn.userData = { isMetal: true };
         group.add(stallHorn);
         
         group.castShadow = true;
@@ -805,6 +828,41 @@ var spinnerStripeBottom = new THREE.Mesh(
         this.crashed = false;
         
         console.log(`Reset complete: pos=(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)}, ${this.position.z.toFixed(0)}), vel=(${this.velocity.x.toFixed(1)}, ${this.velocity.y.toFixed(1)}, ${this.velocity.z.toFixed(1)}), rotY=${this.rotation.y.toFixed(2)}`);
+    }
+    
+    setColors(colors) {
+        this.colors = colors;
+        
+        this.mesh.traverse((child) => {
+            if (child.isMesh && child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                for (const mat of mats) {
+                    if (mat.color) {
+                        // Fixed parts - never change color
+                        // Propeller, glass, wheels, struts, metal parts, cowling, engine, trim, lights
+                        const isFixed = child._isFixedColor || 
+                            child.userData?.isPropeller || 
+                            child.userData?.isGlass || 
+                            child.userData?.isWheel || 
+                            child.userData?.isStrut || 
+                            child.userData?.isMetal ||
+                            child.userData?.isCowling ||
+                            child.userData?.isEngine ||
+                            child.userData?.isTrim ||
+                            child.userData?.isNavLight;
+                        
+                        if (!isFixed) {
+                            // Color changing parts - check if it's a stripe/highlight part
+                            if (child.userData?.isStripe) {
+                                mat.color.set(colors.highlight);
+                            } else {
+                                mat.color.set(colors.main);
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
     
     checkCrash() {
