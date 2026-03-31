@@ -635,6 +635,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.perfMonitor.update();
             }
             
+            // Update multiplayer name labels visibility
+            if (typeof updateMultiplayerLabels === 'function' && camera) {
+                updateMultiplayerLabels(camera.position);
+            }
+            
             renderer.render(scene, camera);
         }
 
