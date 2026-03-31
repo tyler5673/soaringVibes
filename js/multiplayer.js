@@ -228,8 +228,8 @@ class MultiplayerClient {
     }
 
     updateLabels(camera, renderer) {
-        const maxLabelDistance = 1219.2; // 4000ft in meters (4000 * 0.3048)
-        const dotThreshold = 1524; // 5000ft in meters (5000 * 0.3048)
+        const maxLabelDistance = 1219.2; // 4000ft in meters - show name label
+        const dotThreshold = 609.6; // 2000ft in meters - show dot instead of detailed aircraft
         
         // Get CSS pixel dimensions (not internal canvas buffer size)
         const width = renderer.domElement.clientWidth || window.innerWidth;
