@@ -63,66 +63,123 @@
         <div id="loading-version">v0.0.1</div>
     </div>
     <div id="hud">
-        <div id="velocity-display">Speed: 0 m/s</div>
         <div class="gauges">
+            <!-- Airspeed Indicator -->
             <div class="gauge-container">
-                <svg class="gauge" id="speed-gauge" viewBox="0 0 120 120">
+                <svg class="gauge" id="speed-gauge" viewBox="0 0 140 140">
                     <defs>
                         <linearGradient id="gaugeFace" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#f5f5f5"/>
-                            <stop offset="100%" stop-color="#d0d0d0"/>
+                            <stop offset="0%" stop-color="#e8e4dc"/>
+                            <stop offset="50%" stop-color="#d4cfc4"/>
+                            <stop offset="100%" stop-color="#b8b2a4"/>
+                        </linearGradient>
+                        <linearGradient id="gaugeBezel" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#8a8478"/>
+                            <stop offset="50%" stop-color="#5c5850"/>
+                            <stop offset="100%" stop-color="#3a3732"/>
+                        </linearGradient>
+                        <filter id="gaugeShadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+                        </filter>
+                        <linearGradient id="glassShine" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/>
+                            <stop offset="40%" stop-color="rgba(255,255,255,0)"/>
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.05)"/>
                         </linearGradient>
                     </defs>
-                    <circle cx="60" cy="60" r="55" fill="url(#gaugeFace)" stroke="#333" stroke-width="3"/>
-                    <circle cx="60" cy="60" r="50" fill="none" stroke="#222" stroke-width="1"/>
+                    <!-- Outer bezel -->
+                    <circle cx="70" cy="70" r="68" fill="url(#gaugeBezel)"/>
+                    <!-- Inner bezel ring -->
+                    <circle cx="70" cy="70" r="62" fill="#2a2824" stroke="#1a1815" stroke-width="2"/>
+                    <!-- Gauge face -->
+                    <circle cx="70" cy="70" r="58" fill="url(#gaugeFace)" filter="url(#gaugeShadow)"/>
+                    <!-- Inner ring -->
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="#99948a" stroke-width="1"/>
                     <!-- Speed markings -->
                     <g class="gauge-marks" id="speed-marks"></g>
                     <g class="gauge-labels" id="speed-labels"></g>
-                    <!-- Colored arcs -->
-                    <path class="gauge-green-arc" d="M 25 85 A 45 45 0 0 1 95 85" fill="none" stroke="rgba(0,128,0,0.3)" stroke-width="12"/>
-                    <path class="gauge-red-arc" d="M 95 85 A 45 45 0 0 1 95 45" fill="none" stroke="rgba(200,0,0,0.3)" stroke-width="12"/>
+                    <!-- Colored arcs - Cessna 182 normal operating range -->
+                    <path d="M 28 100 A 50 50 0 0 1 112 100" fill="none" stroke="rgba(0,120,0,0.25)" stroke-width="14"/>
+                    <path d="M 112 100 A 50 50 0 0 1 112 55" fill="none" stroke="rgba(180,0,0,0.2)" stroke-width="14"/>
+                    <!-- Warning arc -->
+                    <path d="M 20 95 A 55 55 0 0 1 28 100" fill="none" stroke="rgba(200,150,0,0.3)" stroke-width="3"/>
+                    <!-- Screw detail -->
+                    <circle cx="70" cy="118" r="4" fill="#555"/>
+                    <circle cx="70" cy="118" r="2" fill="#333"/>
+                    <line x1="68" y1="116" x2="72" y2="120" stroke="#777" stroke-width="1"/>
                     <!-- Needle -->
                     <g id="speed-needle">
-                        <polygon points="60,20 57,60 60,65 63,60" fill="#c00"/>
-                        <circle cx="60" cy="60" r="6" fill="#333"/>
+                        <polygon points="70,22 66,70 70,78 74,70" fill="#1a1a1a"/>
+                        <polygon points="70,28 68,68 70,72 72,68" fill="#c41e3a"/>
+                        <circle cx="70" cy="70" r="8" fill="#1a1a1a"/>
+                        <circle cx="70" cy="70" r="5" fill="#888"/>
                     </g>
-                    <text x="60" y="100" text-anchor="middle" font-size="10" font-family="Arial" fill="#333">KTS</text>
+                    <text x="70" y="108" text-anchor="middle" font-size="9" font-family="'Courier New', monospace" font-weight="bold" fill="#222">KTS</text>
+                    <!-- Glass effect -->
+                    <circle cx="70" cy="70" r="55" fill="url(#glassShine)" opacity="0.4"/>
                 </svg>
+                <div class="gauge-label">AIRSPEED</div>
             </div>
+            
+            <!-- Altimeter -->
             <div class="gauge-container">
-                <svg class="gauge" id="altitude-gauge" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="55" fill="url(#gaugeFace)" stroke="#333" stroke-width="3"/>
-                    <circle cx="60" cy="60" r="50" fill="none" stroke="#222" stroke-width="1"/>
+                <svg class="gauge" id="altitude-gauge" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="68" fill="url(#gaugeBezel)"/>
+                    <circle cx="70" cy="70" r="62" fill="#2a2824" stroke="#1a1815" stroke-width="2"/>
+                    <circle cx="70" cy="70" r="58" fill="url(#gaugeFace)" filter="url(#gaugeShadow)"/>
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="#99948a" stroke-width="1"/>
                     <g class="gauge-marks" id="altitude-marks"></g>
                     <g class="gauge-labels" id="altitude-labels"></g>
+                    <!-- Screw detail -->
+                    <circle cx="70" cy="118" r="4" fill="#555"/>
+                    <circle cx="70" cy="118" r="2" fill="#333"/>
+                    <line x1="68" y1="116" x2="72" y2="120" stroke="#777" stroke-width="1"/>
+                    <!-- Altimeter needles -->
                     <g id="altitude-needles">
                         <g class="alt-needle" id="alt-needle-10k">
-                            <polygon points="60,25 58,60 60,63 62,60" fill="#333"/>
+                            <polygon points="70,28 67,70 70,74 73,70" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
                         </g>
                         <g class="alt-needle" id="alt-needle-1k">
-                            <polygon points="60,30 57,60 60,68 63,60" fill="#111"/>
+                            <polygon points="70,32 66,70 70,82 74,70" fill="#1a1a1a"/>
                         </g>
                         <g class="alt-needle" id="alt-needle-100">
-                            <polygon points="60,35 55,60 60,78 65,60" fill="#c00"/>
+                            <polygon points="70,38 64,70 70,95 76,70" fill="#c41e3a" stroke="#8b0000" stroke-width="1"/>
                         </g>
-                        <circle cx="60" cy="60" r="6" fill="#333"/>
+                        <circle cx="70" cy="70" r="8" fill="#1a1a1a"/>
+                        <circle cx="70" cy="70" r="5" fill="#888"/>
                     </g>
-                    <text x="60" y="100" text-anchor="middle" font-size="10" font-family="Arial" fill="#333">FT</text>
+                    <text x="70" y="108" text-anchor="middle" font-size="9" font-family="'Courier New', monospace" font-weight="bold" fill="#222">FEET</text>
+                    <circle cx="70" cy="70" r="55" fill="url(#glassShine)" opacity="0.4"/>
                 </svg>
+                <div class="gauge-label">ALTITUDE</div>
             </div>
-            <div class="gauge-container">
-                <svg class="gauge" id="throttle-gauge" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="55" fill="url(#gaugeFace)" stroke="#333" stroke-width="3"/>
-                    <circle cx="60" cy="60" r="50" fill="none" stroke="#222" stroke-width="1"/>
+            
+            <!-- Throttle -->
+            <div class="gauge-container throttle-gauge">
+                <svg class="gauge" id="throttle-gauge" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="68" fill="url(#gaugeBezel)"/>
+                    <circle cx="70" cy="70" r="62" fill="#2a2824" stroke="#1a1815" stroke-width="2"/>
+                    <circle cx="70" cy="70" r="58" fill="url(#gaugeFace)" filter="url(#gaugeShadow)"/>
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="#99948a" stroke-width="1"/>
                     <g class="gauge-marks" id="throttle-marks"></g>
                     <g class="gauge-labels" id="throttle-labels"></g>
-                    <path d="M 25 85 A 45 45 0 0 1 95 85" fill="none" stroke="rgba(200,180,0,0.3)" stroke-width="12"/>
+                    <!-- Throttle arc - yellow for power -->
+                    <path d="M 28 100 A 50 50 0 0 1 112 100" fill="none" stroke="rgba(180,150,0,0.3)" stroke-width="14"/>
+                    <!-- Screw detail -->
+                    <circle cx="70" cy="118" r="4" fill="#555"/>
+                    <circle cx="70" cy="118" r="2" fill="#333"/>
+                    <line x1="68" y1="116" x2="72" y2="120" stroke="#777" stroke-width="1"/>
+                    <!-- Needle -->
                     <g id="throttle-needle">
-                        <polygon points="60,20 57,60 60,65 63,60" fill="#333"/>
-                        <circle cx="60" cy="60" r="6" fill="#c00"/>
+                        <polygon points="70,22 66,70 70,78 74,70" fill="#1a1a1a"/>
+                        <polygon points="70,28 68,68 70,72 72,68" fill="#b8860b"/>
+                        <circle cx="70" cy="70" r="8" fill="#1a1a1a"/>
+                        <circle cx="70" cy="70" r="5" fill="#888"/>
                     </g>
-                    <text x="60" y="100" text-anchor="middle" font-size="10" font-family="Arial" fill="#333">%</text>
+                    <text x="70" y="108" text-anchor="middle" font-size="9" font-family="'Courier New', monospace" font-weight="bold" fill="#222">% THROTTLE</text>
+                    <circle cx="70" cy="70" r="55" fill="url(#glassShine)" opacity="0.4"/>
                 </svg>
+                <div class="gauge-label">THROTTLE</div>
             </div>
         </div>
         <div id="controls-hint">WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset</div>
@@ -154,6 +211,11 @@
         
         <!-- Reset button -->
         <div id="reset-btn-touch" class="touch-button reset">RESET</div>
+        
+        <!-- Back to menu button -->
+        <div id="menu-btn" class="menu-button" title="Change name or colors">
+            <img src="assets/images/icon.png" alt="Menu">
+        </div>
     </div>
     
     <!-- 2D Distance indicator dots container - always on top of 3D -->

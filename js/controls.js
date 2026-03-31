@@ -224,7 +224,8 @@ function updateStick(stickElement, touch, startPos, stickData) {
     
     // Normalize to -1 to 1 range
     stickData.x = moveX / maxDistance;
-    stickData.y = moveY / maxDistance;
+    // Reverse Y: push up (negative screen Y) = positive output (nose down), pull down = negative (nose up)
+    stickData.y = -moveY / maxDistance;
 }
 
 // Touch camera state

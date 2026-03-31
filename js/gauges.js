@@ -2,6 +2,9 @@
 
 class GaugeSystem {
     constructor() {
+        this.centerX = 70;
+        this.centerY = 70;
+        
         this.speedNeedle = document.getElementById('speed-needle');
         this.altNeedle10k = document.getElementById('alt-needle-10k');
         this.altNeedle1k = document.getElementById('alt-needle-1k');
@@ -23,37 +26,38 @@ class GaugeSystem {
             const rad = (angle * Math.PI) / 180;
             const isMajor = i % 20 === 0;
             
-            const innerR = isMajor ? 40 : 43;
-            const outerR = 47;
+            const innerR = isMajor ? 45 : 49;
+            const outerR = 53;
             
-            const x1 = 60 + innerR * Math.cos(rad);
-            const y1 = 60 + innerR * Math.sin(rad);
-            const x2 = 60 + outerR * Math.cos(rad);
-            const y2 = 60 + outerR * Math.sin(rad);
+            const x1 = this.centerX + innerR * Math.cos(rad);
+            const y1 = this.centerY + innerR * Math.sin(rad);
+            const x2 = this.centerX + outerR * Math.cos(rad);
+            const y2 = this.centerY + outerR * Math.sin(rad);
             
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', x1);
             line.setAttribute('y1', y1);
             line.setAttribute('x2', x2);
             line.setAttribute('y2', y2);
-            line.setAttribute('stroke', '#333');
-            line.setAttribute('stroke-width', isMajor ? 2 : 1);
+            line.setAttribute('stroke', '#2a2824');
+            line.setAttribute('stroke-width', isMajor ? 2.5 : 1.5);
+            line.setAttribute('stroke-linecap', 'round');
             marksGroup.appendChild(line);
             
             if (isMajor) {
-                const labelR = 32;
-                const lx = 60 + labelR * Math.cos(rad);
-                const ly = 60 + labelR * Math.sin(rad);
+                const labelR = 36;
+                const lx = this.centerX + labelR * Math.cos(rad);
+                const ly = this.centerY + labelR * Math.sin(rad);
                 
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 text.setAttribute('x', lx);
                 text.setAttribute('y', ly);
                 text.setAttribute('text-anchor', 'middle');
                 text.setAttribute('dominant-baseline', 'middle');
-                text.setAttribute('font-size', '7');
-                text.setAttribute('font-family', 'Arial');
+                text.setAttribute('font-size', '8');
+                text.setAttribute('font-family', "'Courier New', monospace");
                 text.setAttribute('font-weight', 'bold');
-                text.setAttribute('fill', '#333');
+                text.setAttribute('fill', '#2a2824');
                 text.textContent = i;
                 labelsGroup.appendChild(text);
             }
@@ -70,37 +74,38 @@ class GaugeSystem {
             const rad = (angle * Math.PI) / 180;
             const isMajor = i % 5 === 0;
             
-            const innerR = isMajor ? 40 : 44;
-            const outerR = 47;
+            const innerR = isMajor ? 45 : 50;
+            const outerR = 53;
             
-            const x1 = 60 + innerR * Math.cos(rad);
-            const y1 = 60 + innerR * Math.sin(rad);
-            const x2 = 60 + outerR * Math.cos(rad);
-            const y2 = 60 + outerR * Math.sin(rad);
+            const x1 = this.centerX + innerR * Math.cos(rad);
+            const y1 = this.centerY + innerR * Math.sin(rad);
+            const x2 = this.centerX + outerR * Math.cos(rad);
+            const y2 = this.centerY + outerR * Math.sin(rad);
             
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', x1);
             line.setAttribute('y1', y1);
             line.setAttribute('x2', x2);
             line.setAttribute('y2', y2);
-            line.setAttribute('stroke', '#333');
-            line.setAttribute('stroke-width', isMajor ? 2 : 1);
+            line.setAttribute('stroke', '#2a2824');
+            line.setAttribute('stroke-width', isMajor ? 2.5 : 1);
+            line.setAttribute('stroke-linecap', 'round');
             marksGroup.appendChild(line);
             
             if (isMajor && i % 5 === 0) {
-                const labelR = 33;
-                const lx = 60 + labelR * Math.cos(rad);
-                const ly = 60 + labelR * Math.sin(rad);
+                const labelR = 36;
+                const lx = this.centerX + labelR * Math.cos(rad);
+                const ly = this.centerY + labelR * Math.sin(rad);
                 
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 text.setAttribute('x', lx);
                 text.setAttribute('y', ly);
                 text.setAttribute('text-anchor', 'middle');
                 text.setAttribute('dominant-baseline', 'middle');
-                text.setAttribute('font-size', '6');
-                text.setAttribute('font-family', 'Arial');
+                text.setAttribute('font-size', '7');
+                text.setAttribute('font-family', "'Courier New', monospace");
                 text.setAttribute('font-weight', 'bold');
-                text.setAttribute('fill', '#333');
+                text.setAttribute('fill', '#2a2824');
                 text.textContent = i;
                 labelsGroup.appendChild(text);
             }
@@ -117,36 +122,37 @@ class GaugeSystem {
             const rad = (angle * Math.PI) / 180;
             const isMajor = true;
             
-            const innerR = 40;
-            const outerR = 47;
+            const innerR = 45;
+            const outerR = 53;
             
-            const x1 = 60 + innerR * Math.cos(rad);
-            const y1 = 60 + innerR * Math.sin(rad);
-            const x2 = 60 + outerR * Math.cos(rad);
-            const y2 = 60 + outerR * Math.sin(rad);
+            const x1 = this.centerX + innerR * Math.cos(rad);
+            const y1 = this.centerY + innerR * Math.sin(rad);
+            const x2 = this.centerX + outerR * Math.cos(rad);
+            const y2 = this.centerY + outerR * Math.sin(rad);
             
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', x1);
             line.setAttribute('y1', y1);
             line.setAttribute('x2', x2);
             line.setAttribute('y2', y2);
-            line.setAttribute('stroke', '#333');
-            line.setAttribute('stroke-width', isMajor ? 2 : 1);
+            line.setAttribute('stroke', '#2a2824');
+            line.setAttribute('stroke-width', 2.5);
+            line.setAttribute('stroke-linecap', 'round');
             marksGroup.appendChild(line);
             
-            const labelR = 32;
-            const lx = 60 + labelR * Math.cos(rad);
-            const ly = 60 + labelR * Math.sin(rad);
+            const labelR = 36;
+            const lx = this.centerX + labelR * Math.cos(rad);
+            const ly = this.centerY + labelR * Math.sin(rad);
             
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', lx);
             text.setAttribute('y', ly);
             text.setAttribute('text-anchor', 'middle');
             text.setAttribute('dominant-baseline', 'middle');
-            text.setAttribute('font-size', '7');
-            text.setAttribute('font-family', 'Arial');
+            text.setAttribute('font-size', '8');
+            text.setAttribute('font-family', "'Courier New', monospace");
             text.setAttribute('font-weight', 'bold');
-            text.setAttribute('fill', '#333');
+            text.setAttribute('fill', '#2a2824');
             text.textContent = i;
             labelsGroup.appendChild(text);
         }
@@ -156,7 +162,7 @@ class GaugeSystem {
         const clampedSpeed = Math.max(0, Math.min(200, knots));
         const angle = -135 + (clampedSpeed / 200) * 270;
         if (this.speedNeedle) {
-            this.speedNeedle.setAttribute('transform', `rotate(${angle} 60 60)`);
+            this.speedNeedle.setAttribute('transform', `rotate(${angle} ${this.centerX} ${this.centerY})`);
         }
     }
     
@@ -169,19 +175,19 @@ class GaugeSystem {
         // 100s needle rotates full 270 degrees
         if (this.altNeedle100) {
             const angle100 = -135 + alt100 * 270;
-            this.altNeedle100.setAttribute('transform', `rotate(${angle100} 60 60)`);
+            this.altNeedle100.setAttribute('transform', `rotate(${angle100} ${this.centerX} ${this.centerY})`);
         }
         
         // 1000s needle rotates 270 degrees over 10000
         if (this.altNeedle1k) {
             const angle1k = -135 + alt10 * 270;
-            this.altNeedle1k.setAttribute('transform', `rotate(${angle1k} 60 60)`);
+            this.altNeedle1k.setAttribute('transform', `rotate(${angle1k} ${this.centerX} ${this.centerY})`);
         }
         
         // 10000s needle rotates 270 degrees over 100000
         if (this.altNeedle10k) {
             const angle10k = -135 + alt1 * 270;
-            this.altNeedle10k.setAttribute('transform', `rotate(${angle10k} 60 60)`);
+            this.altNeedle10k.setAttribute('transform', `rotate(${angle10k} ${this.centerX} ${this.centerY})`);
         }
     }
     
@@ -189,7 +195,7 @@ class GaugeSystem {
         const clamped = Math.max(0, Math.min(100, percent));
         const angle = -135 + (clamped / 100) * 270;
         if (this.throttleNeedle) {
-            this.throttleNeedle.setAttribute('transform', `rotate(${angle} 60 60)`);
+            this.throttleNeedle.setAttribute('transform', `rotate(${angle} ${this.centerX} ${this.centerY})`);
         }
     }
 }
