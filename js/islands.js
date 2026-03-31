@@ -381,7 +381,7 @@ function createShrub(localX, localZ, terrainY, group, scale) {
 }
 
 const WATER_LEVEL = 2;
-const TREE_RENDER_DISTANCE = 450; // ~1500 feet - balance of visibility and performance
+const TREE_RENDER_DISTANCE = 800; // ~2600 feet - visible at reasonable distance
 const TERRAIN_SCALE = 0.15;
 const GROUP_OFFSET_Y = -50;
 
@@ -649,6 +649,61 @@ const islandPositions = [
     { name: 'kahoolawe', x: 2200, z: -2200, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 20.637, south: 20.496, east: -156.490, west: -156.704 } }
 ];
 
+// Place lighthouses on beaches - 3 per island
+function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, islandWorldZ, scene) {
+    const meta = islandMetadataCache[islandName];
+    if (!meta) return;
+    
+    const islandInfo = islandPositions.find(i => i.name === islandName);
+    if (!islandInfo) return;
+    
+    const worldScale = islandInfo.worldScale || 0.08;
+    const terrainWidth = meta.worldWidth * worldScale;
+    const terrainHeight = meta.worldHeight * worldScale;
+    const halfWidth = terrainWidth / 2;
+    const halfHeight = terrainHeight / 2;
+    
+    const lighthouses = [];
+    const targetCount = 3;
+    const searchAttempts = 500;
+    
+    for (let attempt = 0; attempt < searchAttempts && lighthouses.length < targetCount; attempt++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * Math.min(halfWidth, halfHeight) * 0.9;
+        
+        const worldX = islandWorldX + Math.cos(angle) * dist;
+        const worldZ = islandWorldZ + Math.sin(angle) * dist;
+        
+        if (!isPointOnIsland(worldX, worldZ, islandName)) continue;
+        
+        const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
+        
+        // Lighthouse should be near water (low elevation but not underwater)
+        if (terrainY > 2 + 2 && terrainY < 15) {
+            // Check distance from other lighthouses
+            let tooClose = false;
+            for (const existing of lighthouses) {
+                const dx = worldX - existing.x;
+                const dz = worldZ - existing.z;
+                if (Math.sqrt(dx*dx + dz*dz) < 500) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            
+            if (!tooClose) {
+                const lighthouse = LighthouseGeometry.getGeometry('high');
+                lighthouse.position.set(worldX - islandWorldX, terrainY, worldZ - islandWorldZ);
+                lighthouse.rotation.y = Math.random() * Math.PI * 2;
+                islandGroup.add(lighthouse);
+                lighthouses.push({ x: worldX, z: worldZ });
+            }
+        }
+    }
+    
+    console.log(`Placed ${lighthouses.length} lighthouses on ${islandName}`);
+}
+
 async function createAllIslands(scene, onProgress) {
     console.log('Loading airport positions...');
     const airportPositions = await loadAirportPositions();
@@ -741,6 +796,12 @@ async function createAllIslands(scene, onProgress) {
         
         for (const { island: islandGroup, info } of results) {
             buildingManager.placeBuildingsForIsland(islandGroup, info.name, info.x, info.z);
+        }
+        
+        // Place lighthouses on beaches (3 per island)
+        console.log('Creating lighthouses...');
+        for (const { island: islandGroup, info } of results) {
+            placeLighthousesForIsland(islandGroup, info.name, info.x, info.z, scene);
         }
         
         console.log(`BuildingManager created with ${buildingManager.allBuildings.length} total buildings`);

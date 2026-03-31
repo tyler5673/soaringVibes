@@ -28,25 +28,18 @@ class BuildingManager {
         switch(zone) {
             case 'airport':
                 return [
-                    { type: 'commercial-shop', weight: 0.4 },
-                    { type: 'commercial-hotel', weight: 0.2 },
-                    { type: 'industrial-warehouse', weight: 0.3 },
-                    { type: 'residential-medium', weight: 0.1 }
-                ];
-            case 'coastal':
-                return [
-                    { type: 'residential-small', weight: 0.3 },
-                    { type: 'residential-medium', weight: 0.25 },
-                    { type: 'commercial-hotel', weight: 0.25 },
-                    { type: 'commercial-restaurant', weight: 0.2 }
+                    { type: 'commercial-shop', weight: 0.5 },
+                    { type: 'commercial-hotel', weight: 0.3 },
+                    { type: 'residential-medium', weight: 0.2 }
                 ];
             case 'inland':
                 return [
-                    { type: 'residential-small', weight: 0.3 },
+                    { type: 'residential-small', weight: 0.5 },
                     { type: 'residential-medium', weight: 0.35 },
-                    { type: 'residential-large', weight: 0.15 },
-                    { type: 'industrial-warehouse', weight: 0.2 }
+                    { type: 'residential-large', weight: 0.15 }
                 ];
+            case 'beach':
+                return []; // No buildings on beaches
             default:
                 return [{ type: 'residential-small', weight: 1.0 }];
         }
@@ -54,10 +47,10 @@ class BuildingManager {
     
     getDensityForZone(zone) {
         switch(zone) {
-            case 'airport': return 0.6;
-            case 'coastal': return 0.4;
-            case 'inland': return 0.2;
-            default: return 0.1;
+            case 'airport': return 0.15;
+            case 'inland': return 0.05;
+            case 'beach': return 0;
+            default: return 0.02;
         }
     }
     
@@ -100,9 +93,25 @@ class BuildingManager {
             if (dist < 500) return 'airport';
         }
         
-        // Check if coastal (within 200m of water - terrain height < 20)
+        // Only allow buildings near airports or inland (not coastal/beaches)
+        for (const airport of islandInfo.airports) {
+            const localX = (airport.x / 1023 - 0.5) * terrainWidth;
+            const localZ = (airport.y / 1023 - 0.5) * terrainHeight;
+            
+            const airportWorldX = islandInfo.x + localX;
+            const airportWorldZ = islandInfo.z + localZ;
+            
+            const dist = Math.sqrt(
+                Math.pow(worldX - airportWorldX, 2) + 
+                Math.pow(worldZ - airportWorldZ, 2)
+            );
+            
+            if (dist < 500) return 'airport';
+        }
+        
+        // Not near airport - check if it's too close to water (beach/coastal)
         const terrainY = getTerrainHeight(worldX, worldZ);
-        if (terrainY < 20) return 'coastal';
+        if (terrainY < 25) return 'beach'; // Too close to water, skip
         
         return 'inland';
     }
@@ -128,12 +137,6 @@ class BuildingManager {
                 break;
             case 'commercial-restaurant':
                 geometry = RestaurantGeometry.getGeometry(lod);
-                break;
-            case 'industrial-warehouse':
-                geometry = WarehouseGeometry.getGeometry(lod);
-                break;
-            case 'industrial-factory':
-                geometry = FactoryGeometry.getGeometry(lod);
                 break;
             default:
                 console.warn(`Unknown building type: ${type}`);
@@ -168,8 +171,9 @@ class BuildingManager {
         const halfWidth = terrainWidth / 2;
         const halfHeight = terrainHeight / 2;
         
-        const gridSize = 25;
+        const gridSize = 15;
         let placed = 0;
+        let skipped = { terrain: 0, water: 0, slope: 0, elevation: 0, notOnIsland: 0, density: 0 };
         
         for (let x = islandWorldX - halfWidth; x <= islandWorldX + halfWidth; x += gridSize) {
             for (let z = islandWorldZ - halfHeight; z <= islandWorldZ + halfHeight; z += gridSize) {
@@ -178,18 +182,39 @@ class BuildingManager {
                 const worldX = x + jitterX;
                 const worldZ = z + jitterZ;
                 
-                if (!isPointOnIsland(worldX, worldZ, islandName)) continue;
+                if (!isPointOnIsland(worldX, worldZ, islandName)) {
+                    skipped.notOnIsland++;
+                    continue;
+                }
                 
                 const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
-                if (terrainY <= 2 + 5) continue; // WATER_LEVEL = 2
+                if (terrainY === null || isNaN(terrainY)) {
+                    skipped.terrain++;
+                    continue;
+                }
+                if (terrainY <= 2 + 5) {
+                    skipped.water++;
+                    continue;
+                }
                 
                 // Check slope
                 const slope = this.getTerrainSlope(worldX, worldZ, islandName);
-                if (slope > 15) continue;
+                if (slope > 25) {
+                    skipped.slope++;
+                    continue;
+                }
                 
-                if (terrainY > 400) continue;
+                if (terrainY > 500) {
+                    skipped.elevation++;
+                    continue;
+                }
                 
                 const zone = this.getBuildingZone(worldX, worldZ, islandName);
+                if (zone === 'beach') {
+                    skipped.density++;
+                    continue;
+                }
+                
                 const density = this.getDensityForZone(zone);
                 const clustering = Math.sin(worldX * 0.008) * Math.cos(worldZ * 0.008) * 0.3 + 0.7;
                 const finalDensity = density * clustering;
@@ -217,7 +242,7 @@ class BuildingManager {
             }
         }
         
-        console.log(`BuildingManager: Placed ${placed} buildings on ${islandName}`);
+        console.log(`BuildingManager: Placed ${placed} buildings on ${islandName}. Skipped:`, skipped);
     }
     
     getTerrainSlope(worldX, worldZ, islandName) {
@@ -243,15 +268,18 @@ class BuildingManager {
         this.perfManager.updateFrustum();
         const camPos = this.camera.position;
         
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+        const maxDist = isMobile ? 1500 : 3500;
+        
         this.allBuildings.forEach(buildingData => {
             const dist = camPos.distanceTo(buildingData.worldPos);
             
-            if (dist > 800) {
+            if (dist > maxDist) {
                 buildingData.mesh.visible = false;
-                return;
+            } else {
+                buildingData.mesh.visible = true;
             }
-            
-            buildingData.mesh.visible = true;
         });
     }
 }

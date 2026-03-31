@@ -212,6 +212,7 @@
     <script src="js/environment.js"></script>
     <script src="js/islands.js"></script>
     <script src="js/airport.js"></script>
+    <script src="js/airport-map-parser.js"></script>
     <script src="js/wildlife.js"></script>
     <script src="js/boats.js"></script>
     <script src="js/gauges.js"></script>
@@ -236,7 +237,12 @@
     <script src="js/trees/beach-morning-glory.js"></script>
     <script src="js/trees/driftwood.js"></script>
     <script src="js/trees/lava-rock.js"></script>
+    <!-- Buildings -->
+    <script src="js/buildings/residential.js"></script>
+    <script src="js/buildings/commercial.js"></script>
+    <script src="js/buildings/lighthouse.js"></script>
     <script src="js/flora-manager.js"></script>
+    <script src="js/building-manager.js"></script>
     <script src="js/hot-air-balloons.js"></script>
     
     <!-- Animal Base Class -->
@@ -757,6 +763,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update flora LOD and culling
             if (window.floraManager) {
                 window.floraManager.update(delta);
+            }
+            
+            // Update buildings
+            if (window.buildingManager) {
+                window.buildingManager.update(delta);
             }
             
             // Update fauna (animals)

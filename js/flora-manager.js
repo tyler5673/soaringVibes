@@ -45,14 +45,14 @@ class FloraManager {
         switch(biome) {
             case 'forest': // JUNGLE - Large impressive trees, reasonable count
                 return [
-                    { type: 'giant-koa', scale: 0.7 + Math.random() * 0.25, weight: 0.30 },
-                    { type: 'banyan', scale: 0.6 + Math.random() * 0.2, weight: 0.25 },
-                    { type: 'koa', scale: 0.55 + Math.random() * 0.2, weight: 0.20 },
-                    { type: 'tree-fern', scale: 0.5 + Math.random() * 0.2, weight: 0.20 },
-                    { type: 'bamboo', scale: 0.9 + Math.random() * 0.3, weight: 0.15 },
-                    { type: 'ohia', scale: 0.9 + Math.random() * 0.3, weight: 0.15 },
-                    { type: 'ti-plant', scale: 0.7 + Math.random() * 0.3, weight: 0.20 },
-                    { type: 'ground-fern', scale: 0.6 + Math.random() * 0.4, weight: 0.30 }
+                    { type: 'giant-koa', scale: 0.58 + Math.random() * 0.2, weight: 0.30 },
+                    { type: 'banyan', scale: 0.5 + Math.random() * 0.17, weight: 0.25 },
+                    { type: 'koa', scale: 0.46 + Math.random() * 0.17, weight: 0.20 },
+                    { type: 'tree-fern', scale: 0.42 + Math.random() * 0.17, weight: 0.20 },
+                    { type: 'bamboo', scale: 0.75 + Math.random() * 0.25, weight: 0.15 },
+                    { type: 'ohia', scale: 0.75 + Math.random() * 0.25, weight: 0.15 },
+                    { type: 'ti-plant', scale: 0.58 + Math.random() * 0.25, weight: 0.20 },
+                    { type: 'ground-fern', scale: 0.5 + Math.random() * 0.33, weight: 0.30 }
                 ];
                 
             case 'dry-forest': // DRY FOREST - Sparse, drought-adapted
@@ -119,16 +119,16 @@ class FloraManager {
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
         const mobileMultiplier = isMobile ? 0 : 1.0;
         
-        // BALANCED DENSITIES - Good coverage, not overwhelming
+        // SPARSE DENSITIES - 3/4 of previous
         switch(biome) {
-            case 'forest': return 0.75 * mobileMultiplier;      // 75% - Dense but not crushing
-            case 'dry-forest': return 0.45 * mobileMultiplier;   // 45% - Natural dry forest
-            case 'beach': return 0.40 * mobileMultiplier;        // 40% - Nice coastal cover
-            case 'shrubland': return 0.60 * mobileMultiplier;    // 60% - Thick shrubbery
-            case 'grassland': return 0.45 * mobileMultiplier;    // 45% - Natural grass
-            case 'cliff': return 0.20 * mobileMultiplier;        // 20% - Sparse
-            case 'rock': return 0.15 * mobileMultiplier;        // 15% - Mostly bare
-            default: return 0.30 * mobileMultiplier;
+            case 'forest': return 0.26 * mobileMultiplier;      // 26%
+            case 'dry-forest': return 0.15 * mobileMultiplier;   // 15%
+            case 'beach': return 0.15 * mobileMultiplier;        // 15%
+            case 'shrubland': return 0.22 * mobileMultiplier;    // 22%
+            case 'grassland': return 0.15 * mobileMultiplier;    // 15%
+            case 'cliff': return 0.08 * mobileMultiplier;        // 8%
+            case 'rock': return 0.06 * mobileMultiplier;        // 6%
+            default: return 0.11 * mobileMultiplier;
         }
     }
 
@@ -369,38 +369,21 @@ class FloraManager {
 
         this.perfManager.updateFrustum();
         const camPos = this.camera.position;
-        let visibleCount = 0;
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+        const treeMaxDist = isMobile ? 800 : 1300; // 800m mobile, 1300m desktop (+500)
 
         this.allTrees.forEach(treeData => {
             const dist = camPos.distanceTo(treeData.worldPos);
 
-            if (dist > TREE_RENDER_DISTANCE) {
+            // Simple distance-based visibility
+            if (dist > treeMaxDist) {
                 treeData.mesh.visible = false;
-                return;
-            }
-
-            treeData.mesh.visible = true;
-            visibleCount++;
-
-            const targetLOD = this.perfManager.getLODLevel(dist);
-            if (treeData.currentLOD !== targetLOD) {
-                this.switchLOD(treeData, targetLOD);
+            } else {
+                treeData.mesh.visible = true;
             }
         });
-
-        if (visibleCount > this.maxVisibleTrees) {
-            const sorted = this.allTrees
-                .filter(t => t.mesh.visible)
-                .sort((a, b) => {
-                    const da = camPos.distanceTo(a.worldPos);
-                    const db = camPos.distanceTo(b.worldPos);
-                    return db - da;
-                });
-
-            for (let i = this.maxVisibleTrees; i < sorted.length; i++) {
-                sorted[i].mesh.visible = false;
-            }
-        }
     }
 
     getTreesByBiome(biome) {
