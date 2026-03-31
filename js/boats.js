@@ -32,156 +32,291 @@ class Sailboat {
     createMesh() {
         const group = new THREE.Group();
         
-        // Main hull - classic schooner shape
-        const hullShape = new THREE.Shape();
-        hullShape.moveTo(0, 0);
-        hullShape.lineTo(15, 0);
-        hullShape.lineTo(14, 3);
-        hullShape.lineTo(1, 3);
-        hullShape.closePath();
+        // Hull profile (side view) - teardrop cross-section, pointed bow forward (+X), wider stern at origin
+        const hullProfile = new THREE.Shape();
+        hullProfile.moveTo(0, 1);
+        hullProfile.lineTo(4, 2.5);
+        hullProfile.quadraticCurveTo(12, 3, 16, 1);
+        hullProfile.lineTo(16, -1);
+        hullProfile.quadraticCurveTo(12, -2, 4, -2.5);
+        hullProfile.lineTo(0, -1);
+        hullProfile.closePath();
         
-        const hullGeo = new THREE.ExtrudeGeometry(hullShape, { depth: 5, bevelEnabled: false });
-        hullGeo.rotateX(-Math.PI / 2);
-        hullGeo.translate(-7.5, 0, -2.5);
+        // Extrude along Z axis (depth = beam/width), then rotate to lay flat
+        const hullGeo = new THREE.ExtrudeGeometry(hullProfile, { 
+            depth: 5,           // Beam (width) of boat
+            bevelEnabled: false 
+        });
+        hullGeo.rotateX(-Math.PI / 2);       // Lay flat
+        hullGeo.translate(0, -1.8, -2.5);     // Center and position
         
         const hullMat = new THREE.MeshStandardMaterial({ 
-            color: 0x2C1810,
-            roughness: 0.7,
+            color: 0xFFFFFF,
+            roughness: 0.4,
             metalness: 0.1
         });
         const hull = new THREE.Mesh(hullGeo, hullMat);
         hull.castShadow = true;
         group.add(hull);
         
-        // Deck
-        const deckGeo = new THREE.BoxGeometry(14, 0.3, 4.5);
-        const deckMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
-        const deck = new THREE.Mesh(deckGeo, deckMat);
-        deck.position.set(0, 3.1, 0);
-        group.add(deck);
+        // Keel - weighted fin for stability (missing from original)
+        const keelShape = new THREE.Shape();
+        keelShape.moveTo(0, 0);
+        keelShape.lineTo(1.5, -3.5);
+        keelShape.lineTo(2, -10);
+        keelShape.lineTo(-2, -10);
+        keelShape.lineTo(-1.5, -3.5);
+        keelShape.closePath();
         
-        // Cabin
-        const cabinGeo = new THREE.BoxGeometry(4, 2.5, 3.5);
-        const cabinMat = new THREE.MeshStandardMaterial({ color: 0xF5F5DC, roughness: 0.5 });
-        const cabin = new THREE.Mesh(cabinGeo, cabinMat);
-        cabin.position.set(-3, 4.4, 0);
-        cabin.castShadow = true;
-        group.add(cabin);
+        const keelGeo = new THREE.ExtrudeGeometry(keelShape, { 
+            depth: 0.6, 
+            bevelEnabled: false 
+        });
+        keelGeo.rotateX(-Math.PI / 2);
+        keelGeo.translate(-1, -3.5, 0);
         
-        // Cabin roof
-        const roofGeo = new THREE.BoxGeometry(4.5, 0.3, 4);
-        const roof = new THREE.Mesh(roofGeo, hullMat);
-        roof.position.set(-3, 5.7, 0);
-        group.add(roof);
+        const keelMat = new THREE.MeshStandardMaterial({ 
+            color: 0x333333,
+            roughness: 0.6,
+            metalness: 0.5
+        });
+        const keel = new THREE.Mesh(keelGeo, keelMat);
+        keel.castShadow = true;
+        group.add(keel);
         
-        // Main mast (forward)
-        const mainMastGeo = new THREE.CylinderGeometry(0.15, 0.2, 18, 8);
-        const mastMat = new THREE.MeshStandardMaterial({ color: 0x3D2817, roughness: 0.8 });
+        // Deck line stripe - runs along centerline from stern to bow
+        const deckStripeGeo = new THREE.BoxGeometry(16, 0.15, 4.8);
+        const deckStripeMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+        const deckStripe = new THREE.Mesh(deckStripeGeo, deckStripeMat);
+        deckStripe.position.set(7, 2.6, 0);
+        group.add(deckStripe);
+        
+        // Cabin structure (simplified) - sits on deck near stern
+        const cabinTopGeo = new THREE.BoxGeometry(5, 0.3, 3.8);
+        const cabinTopMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+        const cabinTop = new THREE.Mesh(cabinTopGeo, cabinTopMat);
+        cabinTop.position.set(1.5, 2.9, 0);
+        group.add(cabinTop);
+        
+        // Mast - single central mast with slight aft rake (correct for sloop)
+        // Positioned ~2 units from stern, slightly forward of center
+        const mastHeight = 22;
+        const mastRadius = 0.18;
+        const mainMastGeo = new THREE.CylinderGeometry(mastRadius * 0.7, mastRadius, mastHeight, 10);
+        const mastMat = new THREE.MeshStandardMaterial({ color: 0xEEEEEE, roughness: 0.5 });
         const mainMast = new THREE.Mesh(mainMastGeo, mastMat);
-        mainMast.position.set(2, 12, 0);
+        // Mast base at deck level (y=2.6), centered on hull width, ~2 units from stern
+        mainMast.position.set(2, mastHeight / 2 + 2.6 - 1, 0);
         group.add(mainMast);
         
-        // Fore mast (aft)
-        const foreMastGeo = new THREE.CylinderGeometry(0.12, 0.18, 14, 8);
-        const foreMast = new THREE.Mesh(foreMastGeo, mastMat);
-        foreMast.position.set(-4, 10, 0);
-        group.add(foreMast);
+        // Standing rigging - shrouds (side support) and stays (fore/aft support)
+        const riggingMat = new THREE.MeshStandardMaterial({ 
+            color: 0x888888, 
+            metalness: 0.9, 
+            roughness: 0.3 
+        });
         
-        // Main sail
+        // Mast top position (where shrouds attach)
+        const mastTopY = mainMast.position.y;
+        const mastBaseY = mainMast.position.y - mastHeight + 1;
+        
+        // Port side shroud - from mast top to deck edge on port side
+        const portShroudGeo = new THREE.CylinderGeometry(0.02, 0.02, Math.sqrt(mastHeight * mastHeight + 3 * 3), 4);
+        const portShroud = new THREE.Mesh(portShroudGeo, riggingMat);
+        // Center the shroud between deck edge and mast top
+        portShroud.position.set(2, mastTopY - (mastHeight - 5) / 2, 2.5);
+        portShroud.rotation.z = Math.atan2(mastHeight - 5, 2.5);
+        group.add(portShroud);
+        
+        // Starboard side shroud - mirror of port
+        const starboardShroudGeo = new THREE.CylinderGeometry(0.02, 0.02, Math.sqrt(mastHeight * mastHeight + 3 * 3), 4);
+        const starboardShroud = new THREE.Mesh(starboardShroudGeo, riggingMat);
+        starboardShroud.position.set(2, mastTopY - (mastHeight - 5) / 2, -2.5);
+        starboardShroud.rotation.z = -Math.atan2(mastHeight - 5, 2.5);
+        group.add(starboardShroud);
+        
+        // Forestay - from mast top to bow
+        const forestayGeo = new THREE.CylinderGeometry(0.025, 0.02, Math.sqrt((mastHeight + 3) * (mastHeight + 3) + 14 * 14), 4);
+        const forestay = new THREE.Mesh(forestayGeo, riggingMat);
+        forestay.position.set(2 - 7, mastTopY - (mastHeight + 3) / 2, 0.5);
+        forestay.rotation.z = Math.atan2(mastHeight + 3, 14);
+        group.add(forestay);
+        
+        // Backstay - from mast top to stern
+        const backstayGeo = new THREE.CylinderGeometry(0.03, 0.02, Math.sqrt((mastHeight + 2) * (mastHeight + 2) + 10 * 10), 4);
+        const backstay = new THREE.Mesh(backstayGeo, riggingMat);
+        backstay.position.set(2 + 5, mastTopY - (mastHeight + 2) / 2, 0.5);
+        backstay.rotation.z = -Math.atan2(mastHeight + 2, 10);
+        group.add(backstay);
+        
+        // Bermuda mainsail - triangular sail attached to mast and boom
+        const sailMat = new THREE.MeshStandardMaterial({ 
+            color: 0xFFF8E7,  // Warm white canvas
+            side: THREE.DoubleSide,
+            roughness: 0.95
+        });
+        
+        // Mainsail shape (in local coordinates relative to mast position)
         const mainSailShape = new THREE.Shape();
-        mainSailShape.moveTo(0, 0);
-        mainSailShape.quadraticCurveTo(2.5, 6, 0, 12);
-        mainSailShape.lineTo(0, 0);
+        mainSailShape.moveTo(0, 1);           // Boom attachment at deck level (+y from mast base)
+        mainSailShape.lineTo(0.3, mastHeight - 4); // Peak near top of mast (with aft rake offset)
+        mainSailShape.quadraticCurveTo(-2, mastHeight / 2, -10, 1); // Leech curves to boom end
+        mainSailShape.closePath();
         
         const mainSailGeo = new THREE.ShapeGeometry(mainSailShape);
-        const sailMat = new THREE.MeshStandardMaterial({ 
-            color: 0xFEFEFA,
-            side: THREE.DoubleSide,
-            roughness: 0.9
-        });
         const mainSail = new THREE.Mesh(mainSailGeo, sailMat);
-        mainSail.position.set(0.1, 3.5, 0);
-        mainSail.rotation.y = Math.PI / 2;
+        // Position relative to mast: centered on mast with correct Y offset
+        mainSail.position.set(2.15, 3 + (mastHeight - 4) / 2, 0);
         mainSail.userData.isSail = true;
         group.add(mainSail);
         
-        // Main sail gaff
-        const gaffGeo = new THREE.CylinderGeometry(0.05, 0.05, 3.5, 6);
-        const gaff = new THREE.Mesh(gaffGeo, mastMat);
-        gaff.position.set(0, 9.5, 0);
-        gaff.rotation.z = Math.PI / 2;
-        gaff.rotation.x = 0.3;
-        group.add(gaff);
-        
-        // Main boom
-        const boomGeo = new THREE.CylinderGeometry(0.06, 0.06, 3, 6);
-        const boom = new THREE.Mesh(boomGeo, mastMat);
-        boom.position.set(0, 3.5, 0);
-        boom.rotation.z = Math.PI / 2;
+        // Main boom - horizontal spar at base of mainsail
+        const boomLength = 9;
+        const boomGeo = new THREE.CylinderGeometry(0.06, 0.04, boomLength + 1, 8);
+        const boomMat = new THREE.MeshStandardMaterial({ color: 0x3D2817 });
+        const boom = new THREE.Mesh(boomGeo, boomMat);
+        // Boom extends from gooseneck (near mast) to sail clew
+        boom.position.set(-3.5, 4, 0.3);
+        boom.rotation.z = -Math.PI / 12; // Slight down angle
         group.add(boom);
         
-        // Fore sail
-        const foreSailShape = new THREE.Shape();
-        foreSailShape.moveTo(0, 0);
-        foreSailShape.quadraticCurveTo(2, 4.5, 0, 9);
-        foreSailShape.lineTo(0, 0);
+        // Gooseneck - connection point of boom to mast
+        const gooseneckGeo = new THREE.BoxGeometry(0.3, 0.4, 0.3);
+        const gooseneck = new THREE.Mesh(gooseneckGeo, mastMat);
+        gooseneck.position.set(-1, 4, 0.3);
+        group.add(gooseneck);
         
-        const foreSailGeo = new THREE.ShapeGeometry(foreSailShape);
-        const foreSail = new THREE.Mesh(foreSailGeo, sailMat.clone());
-        foreSail.position.set(-2.1, 3, 0);
-        foreSail.rotation.y = Math.PI / 2;
-        foreSail.userData.isSail = true;
-        group.add(foreSail);
-        
-        // Jib
+        // Headsail/Jib - triangular sail forward of mast (cutter rig adds versatility)
         const jibShape = new THREE.Shape();
-        jibShape.moveTo(0, 0);
-        jibShape.quadraticCurveTo(1.5, 3, 0, 7);
-        jibShape.lineTo(0, 0);
+        jibShape.moveTo(0, 1);              // Tack at deck level
+        jibShape.lineTo(-0.5, mastHeight - 8); // Head near top of mast
+        jibShape.lineTo(-14, 2);             // Clew forward (bow area)
+        jibShape.closePath();
         
         const jibGeo = new THREE.ShapeGeometry(jibShape);
         const jib = new THREE.Mesh(jibGeo, sailMat.clone());
-        jib.position.set(4.1, 3, 0);
-        jib.rotation.y = Math.PI / 2;
+        jib.position.set(2 - 7, 3 + (mastHeight - 8) / 2, 0.5);
         jib.userData.isSail = true;
         group.add(jib);
         
-        // Railing
-        const railMat = new THREE.MeshStandardMaterial({ color: 0x2C1810 });
-        for (let side = -1; side <= 1; side += 2) {
-            for (let i = 0; i < 6; i++) {
-                const postGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 6);
-                const post = new THREE.Mesh(postGeo, railMat);
-                post.position.set(-6 + i * 2.5, 3.7, side * 2);
-                group.add(post);
-            }
+        // Staysail - inner forestay sail for added versatility (cutter configuration)
+        const staysailShape = new THREE.Shape();
+        staysailShape.moveTo(0, 1);
+        staysailShape.lineTo(-0.2, mastHeight - 12);
+        staysailShape.lineTo(-6, 1.5);
+        staysailShape.closePath();
+        
+        const staysailGeo = new THREE.ShapeGeometry(staysailShape);
+        const staysail = new THREE.Mesh(staysailGeo, sailMat.clone());
+        staysail.position.set(2 - 3.5, 3 + (mastHeight - 12) / 2, 0.3);
+        staysail.userData.isSail = true;
+        group.add(staysail);
+        
+        // Hiking rails - side rails for crew to sit on along the hull sides
+        const railMat = new THREE.MeshStandardMaterial({ color: 0x4A4A4A });
+        
+        for (let i = 0; i < 6; i++) {
+            const railX = 3 + i * 2.5;  // Along the hull from stern to bow area
+            const railHeight = 4 + i * 0.08;  // Slight upward curve following deck
             
-            const railGeo = new THREE.CylinderGeometry(0.03, 0.03, 14, 6);
-            const rail = new THREE.Mesh(railGeo, railMat);
-            rail.position.set(0, 4.2, side * 2);
-            rail.rotation.z = Math.PI / 2;
-            group.add(rail);
+            // Port side hiking stick
+            const portStickGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.2, 6);
+            const portStick = new THREE.Mesh(portStickGeo, railMat);
+            portStick.position.set(railX, railHeight, 2.5);
+            group.add(portStick);
+            
+            // Starboard side hiking stick
+            const starboardStick = new THREE.Mesh(portStickGeo, railMat.clone());
+            starboardStick.position.set(railX, railHeight, -2.5);
+            group.add(starboardStick);
         }
         
-        // Anchor
-        const anchorGeo = new THREE.TorusGeometry(0.4, 0.1, 8, 12, Math.PI);
-        const anchorMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8 });
-        const anchor = new THREE.Mesh(anchorGeo, anchorMat);
-        anchor.position.set(6, 1.5, 0);
-        anchor.rotation.x = Math.PI / 2;
-        group.add(anchor);
+        // Stern railing - at the back of the boat
+        for (let side = -1; side <= 1; side += 2) {
+            const sternPostGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 6);
+            for (let i = 0; i < 3; i++) {
+                const post = new THREE.Mesh(sternPostGeo, railMat);
+                // Stern is at x=16 (bow), so posts go from x=15 to x=9
+                const sternX = 16 - 1.2 * i;  
+                post.position.set(sternX, 4 + i * 0.05, side * 2);
+                group.add(post);
+            }
+        }
         
-        // Portholes
-        const portholeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.5 });
-        for (let i = 0; i < 3; i++) {
-            const portholeGeo = new THREE.CircleGeometry(0.25, 12);
+        // Bow pulpit (front railing)
+        for (let side = -1; side <= 1; side += 2) {
+            const bowPostGeo = new THREE.CylinderGeometry(0.04, 0.04, 1, 6);
+            for (let i = 0; i < 2; i++) {
+                const post = new THREE.Mesh(bowPostGeo, railMat);
+                // Bow area at x=0-3
+                const bowX = 1 + i * 1.5;
+                post.position.set(bowX, 4.2 + i * 0.1, side * 2.1);
+                group.add(post);
+            }
+        }
+        
+        // Winches - two primary winches near cockpit (aft of mast)
+        const winchGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.25, 16);
+        const winchMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        
+        for (let side = -1; side <= 1; side += 2) {
+            const winch = new THREE.Mesh(winchGeo, winchMat.clone());
+            // Winches positioned near mast but slightly aft
+            winch.position.set(1.5, 3.8, side * 2);
+            group.add(winch);
+        }
+        
+        // Portholes - circular windows on hull sides (properly sized and spaced)
+        const portholeMat = new THREE.MeshStandardMaterial({ 
+            color: 0x1a3a5c, 
+            metalness: 0.6, 
+            roughness: 0.2,
+            transparent: true,
+            opacity: 0.9
+        });
+        
+        // Place portholes along the hull sides at waterline level
+        for (let i = 0; i < 5; i++) {
+            const portholeX = 4 + i * 2.6;  // Spread from mid-hull toward bow
+            const portholeGeo = new THREE.CircleGeometry(0.18, 16);
+            
             const porthole = new THREE.Mesh(portholeGeo, portholeMat);
-            porthole.position.set(-5 + i * 2, 4.5, 1.76);
+            porthole.position.set(portholeX, 3.2, 2.45);  // Port side
             group.add(porthole);
             
             const porthole2 = porthole.clone();
-            porthole2.position.z = -1.76;
+            porthole2.position.z = -2.45;  // Starboard side
             group.add(porthole2);
+        }
+        
+        // Rudder - visible at stern for steering control (attached to transom)
+        const rudderGeo = new THREE.BoxGeometry(0.8, 2.5, 0.15);
+        const rudderMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+        const rudder = new THREE.Mesh(rudderGeo, rudderMat);
+        // Stern is at x=16 (bow end), rudder hangs below hull
+        rudder.position.set(15.5, -3, 0);
+        group.add(rudder);
+        
+        // Stern cleats - for securing lines (at transom)
+        const cleatShape = new THREE.Shape();
+        cleatShape.moveTo(0, 0);
+        cleatShape.lineTo(0.4, 0);
+        cleatShape.lineTo(0.5, 0.3);
+        cleatShape.lineTo(0.2, 0.3);
+        cleatShape.lineTo(0, 0.6);
+        cleatShape.lineTo(-0.2, 0.3);
+        cleatShape.lineTo(0.1, 0.3);
+        cleatShape.lineTo(0.2, 0);
+        cleatShape.closePath();
+        
+        const cleatGeo = new THREE.ExtrudeGeometry(cleatShape, { depth: 0.15 });
+        const cleatMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        
+        for (let side = -1; side <= 1; side += 2) {
+            const cleat = new THREE.Mesh(cleatGeo, cleatMat.clone());
+            // Cleats at stern transom area
+            cleat.position.set(15.5, 3.2, side * 2);
+            group.add(cleat);
         }
         
         return group;

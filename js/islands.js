@@ -769,7 +769,7 @@ async function createAllIslands(scene, onProgress) {
             const terrainHeight = meta.worldHeight * info.worldScale;
             
             const u = airport.x / 1023;
-            const v = airport.y / 1023;
+            const v = 1 - (airport.y / 1023);
             
             const localX = (u - 0.5) * terrainWidth;
             const localZ = (v - 0.5) * terrainHeight;
