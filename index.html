@@ -62,10 +62,11 @@
         <div id="loading-tagline">Built with prompts. Fueled by vibes. Powered by open source.</div>
         <div id="loading-version">v0.0.1</div>
     </div>
-    <!-- Desktop menu button - outside loading so it shows during gameplay -->
+    <!-- Desktop buttons - outside loading so they show during gameplay -->
     <div id="desktop-menu-btn" class="desktop-menu-button" title="Change name or colors">
         <img src="assets/images/icon.png" alt="Menu">
     </div>
+    <button id="desktop-reset-btn" class="desktop-reset-button" title="Reset Aircraft (R)">↻</button>
     <div id="hud">
         <div class="gauges">
             <!-- Airspeed Indicator -->
@@ -432,6 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Menu buttons - show loading screen to change name/colors
     const desktopMenuBtn = document.getElementById('desktop-menu-btn');
+    const desktopResetBtn = document.getElementById('desktop-reset-btn');
     const menuBtn = document.getElementById('menu-btn');
     
     function handleMenuClick() {
@@ -440,6 +442,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (desktopMenuBtn) {
         desktopMenuBtn.addEventListener('click', handleMenuClick);
+    }
+    if (desktopResetBtn) {
+        desktopResetBtn.addEventListener('click', () => {
+            if (aircraft) aircraft.reset();
+            if (orbitCamera) orbitCamera.resetBehindTarget();
+        });
     }
     if (menuBtn) {
         menuBtn.addEventListener('click', handleMenuClick);
@@ -490,10 +498,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Show menu buttons during gameplay
                 const desktopMenuBtn = document.getElementById('desktop-menu-btn');
+                const desktopResetBtn = document.getElementById('desktop-reset-btn');
                 const menuBtn = document.getElementById('menu-btn');
                 const resetBtn = document.getElementById('reset-btn');
                 const controlsHint = document.getElementById('controls-hint');
                 if (desktopMenuBtn) desktopMenuBtn.classList.add('visible');
+                if (desktopResetBtn) desktopResetBtn.classList.add('visible');
                 if (menuBtn) menuBtn.classList.add('visible');
                 if (resetBtn) resetBtn.classList.add('visible');
                 if (controlsHint) controlsHint.classList.add('visible');
@@ -512,10 +522,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Hide menu buttons during loading
                 const desktopMenuBtn = document.getElementById('desktop-menu-btn');
+                const desktopResetBtn = document.getElementById('desktop-reset-btn');
                 const menuBtn = document.getElementById('menu-btn');
                 const resetBtn = document.getElementById('reset-btn');
                 const controlsHint = document.getElementById('controls-hint');
                 if (desktopMenuBtn) desktopMenuBtn.classList.remove('visible');
+                if (desktopResetBtn) desktopResetBtn.classList.remove('visible');
                 if (menuBtn) menuBtn.classList.remove('visible');
                 if (resetBtn) resetBtn.classList.remove('visible');
                 if (controlsHint) controlsHint.classList.remove('visible');
