@@ -441,6 +441,7 @@ body { overflow: hidden; background: #000; }
 #loading.hidden {
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;
 }
 #loading-bar {
     width: 300px;
@@ -654,6 +655,7 @@ body { overflow: hidden; background: #000; }
     opacity: 0;
     transition: opacity 0.5s ease-out;
     pointer-events: none;
+    visibility: hidden;
 }
 
 /* Crash Message Styling */
