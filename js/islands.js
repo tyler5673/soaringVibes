@@ -621,6 +621,23 @@ function addRocks(group, scale, islandRadius, islandName) {
     }
 }
 
+async function loadAirportPositions() {
+    const airportMap = {};
+    
+    for (const island of islandPositions) {
+        try {
+            const airports = await parseAirportMap(island.name);
+            airportMap[island.name] = airports;
+            console.log(`Loaded ${airports.length} airports for ${island.name}`);
+        } catch (e) {
+            console.warn(`No airport map for ${island.name}:`, e.message);
+            airportMap[island.name] = [];
+        }
+    }
+    
+    return airportMap;
+}
+
 const islandPositions = [
     { name: 'maui', x: 0, z: 0, hasAirport: true, worldScale: 0.08, bounds: { north: 21.031, south: 20.574, east: -155.979, west: -156.697 } },
     { name: 'big-island', x: 3200, z: -6400, hasAirport: false, worldScale: 0.08, bounds: { north: 20.310, south: 18.861, east: -154.756, west: -156.124 } },
