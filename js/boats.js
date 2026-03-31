@@ -3,7 +3,10 @@ class Sailboat {
     constructor(scene, position) {
         this.scene = scene;
         this.mesh = this.createMesh();
-        this.mesh.position.copy(position);
+        
+        if (position) {
+            this.mesh.position.copy(position);
+        }
         
         this.velocity = new THREE.Vector3();
         this.speed = 5 + Math.random() * 10;
@@ -13,7 +16,14 @@ class Sailboat {
         this.bobTimer = Math.random() * Math.PI * 2;
         this.rockTimer = Math.random() * Math.PI * 2;
         
-        scene.add(this.mesh);
+        if (scene) {
+            scene.add(this.mesh);
+        }
+    }
+    
+    static getGeometry() {
+        const temp = new Sailboat();
+        return temp.mesh;
     }
     
     createMesh() {
@@ -70,7 +80,10 @@ class CruiseShip {
     constructor(scene, position) {
         this.scene = scene;
         this.mesh = this.createMesh();
-        this.mesh.position.copy(position);
+        
+        if (position) {
+            this.mesh.position.copy(position);
+        }
         
         this.velocity = new THREE.Vector3();
         this.speed = 10 + Math.random() * 10;
@@ -80,7 +93,14 @@ class CruiseShip {
         this.bobTimer = Math.random() * Math.PI * 2;
         this.windowLightsOn = Math.random() > 0.3;
         
-        scene.add(this.mesh);
+        if (scene) {
+            scene.add(this.mesh);
+        }
+    }
+    
+    static getGeometry() {
+        const temp = new CruiseShip();
+        return temp.mesh;
     }
     
     createMesh() {
@@ -168,12 +188,12 @@ class BoatManager {
         this.sailboats = [];
         this.cruiseShips = [];
         
-        this.createSailboats(25);
-        this.createCruiseShips(5);
+        this.createSailboats(50);
+        this.createCruiseShips(10);
     }
     
     createSailboats(count) {
-        const coastalCount = 15;
+        const coastalCount = 30;
         
         for (let i = 0; i < coastalCount; i++) {
             const pos = this.getCoastalPosition();
@@ -225,7 +245,7 @@ class BoatManager {
     }
     
     pickNewWaypoint(boat) {
-        const isCoastal = boat instanceof Sailboat && this.sailboats.indexOf(boat) < 15;
+        const isCoastal = boat instanceof Sailboat && this.sailboats.indexOf(boat) < 30;
         
         let newTarget;
         if (isCoastal) {
