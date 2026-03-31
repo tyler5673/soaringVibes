@@ -8,9 +8,9 @@ body { overflow: hidden; background: #000; }
     z-index: 100; 
 }
 
-/* Hide HUD on desktop - only show on touch devices */
+/* Hide velocity display on desktop - show gauges only on mobile */
 @media (hover: hover) and (pointer: fine) {
-    #hud {
+    #velocity-display {
         display: none !important;
     }
 }
