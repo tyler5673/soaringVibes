@@ -45,10 +45,10 @@ class FloraManager {
         switch(biome) {
             case 'forest': // JUNGLE - Large impressive trees, reasonable count
                 return [
-                    { type: 'giant-koa', scale: 1.4 + Math.random() * 0.5, weight: 0.30 },
-                    { type: 'banyan', scale: 1.2 + Math.random() * 0.4, weight: 0.25 },
-                    { type: 'koa', scale: 1.1 + Math.random() * 0.4, weight: 0.20 },
-                    { type: 'tree-fern', scale: 1.0 + Math.random() * 0.4, weight: 0.20 },
+                    { type: 'giant-koa', scale: 0.7 + Math.random() * 0.25, weight: 0.30 },
+                    { type: 'banyan', scale: 0.6 + Math.random() * 0.2, weight: 0.25 },
+                    { type: 'koa', scale: 0.55 + Math.random() * 0.2, weight: 0.20 },
+                    { type: 'tree-fern', scale: 0.5 + Math.random() * 0.2, weight: 0.20 },
                     { type: 'bamboo', scale: 0.9 + Math.random() * 0.3, weight: 0.15 },
                     { type: 'ohia', scale: 0.9 + Math.random() * 0.3, weight: 0.15 },
                     { type: 'ti-plant', scale: 0.7 + Math.random() * 0.3, weight: 0.20 },
@@ -67,7 +67,7 @@ class FloraManager {
                 
             case 'beach': // BEACH - Palms and coastal vegetation
                 return [
-                    { type: 'coconut-palm', scale: 1.0 + Math.random() * 0.5, weight: 0.35 },
+                    { type: 'coconut-palm', scale: 0.5 + Math.random() * 0.25, weight: 0.35 },
                     { type: 'palm', scale: 0.9 + Math.random() * 0.4, weight: 0.25 },
                     { type: 'naupaka', scale: 0.7 + Math.random() * 0.3, weight: 0.30 },
                     { type: 'beach-morning-glory', scale: 0.5 + Math.random() * 0.3, weight: 0.25 },
