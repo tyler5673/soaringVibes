@@ -207,6 +207,22 @@
       "script": "../js/hot-air-balloons.js",
       "export": "HotAirBalloon",
       "description": "Colorful hot air balloon with burner effect"
+    },
+    {
+      "id": "sailboat",
+      "name": "Sailboat",
+      "category": "vehicles",
+      "script": "../js/boats.js",
+      "export": "Sailboat",
+      "description": "Sailing boat with animated sail"
+    },
+    {
+      "id": "cruise-ship",
+      "name": "Cruise Ship",
+      "category": "vehicles",
+      "script": "../js/boats.js",
+      "export": "CruiseShip",
+      "description": "Large cruise ship with passengers"
     }
   ]
 }
