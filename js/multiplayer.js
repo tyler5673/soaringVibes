@@ -221,6 +221,10 @@ class MultiplayerClient {
         const maxLabelDistance = 1219.2; // 4000ft in meters (4000 * 0.3048)
         const dotThreshold = 1524; // 5000ft in meters (5000 * 0.3048)
         
+        // Get CSS pixel dimensions (not internal canvas buffer size)
+        const width = renderer.domElement.clientWidth || window.innerWidth;
+        const height = renderer.domElement.clientHeight || window.innerHeight;
+        
         for (const [playerId, mesh] of this.otherPlayers) {
             if (!mesh) continue;
             
@@ -254,11 +258,11 @@ class MultiplayerClient {
                     
                     // Check if the point is in front of the camera (z < 1)
                     if (screenPos.z < 1) {
-                        const width = renderer.domElement.width || window.innerWidth;
-                        const height = renderer.domElement.height || window.innerHeight;
-                        
+                        // Convert normalized device coordinates (-1 to 1) to CSS pixels
+                        // screenPos.x: -1 (left) to 1 (right)
+                        // screenPos.y: 1 (top) to -1 (bottom) in NDC, so we flip Y
                         const x = (screenPos.x + 1) / 2 * width;
-                        const y = -(screenPos.y - 1) / 2 * height;
+                        const y = (1 - screenPos.y) / 2 * height;
                         
                         dotElement.style.display = 'block';
                         dotElement.style.left = `${x}px`;
