@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Soaring Vibes</title>
     <link rel="icon" type="image/png" href="assets/images/icon.png">
     <link rel="stylesheet" href="css/style.css">
@@ -369,6 +369,25 @@ document.addEventListener('DOMContentLoaded', function() {
     updateColorDisplay();
     setRandomName();
     setRandomColors();
+    
+    // Handle orientation change - force repaint of loading screen
+    window.addEventListener('orientationchange', function() {
+        setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    });
+    
+    // Also handle resize for browser-based orientation changes
+    window.addEventListener('resize', function() {
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl && loadingEl.style.display !== 'none' && !loadingEl.classList.contains('hidden')) {
+            // Trigger reflow to fix any layout issues
+            const display = loadingEl.style.display;
+            loadingEl.style.display = 'none';
+            void loadingEl.offsetHeight; // Force reflow
+            loadingEl.style.display = display || 'flex';
+        }
+    });
 });
 
 // ========== MAIN =======
