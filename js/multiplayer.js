@@ -58,6 +58,12 @@ class MultiplayerClient {
             case 'welcome':
                 this.playerId = data.your_id;
                 break;
+            case 'ping':
+                // Respond to server ping to keep connection alive
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({ type: 'ping' }));
+                }
+                break;
             case 'players':
                 this.updateOtherPlayers(data.players);
                 break;
@@ -76,11 +82,32 @@ class MultiplayerClient {
         const currentIds = new Set(this.otherPlayers.keys());
         const newIds = new Set(Object.keys(players));
 
-        // Remove players who are no longer in the list
+        // Remove players who are no longer in the list (with debounce)
         for (const id of currentIds) {
             if (!newIds.has(id)) {
-                console.log(`Player left the game`);
-                this.removePlayer(id);
+                // Debounce removal - wait to see if player comes back
+                if (!this.pendingRemovals) this.pendingRemovals = new Map();
+                
+                if (!this.pendingRemovals.has(id)) {
+                    this.pendingRemovals.set(id, setTimeout(() => {
+                        this.pendingRemovals.delete(id);
+                        // Only remove if still not in player list
+                        if (!newIds.has(id)) {
+                            console.log(`Player left the game`);
+                            this.removePlayer(id);
+                        }
+                    }, 500));
+                }
+            }
+        }
+
+        // Cancel pending removal if player comes back
+        if (this.pendingRemovals) {
+            for (const id of newIds) {
+                if (this.pendingRemovals.has(id)) {
+                    clearTimeout(this.pendingRemovals.get(id));
+                    this.pendingRemovals.delete(id);
+                }
             }
         }
 
