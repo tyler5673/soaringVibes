@@ -680,6 +680,11 @@ body { overflow: hidden; background: #000; }
     box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
 }
 
+/* Reset button in crash dialog - show when crash message is visible */
+#crash-message.visible #reset-btn {
+    display: block;
+}
+
 /* Show reset button during gameplay on desktop */
 #reset-btn.visible {
     display: block;
@@ -941,11 +946,6 @@ body { overflow: hidden; background: #000; }
     background: rgba(79, 195, 247, 0.4);
     border-color: rgba(79, 195, 247, 0.8);
     transform: scale(0.95);
-}
-
-/* Show reset button during gameplay on desktop */
-#reset-btn.visible {
-    display: block;
 }
 
 /* Hide on touch devices */
