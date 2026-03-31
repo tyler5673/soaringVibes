@@ -182,6 +182,17 @@ function initTouchControls() {
             rudderHandle.style.left = handlePos + 'px';
         };
         
+        const resetRudderToCenter = () => {
+            if (!rudderTrackRect) {
+                const track = rudderZone.querySelector('.rudder-track');
+                if (track) rudderTrackRect = track.getBoundingClientRect();
+            }
+            touchInput.yaw = 0; // Reset to center (no rudder)
+            // Set handle to center of track in pixels for smooth transition
+            const centerX = (rudderTrackRect ? rudderTrackRect.width : 120) / 2 - 30;
+            rudderHandle.style.left = centerX + 'px';
+        };
+        
         rudderZone.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const track = rudderZone.querySelector('.rudder-track');
@@ -207,8 +218,7 @@ function initTouchControls() {
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === rudderTouchId) {
                     rudderTouchId = null;
-                    touchInput.yaw = 0; // Reset to center (no rudder)
-                    rudderHandle.style.left = '50%';
+                    resetRudderToCenter();
                     break;
                 }
             }
@@ -217,8 +227,7 @@ function initTouchControls() {
         rudderZone.addEventListener('touchcancel', (e) => {
             e.preventDefault();
             rudderTouchId = null;
-            touchInput.yaw = 0; // Reset to center (no rudder)
-            rudderHandle.style.left = '50%';
+            resetRudderToCenter();
         }, { passive: false });
     }
     

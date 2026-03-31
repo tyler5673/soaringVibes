@@ -1112,8 +1112,8 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     border: 2px solid rgba(255, 255, 255, 0.9);
     border-radius: 12px;
     box-shadow: 0 0 15px var(--color-primary-glow-strong);
-    left: 50%;
-    transition: none;
+    left: 30px;
+    transition: left 0.3s ease-out;
 }
 
 .rudder-container .touch-label {
