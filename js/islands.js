@@ -385,6 +385,9 @@ const TREE_RENDER_DISTANCE = 450; // ~1500 feet - balance of visibility and perf
 const TERRAIN_SCALE = 0.15;
 const GROUP_OFFSET_Y = -50;
 
+// Expose WATER_LEVEL globally for other modules
+window.WATER_LEVEL = 2;
+
 function isPointOnIsland(worldX, worldZ, islandName) {
     const data = heightmapCache[islandName];
     const meta = islandMetadataCache[islandName];

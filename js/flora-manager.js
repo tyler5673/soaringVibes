@@ -115,16 +115,20 @@ class FloraManager {
     }
 
     getDensityForBiome(biome) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+        const mobileMultiplier = isMobile ? 0.5 : 1.0;
+        
         // BALANCED DENSITIES - Good coverage, not overwhelming
         switch(biome) {
-            case 'forest': return 0.75;      // 75% - Dense but not crushing
-            case 'dry-forest': return 0.45;   // 45% - Natural dry forest
-            case 'beach': return 0.40;        // 40% - Nice coastal cover
-            case 'shrubland': return 0.60;    // 60% - Thick shrubbery
-            case 'grassland': return 0.45;    // 45% - Natural grass
-            case 'cliff': return 0.20;        // 20% - Sparse
-            case 'rock': return 0.15;        // 15% - Mostly bare
-            default: return 0.30;
+            case 'forest': return 0.75 * mobileMultiplier;      // 75% - Dense but not crushing
+            case 'dry-forest': return 0.45 * mobileMultiplier;   // 45% - Natural dry forest
+            case 'beach': return 0.40 * mobileMultiplier;        // 40% - Nice coastal cover
+            case 'shrubland': return 0.60 * mobileMultiplier;    // 60% - Thick shrubbery
+            case 'grassland': return 0.45 * mobileMultiplier;    // 45% - Natural grass
+            case 'cliff': return 0.20 * mobileMultiplier;        // 20% - Sparse
+            case 'rock': return 0.15 * mobileMultiplier;        // 15% - Mostly bare
+            default: return 0.30 * mobileMultiplier;
         }
     }
 

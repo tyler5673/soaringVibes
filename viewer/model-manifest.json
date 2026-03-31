@@ -201,6 +201,38 @@
       "description": "Humpback whale"
     },
     {
+      "id": "sailboat",
+      "name": "Sailboat",
+      "category": "vehicles",
+      "script": "../js/boats.js",
+      "export": "Sailboat",
+      "description": "Sailboat with animated sail"
+    },
+    {
+      "id": "speedboat",
+      "name": "Speedboat",
+      "category": "vehicles",
+      "script": "../js/boats.js",
+      "export": "Speedboat",
+      "description": "Motor speedboat with randomized colors"
+    },
+    {
+      "id": "pirateship",
+      "name": "Pirate Ship",
+      "category": "vehicles",
+      "script": "../js/boats.js",
+      "export": "PirateShip",
+      "description": "Black sailing ship with skull flag"
+    },
+    {
+      "id": "cruiseship",
+      "name": "Cruise Ship",
+      "category": "vehicles",
+      "script": "../js/boats.js",
+      "export": "CruiseShip",
+      "description": "Large cruise ship with passengers"
+    },
+    {
       "id": "hot-air-balloon",
       "name": "Hot Air Balloon",
       "category": "effects",

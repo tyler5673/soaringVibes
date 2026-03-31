@@ -597,6 +597,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const gaugeSystem = new GaugeSystem();
                 window.gaugeSystem = gaugeSystem;
                 
+                // Initialize boat manager after islands are loaded
+                const boatManager = new BoatManager(scene);
+                window.boatManager = boatManager;
+                
                 updateLoading(90);
                 
                 // Show "Let's Soar!" button while final systems initialize
@@ -617,10 +621,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Keep old wildlife for backward compatibility (balloons)
             wildlife = new Wildlife(scene);
-            
-            // Create boats
-            const boatManager = new BoatManager(scene);
-            window.boatManager = boatManager;
             
             window.addEventListener('resize', onWindowResize);
 
@@ -730,7 +730,9 @@ document.addEventListener('DOMContentLoaded', function() {
             orbitCamera.update(delta);
             cloudSystem.update(delta, time);
             wildlife.update(delta);
-            boatManager.update(delta, time);
+            if (window.boatManager) {
+                window.boatManager.update(delta, time);
+            }
             
             // Update flora LOD and culling
             if (window.floraManager) {
