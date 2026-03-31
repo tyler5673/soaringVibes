@@ -73,9 +73,9 @@ class TreeFernGeometry {
             roughness: 0.95
         });
         
-        // Fronds - bluish-green with silvery undersides
+        // Fronds - natural green
         const frondMat = new THREE.MeshStandardMaterial({ 
-            color: 0x5C8D5C, // Slightly bluish green
+            color: 0x388E3C, // Natural green
             roughness: 0.6
         });
         
