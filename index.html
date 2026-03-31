@@ -158,33 +158,7 @@
                 <div class="gauge-label">ALTITUDE</div>
             </div>
             
-            <!-- Throttle -->
-            <div class="gauge-container throttle-gauge">
-                <svg class="gauge" id="throttle-gauge" viewBox="0 0 140 140">
-                    <circle cx="70" cy="70" r="68" fill="url(#gaugeBezel)"/>
-                    <circle cx="70" cy="70" r="62" fill="#2a2824" stroke="#1a1815" stroke-width="2"/>
-                    <circle cx="70" cy="70" r="58" fill="url(#gaugeFace)" filter="url(#gaugeShadow)"/>
-                    <circle cx="70" cy="70" r="54" fill="none" stroke="#99948a" stroke-width="1"/>
-                    <g class="gauge-marks" id="throttle-marks"></g>
-                    <g class="gauge-labels" id="throttle-labels"></g>
-                    <!-- Throttle arc - yellow for power -->
-                    <path d="M 28 100 A 50 50 0 0 1 112 100" fill="none" stroke="rgba(180,150,0,0.3)" stroke-width="14"/>
-                    <!-- Screw detail -->
-                    <circle cx="70" cy="118" r="4" fill="#555"/>
-                    <circle cx="70" cy="118" r="2" fill="#333"/>
-                    <line x1="68" y1="116" x2="72" y2="120" stroke="#777" stroke-width="1"/>
-                    <!-- Needle -->
-                    <g id="throttle-needle">
-                        <polygon points="70,22 66,70 70,78 74,70" fill="#1a1a1a"/>
-                        <polygon points="70,28 68,68 70,72 72,68" fill="#b8860b"/>
-                        <circle cx="70" cy="70" r="8" fill="#1a1a1a"/>
-                        <circle cx="70" cy="70" r="5" fill="#888"/>
-                    </g>
-                    <text x="70" y="108" text-anchor="middle" font-size="9" font-family="'Courier New', monospace" font-weight="bold" fill="#222">% THROTTLE</text>
-                    <circle cx="70" cy="70" r="55" fill="url(#glassShine)" opacity="0.4"/>
-                </svg>
-                <div class="gauge-label">THROTTLE</div>
-            </div>
+
         </div>
         <div id="controls-hint">WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset</div>
     </div>

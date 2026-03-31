@@ -6,7 +6,7 @@ let scrollDelta = 0;
 // Touch input state
 const touchInput = {
     rightStick: { x: 0, y: 0, active: false },
-    throttle: 0, // 0 to 1, set by slider position
+    throttle: 0.5, // 0 to 1, set by slider position (default matches aircraft idle)
     yawLeft: false,
     yawRight: false,
     reset: false
@@ -41,6 +41,17 @@ function initTouchControls() {
     const throttleHandle = document.getElementById('throttle-handle');
     let throttleTouchId = null;
     let throttleTrackRect = null;
+    
+    // Initialize throttle handle position to match default throttle (0.5 = 50% = middle)
+    if (throttleZone && throttleHandle) {
+        const track = throttleZone.querySelector('.throttle-track');
+        if (track) {
+            const trackRect = track.getBoundingClientRect();
+            const trackHeight = trackRect.height - 60;
+            const handlePos = touchInput.throttle * trackHeight;
+            throttleHandle.style.bottom = handlePos + 'px';
+        }
+    }
     
     // Right stick: Pitch (Y) + Roll (X)
     const rightZone = document.getElementById('right-stick-zone');

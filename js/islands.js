@@ -164,7 +164,9 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
     const terrainWidth = meta.worldWidth * worldScale;
     const terrainHeight = meta.worldHeight * worldScale;
     
-    const segments = 768;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+    const segments = isMobile ? 384 : 768;
     const terrainGeo = new THREE.PlaneGeometry(terrainWidth, terrainHeight, segments, segments);
     terrainGeo.rotateX(-Math.PI / 2);
     
@@ -647,9 +649,12 @@ async function createAllIslands(scene, onProgress) {
 
     const results = await Promise.all(loadPromises);
     
-    // Initialize FloraManager with global camera reference
+    // Initialize FloraManager with global camera reference (skip on mobile)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+    
     console.log('createAllIslands: window.camera =', window.camera);
-    if (window.camera) {
+    if (window.camera && !isMobile) {
         console.log('Creating FloraManager...');
         const floraManager = new FloraManager(scene, window.camera);
         window.floraManager = floraManager;
@@ -659,6 +664,8 @@ async function createAllIslands(scene, onProgress) {
         }
         
         console.log(`FloraManager created with ${floraManager.allTrees.length} total trees`);
+    } else if (isMobile) {
+        console.log('Skipping FloraManager on mobile');
     } else {
         console.warn('No window.camera available, FloraManager not created');
     }
