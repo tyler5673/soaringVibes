@@ -170,6 +170,19 @@ class MultiplayerClient {
         if (mesh.userData.stripeMat) {
             mesh.userData.stripeMat.color.set(colors.highlight);
         }
+        
+        // Update distance dot color
+        if (mesh.userData.distanceDot) {
+            // Recreate the dot with new color
+            const oldDot = mesh.userData.distanceDot;
+            mesh.remove(oldDot);
+            
+            const newDot = this.createDistanceDot(colors.main);
+            newDot.position.copy(oldDot.position);
+            newDot.visible = oldDot.visible;
+            mesh.add(newDot);
+            mesh.userData.distanceDot = newDot;
+        }
     }
 
     createNameLabel(name) {
@@ -205,22 +218,46 @@ class MultiplayerClient {
     }
 
     updateLabels(cameraPosition) {
-        const maxDistance = 1219.2; // 4000ft in meters (4000 * 0.3048)
+        const maxLabelDistance = 1219.2; // 4000ft in meters (4000 * 0.3048)
+        const dotThreshold = 1524; // 5000ft in meters (5000 * 0.3048)
         
         for (const [playerId, mesh] of this.otherPlayers) {
             if (!mesh.userData.label) continue;
             
             const distance = mesh.position.distanceTo(cameraPosition);
             const label = mesh.userData.label;
+            const distanceDot = mesh.userData.distanceDot;
+            const detailedMesh = mesh.userData.detailedMesh || [];
             
-            // Show/hide based on distance
-            label.visible = distance <= maxDistance;
+            // Determine what to show based on distance
+            const showDot = distance >= dotThreshold;
+            const showLabel = distance <= maxLabelDistance && !showDot;
+            const showDetailed = !showDot;
+            
+            // Update label visibility
+            label.visible = showLabel;
             
             if (label.visible) {
                 // Scale label based on distance (smaller when far, minimum size when close)
                 const scale = Math.max(1.5, distance / 50);
                 label.scale.set(scale * 3, scale * 0.75, 1);
             }
+            
+            // Toggle between detailed mesh and distance dot
+            if (distanceDot) {
+                distanceDot.visible = showDot;
+                
+                // Update dot color if needed
+                if (showDot && mesh.userData.colors) {
+                    // We could update the dot color here if colors changed
+                    // For now, the dot is created with the initial color
+                }
+            }
+            
+            // Show/hide detailed mesh parts
+            detailedMesh.forEach(part => {
+                part.visible = showDetailed;
+            });
         }
     }
 
@@ -678,8 +715,67 @@ class MultiplayerClient {
         group.userData.stripeMat = stripeMat;
         group.userData.colors = { main: mainColor, highlight: highlightColor };
         
+        // Create distance dot for when player is far away (5000ft+)
+        const distanceDot = this.createDistanceDot(mainColor);
+        distanceDot.position.set(0, 0, 0);
+        distanceDot.visible = false; // Hidden by default, shown when far away
+        group.add(distanceDot);
+        group.userData.distanceDot = distanceDot;
+        group.userData.detailedMesh = []; // Will hold references to all detailed mesh parts
+        
+        // Collect all detailed mesh parts (everything except the dot)
+        group.children.forEach(child => {
+            if (child !== distanceDot && child !== label) {
+                group.userData.detailedMesh.push(child);
+            }
+        });
+        
         group.castShadow = true;
         return group;
+    }
+
+    createDistanceDot(color) {
+        // Create canvas for circular dot
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 64;
+        canvas.height = 64;
+        
+        // Draw filled circle
+        const centerX = 32;
+        const centerY = 32;
+        const radius = 28;
+        
+        context.beginPath();
+        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        context.fillStyle = color;
+        context.fill();
+        
+        // Add white border for visibility
+        context.lineWidth = 3;
+        context.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        context.stroke();
+        
+        // Create texture and sprite
+        const texture = new THREE.CanvasTexture(canvas);
+        const material = new THREE.SpriteMaterial({ 
+            map: texture,
+            transparent: true,
+            opacity: 0.9,
+            sizeAttenuation: false // Keep constant size on screen
+        });
+        const sprite = new THREE.Sprite(material);
+        
+        // Scale to approximately 40 pixels (at typical FOV)
+        // Three.js sprites are in world units, but with sizeAttenuation=false
+        // they're in normalized device coordinates. We need to convert.
+        // At standard 50 degree vertical FOV, 40 pixels is roughly:
+        const pixelSize = 40;
+        const screenHeight = window.innerHeight || 1080;
+        const normalizedSize = (pixelSize / screenHeight) * 2; // Approximate NDC size
+        sprite.scale.set(normalizedSize * 1.5, normalizedSize * 1.5, 1);
+        
+        return sprite;
     }
 
     sendUpdate(position, rotation, velocity, color, highlightColor, name) {
