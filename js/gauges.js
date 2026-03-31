@@ -116,6 +116,8 @@ class GaugeSystem {
         const marksGroup = document.getElementById('throttle-marks');
         const labelsGroup = document.getElementById('throttle-labels');
         
+        if (!marksGroup || !labelsGroup) return;
+        
         // Throttle: 0-100%
         for (let i = 0; i <= 100; i += 10) {
             const angle = -135 + (i / 100) * 270;
