@@ -1,50 +1,127 @@
-# Flight Simulator Project
+# Flight Simulator Project - Agent Guidelines
 
-## Overview
-Browser-based flight simulator using Three.js. Run with local server (e.g., `npx serve` or VS Code Live Server).
+## Project Overview
+Browser-based flight simulator using Three.js featuring the Hawaiian islands. Run with a local server (e.g., `npx serve` or VS Code Live Server).
 
-## Current State
-- Islands use real heightmap data from USGS 10m DEM for Hawaiian islands
-- Heightmap-based terrain generation with proper elevation scaling via metadata JSON files
-- All islands green with vertex coloring based on elevation (beach, grass, forest, cliffs, snow peaks)
-- Islands positioned based on real Hawaiian geography (scaled to ~1/12)
-- Detailed Cessna 182 Skylane aircraft with animated propeller and control surfaces
-- Palm trees scattered across islands using terrain height lookup
-- Loading screen with progress indicator
-- Clouds cluster around islands
+## Current Features
+- **Terrain**: Real heightmap data from USGS 10m DEM for Hawaiian islands (8 islands: Big Island, Maui, Oahu, Kauai, Molokai, Lanai, Niihau, Kahoolawe)
+- **Aircraft**: Detailed Cessna 182 Skylane with animated propeller and control surfaces
+- **Ecosystem**: Palm trees, native Hawaiian flora (koa, ohia, banyan, etc.), marine animals (whales, dolphins, sea turtles), birds (albatross, frigatebirds, nene)
+- **Aircraft customization**: Custom name and color selection at spawn
+- **Multiplayer**: WebSocket-based multiplayer at `wss://multiplayer.soaringvibes.com/ws`
+- **Mobile support**: Touch controls with throttle slider and virtual joystick
 
-## Assets
-Downloaded from USGS 10m DEM ArcGIS service for Hawaiian islands:
-- big-island.png + .json (max elevation ~4200m)
-- maui.png + .json (max elevation ~3055m)
-- oahu.png + .json (max elevation ~1227m)
-- kauai.png + .json (max elevation ~1598m)
-- molokai.png + .json (max elevation ~1570m)
-- lanai.png + .json (max elevation ~1026m)
-- niihau.png + .json (max elevation ~381m)
-- kahoolawe.png + .json (max elevation ~450m)
+## Technology Stack
+- **Rendering**: Three.js (CDN: `https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js`)
+- **Physics**: Custom aircraft physics (mass: 1100kg, wing area: 16m², max thrust: 3500N, max speed: 80m/s)
+- **Testing**: Jest with jsdom environment
 
-## Files
-| File | Purpose |
-|------|---------|
-| index.html | Entry point with fog and loading screen |
-| js/utils.js | Utility functions |
-| js/controls.js | Input handling |
-| js/aircraft.js | Cessna 182 with animations and physics |
-| js/camera.js | Orbit camera |
-| js/environment.js | Sky, ocean, clouds |
-| js/islands.js | Heightmap terrain, getTerrainHeight, palm trees |
-| js/airport.js | Runway and buildings on Maui |
-| js/wildlife.js | Birds and balloons |
-| css/style.css | Styling including loading screen |
-| assets/heightmaps/ | Heightmap PNGs + metadata JSONs |
+## File Structure
+```
+soaringVibes/
+├── index.html              # Main entry point
+├── package.json            # Dependencies (sharp, utm)
+├── AGENTS.md               # This file
+├── css/style.css           # Styling including loading screen
+├── js/
+│   ├── utils.js            # Utility functions
+│   ├── controls.js         # Input handling (keyboard, touch, mouse)
+│   ├── aircraft.js         # Cessna 182 with physics and animations
+│   ├── camera.js          # Orbit camera with mouse/scroll controls
+│   ├── environment.js      # Sky, ocean, clouds
+│   ├── islands.js          # Heightmap terrain generation, getTerrainHeight()
+│   ├── airport.js         # Runway and buildings on Maui
+│   ├── wildlife.js        # Birds and balloons (legacy)
+│   ├── boats.js           # Boat manager
+│   ├── gauges.js          # SVG cockpit gauges (airspeed, altimeter)
+│   ├── performance.js     # Performance monitor
+│   ├── spatial-grid.js    # Spatial partitioning for culling
+│   ├── multiplayer.js     # WebSocket multiplayer
+│   ├── flora-manager.js   # Flora LOD and culling system
+│   ├── fauna-manager.js   # Animal manager
+│   ├── hot-air-balloons.js# Hot air balloon system
+│   ├── trees/             # Tree species classes
+│   │   ├── palm.js, coconut-palm.js, koa.js, giant-koa.js
+│   │   ├── ohia.js, banyan.js, tree-fern.js, ti-plant.js
+│   │   ├── bamboo.js, wiliwili.js, shrub.js, grass.js
+│   │   ├── ground-fern.js, naupaka.js, beach-morning-glory.js
+│   │   ├── driftwood.js, lava-rock.js
+│   └── animals/           # Animal species classes
+│       ├── animal-base.js, whale.js, dolphin.js
+│       ├── seaturtle.js, albatross.js, frigatebird.js
+│       ├── honeycreeper.js, nene.js
+├── viewer/                # Asset viewer
+├── tests/                 # Jest tests
+├── docs/                  # Design documents
+└── assets/
+    ├── heightmaps/        # Heightmap PNGs + metadata JSONs
+    ├── images/            # Logo and icon
+    └── maps/              # Airport maps
+```
 
-## Aircraft Physics (Cessna 182 Skylane)
-- Mass: 1100 kg
-- Wing area: 16 m²
-- Max thrust: 3500 N
-- Max speed: 80 m/s
+## Key Systems
+
+### Aircraft Physics
+- Pitch, roll, yaw control with realistic flight dynamics
+- Throttle affects thrust; drag reduces speed
+- Lift proportional to speed² and angle of attack
+- Stall at low speed; gravity always pulls down
+- Collision detection via terrain heightmap (`getTerrainHeight()`)
 - Spawns at ~2500 feet above Maui airport
+
+### Flora System
+- LOD system: 3 detail levels based on distance
+- Spatial grid for efficient frustum culling
+- Species-specific placement rules (elevation, biome)
+- Beach species: palm, coconut-palm, naupaka, beach-morning-glory, driftwood
+- Lowland: wiliwili, koa, ohia
+- Mid-elevation: koa, giant-koa, banyan, tree-fern, ti-plant
+- High elevation: ohia, tree-fern
+
+### Fauna System
+- Marine: whales, dolphins, sea turtles (follow waypoints)
+- Aerial: albatross (soaring), frigatebird (thermal circling), honeycreeper (perching)
+- Ground: nene (geese wandering)
+
+### Multiplayer
+- WebSocket connection to `wss://multiplayer.soaringvibes.com/ws`
+- Position/name/color sync with interpolation
+- Distance-based label rendering
+
+### Performance
+- Spatial grid for flora/fauna culling
+- LOD system for vegetation
+- Instanced rendering where applicable
+- PerformanceMonitor class for FPS tracking
+
+## Controls
+
+### Desktop
+- **W/S**: Pitch down/up
+- **A/D**: Roll left/right
+- **Q/E**: Yaw left/right
+- **Shift/Ctrl**: Throttle up/down
+- **Space**: Brake
+- **R**: Reset aircraft
+- **Mouse drag**: Orbit camera
+- **Scroll**: Zoom
+
+### Mobile
+- Left side: Throttle slider
+- Right side: Virtual joystick for pitch/roll
+- Yaw buttons below joystick
 
 ## Known Issues
 - Heightmaps are 8-bit (limited precision) - server didn't support float32 export
+
+## Development Commands
+```bash
+npm test              # Run Jest tests
+npm run test:watch   # Watch mode
+npx serve            # Start local server
+```
+
+## External Resources
+- Three.js CDN: `https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js`
+- Multiplayer server: `wss://multiplayer.soaringvibes.com/ws`
+- Ko-fi: `https://ko-fi.com/tylereastman`
