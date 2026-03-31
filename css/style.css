@@ -1019,14 +1019,9 @@ body { overflow: hidden; background: #000; }
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-}
-
-.modal.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: unset;
+    justify-content: unset;
+    background: transparent;
 }
 
 .modal-content.color-picker-container {
@@ -1036,7 +1031,33 @@ body { overflow: hidden; background: #000; }
     min-width: 260px;
     max-width: 90%;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(79, 195, 247, 0.2);
-    position: relative;
+    position: fixed;
+    z-index: 3001;
+}
+
+.rgb-color-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#color-picker-preview {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content.color-picker-container {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 30px;
+    min-width: 260px;
+    max-width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(79, 195, 247, 0.2);
+    position: fixed;
+    z-index: 3001;
 }
 
 .rgb-color-picker {
@@ -1099,43 +1120,22 @@ body { overflow: hidden; background: #000; }
 .color-preview-container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 15px;
+    justify-content: center;
+    padding: 20px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
 }
 
+.color-preview-container.centered {
+    margin-top: 10px;
+}
+
 #color-picker-preview {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     border: 3px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-#hex-display {
-    font-family: 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: bold;
-    color: #fff;
-    letter-spacing: 2px;
-}
-
-.close-btn {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 32px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    line-height: 1;
-}
-
-.close-btn:hover {
-    color: #4fc3f7;
-    transform: scale(1.1);
 }
 
 /* Mobile responsive */
