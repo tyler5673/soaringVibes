@@ -234,7 +234,7 @@ body { overflow: hidden; background: #000; }
     }
 }
 
-@media (max-width: 768px) and (orientation: landscape) {
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
     #loading {
         flex-direction: row;
         flex-wrap: wrap;

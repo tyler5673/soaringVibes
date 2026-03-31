@@ -448,6 +448,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // ========== MAIN =======
         var scene, camera, renderer, aircraft, orbitCamera, cloudSystem, wildlife, clock;
         
+        function isMobileLandscape() {
+            const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const isShort = window.innerHeight < 500;
+            return isTouch && (isLandscape || isShort);
+        }
+
+        // Hide logo on mobile landscape
+        if (isMobileLandscape()) {
+            const logo = document.getElementById('loading-logo');
+            if (logo) logo.style.display = 'none';
+        }
+
         function updateLoading(progress) {
             const progressEl = document.getElementById('loading-progress');
             const barFillEl = document.getElementById('loading-bar-fill');
