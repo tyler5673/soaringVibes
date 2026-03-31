@@ -103,11 +103,15 @@ class MultiplayerClient {
             mesh.userData.name = data.name || 'Pilot';
             mesh.userData.lastUpdate = Date.now();
             
-            // Add name label
+            // Add name label (3D sprite for close range)
             const label = this.createNameLabel(data.name || 'Pilot');
             label.position.set(0, 2.5, 0); // Above aircraft
             mesh.add(label);
             mesh.userData.label = label;
+            
+            // Create 2D HTML distance dot for far range
+            const dotElement = this.createDistanceDotElement(newColors.main, playerId, data.name || 'Pilot');
+            mesh.userData.distanceDotElement = dotElement;
             
             this.otherPlayers.set(playerId, mesh);
             if (window.mpScene) window.mpScene.add(mesh);
@@ -129,6 +133,10 @@ class MultiplayerClient {
                     newLabel.position.set(0, 2.5, 0);
                     mesh.add(newLabel);
                     mesh.userData.label = newLabel;
+                }
+                // Update dot tooltip
+                if (mesh.userData.distanceDotElement) {
+                    mesh.userData.distanceDotElement.title = data.name || 'Unknown Pilot';
                 }
             }
             mesh.userData.lastUpdate = Date.now();
@@ -171,17 +179,9 @@ class MultiplayerClient {
             mesh.userData.stripeMat.color.set(colors.highlight);
         }
         
-        // Update distance dot color
-        if (mesh.userData.distanceDot) {
-            // Recreate the dot with new color
-            const oldDot = mesh.userData.distanceDot;
-            mesh.remove(oldDot);
-            
-            const newDot = this.createDistanceDot(colors.main);
-            newDot.position.copy(oldDot.position);
-            newDot.visible = oldDot.visible;
-            mesh.add(newDot);
-            mesh.userData.distanceDot = newDot;
+        // Update 2D distance dot color
+        if (mesh.userData.distanceDotElement) {
+            mesh.userData.distanceDotElement.style.backgroundColor = colors.main;
         }
     }
 
@@ -217,61 +217,77 @@ class MultiplayerClient {
         return sprite;
     }
 
-    updateLabels(cameraPosition) {
+    updateLabels(camera, renderer) {
         const maxLabelDistance = 1219.2; // 4000ft in meters (4000 * 0.3048)
         const dotThreshold = 1524; // 5000ft in meters (5000 * 0.3048)
         
-        // Camera FOV-based scaling factor for 40px dots
-        const PIXEL_SCALE_FACTOR = 0.025;
-        
         for (const [playerId, mesh] of this.otherPlayers) {
-            if (!mesh.userData.label) continue;
+            if (!mesh) continue;
             
+            const cameraPosition = camera.position;
             const distance = mesh.position.distanceTo(cameraPosition);
             const label = mesh.userData.label;
-            const distanceDot = mesh.userData.distanceDot;
-            const detailedMesh = mesh.userData.detailedMesh || [];
+            const dotElement = mesh.userData.distanceDotElement;
             
             // Determine what to show based on distance
             const showDot = distance >= dotThreshold;
             const showLabel = distance <= maxLabelDistance && !showDot;
             const showDetailed = !showDot;
             
-            // Debug logging for dot visibility changes
-            if (distanceDot && distanceDot.visible !== showDot) {
-                console.log(`Player ${mesh.userData.name || playerId}: distance=${distance.toFixed(0)}m, showDot=${showDot}, showDetailed=${showDetailed}`);
-            }
-            
-            // Update label visibility
-            label.visible = showLabel;
-            
-            if (label.visible) {
-                const scale = Math.max(1.5, distance / 50);
-                label.scale.set(scale * 3, scale * 0.75, 1);
-            }
-            
-            // Toggle between detailed mesh and distance dot
-            if (distanceDot) {
-                distanceDot.visible = showDot;
-                
-                if (showDot) {
-                    // Scale dot to maintain ~40px on screen
-                    const worldScale = Math.max(15, distance * PIXEL_SCALE_FACTOR);
-                    distanceDot.scale.set(worldScale, worldScale, 1);
+            // Update label visibility (3D sprite label)
+            if (label) {
+                label.visible = showLabel;
+                if (label.visible) {
+                    const scale = Math.max(1.5, distance / 50);
+                    label.scale.set(scale * 3, scale * 0.75, 1);
                 }
             }
             
-            // Show/hide detailed mesh parts
-            detailedMesh.forEach(part => {
-                part.visible = showDetailed;
-            });
+            // Show/hide detailed 3D mesh
+            mesh.visible = showDetailed;
+            
+            // Update 2D distance dot position and visibility
+            if (dotElement) {
+                if (showDot) {
+                    // Convert 3D world position to 2D screen coordinates
+                    const screenPos = mesh.position.clone().project(camera);
+                    
+                    // Check if the point is in front of the camera (z < 1)
+                    if (screenPos.z < 1) {
+                        const width = renderer.domElement.width || window.innerWidth;
+                        const height = renderer.domElement.height || window.innerHeight;
+                        
+                        const x = (screenPos.x + 1) / 2 * width;
+                        const y = -(screenPos.y - 1) / 2 * height;
+                        
+                        dotElement.style.display = 'block';
+                        dotElement.style.left = `${x}px`;
+                        dotElement.style.top = `${y}px`;
+                    } else {
+                        // Behind camera, hide the dot
+                        dotElement.style.display = 'none';
+                    }
+                } else {
+                    dotElement.style.display = 'none';
+                }
+            }
         }
     }
 
     removePlayer(playerId) {
         const mesh = this.otherPlayers.get(playerId);
         if (mesh) {
+            // Remove 3D mesh from scene
             if (window.mpScene) window.mpScene.remove(mesh);
+            
+            // Remove 2D distance dot element
+            if (mesh.userData.distanceDotElement) {
+                const dot = mesh.userData.distanceDotElement;
+                if (dot.parentNode) {
+                    dot.parentNode.removeChild(dot);
+                }
+            }
+            
             this.otherPlayers.delete(playerId);
         }
     }
@@ -722,65 +738,39 @@ class MultiplayerClient {
         group.userData.stripeMat = stripeMat;
         group.userData.colors = { main: mainColor, highlight: highlightColor };
         
-        // Create distance dot for when player is far away (5000ft+)
-        const distanceDot = this.createDistanceDot(mainColor);
-        distanceDot.position.set(0, 0, 0);
-        distanceDot.visible = false; // Hidden by default, shown when far away
-        group.add(distanceDot);
-        group.userData.distanceDot = distanceDot;
-        group.userData.detailedMesh = []; // Will hold references to all detailed mesh parts
-        
-        // Collect all detailed mesh parts (everything except the dot)
-        group.children.forEach(child => {
-            if (child !== distanceDot && child !== label) {
-                group.userData.detailedMesh.push(child);
-            }
-        });
-        
         group.castShadow = true;
         return group;
     }
 
-    createDistanceDot(color) {
-        // Create canvas for circular dot
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = 64;
-        canvas.height = 64;
+    createDistanceDotElement(color, playerId, name) {
+        // Create 2D HTML overlay dot
+        const dot = document.createElement('div');
+        dot.className = 'distance-indicator-dot';
+        dot.id = `distance-dot-${playerId}`;
+        dot.style.cssText = `
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: ${color};
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            transform: translate(-50%, -50%);
+        `;
         
-        // Draw filled circle
-        const centerX = 32;
-        const centerY = 32;
-        const radius = 28;
+        // Add tooltip with player name
+        dot.title = name || 'Unknown Pilot';
         
-        context.beginPath();
-        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-        context.fillStyle = color;
-        context.fill();
+        // Add to container
+        const container = document.getElementById('distance-dots-container');
+        if (container) {
+            container.appendChild(dot);
+        }
         
-        // Add white border for visibility
-        context.lineWidth = 3;
-        context.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        context.stroke();
-        
-        // Create texture and sprite
-        const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.SpriteMaterial({ 
-            map: texture,
-            transparent: true,
-            opacity: 0.9,
-            sizeAttenuation: true // Use world space positioning
-        });
-        const sprite = new THREE.Sprite(material);
-        
-        // Initial scale - will be updated dynamically in updateLabels
-        // At 1524m distance, we want it to appear as ~40px
-        // scale = (desired_screen_pixels / screen_height) * distance * 2 * tan(fov/2)
-        // Simplified: at 1524m distance, scale of 25 world units = ~40px on typical screen
-        sprite.scale.set(25, 25, 1);
-        sprite.userData.isDistanceDot = true;
-        
-        return sprite;
+        return dot;
     }
 
     sendUpdate(position, rotation, velocity, color, highlightColor, name) {
@@ -836,8 +826,8 @@ function updateMultiplayer(aircraft) {
     }
 }
 
-function updateMultiplayerLabels(cameraPosition) {
+function updateMultiplayerLabels(camera, renderer) {
     if (multiplayer && multiplayer.connected) {
-        multiplayer.updateLabels(cameraPosition);
+        multiplayer.updateLabels(camera, renderer);
     }
 }
