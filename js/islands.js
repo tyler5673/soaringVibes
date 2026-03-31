@@ -733,5 +733,18 @@ async function createAllIslands(scene, onProgress) {
         }
     }
 
+    // Create BuildingManager and place buildings (skip on mobile)
+    if (window.camera && !isMobile) {
+        console.log('Creating BuildingManager...');
+        const buildingManager = new BuildingManager(scene, window.camera);
+        window.buildingManager = buildingManager;
+        
+        for (const { island: islandGroup, info } of results) {
+            buildingManager.placeBuildingsForIsland(islandGroup, info.name, info.x, info.z);
+        }
+        
+        console.log(`BuildingManager created with ${buildingManager.allBuildings.length} total buildings`);
+    }
+
     return results.map(r => r.island);
 }
