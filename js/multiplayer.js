@@ -110,7 +110,7 @@ class MultiplayerClient {
             mesh.userData.label = label;
             
             // Create 2D HTML distance dot for far range
-            const dotElement = this.createDistanceDotElement(newColors.main, playerId, data.name || 'Pilot');
+            const dotElement = this.createDistanceDotElement(newColors.main, newColors.highlight, playerId, data.name || 'Pilot');
             mesh.userData.distanceDotElement = dotElement;
             
             this.otherPlayers.set(playerId, mesh);
@@ -179,9 +179,15 @@ class MultiplayerClient {
             mesh.userData.stripeMat.color.set(colors.highlight);
         }
         
-        // Update 2D distance dot color
-        if (mesh.userData.distanceDotElement) {
-            mesh.userData.distanceDotElement.style.backgroundColor = colors.main;
+        // Update 2D distance dot colors (target style: outer=highlight, inner=main)
+        if (mesh.userData.distanceDotElement && mesh.userData.distanceDotElement.userData) {
+            const dotData = mesh.userData.distanceDotElement.userData;
+            if (dotData.outerDot) {
+                dotData.outerDot.style.backgroundColor = colors.highlight;
+            }
+            if (dotData.innerDot) {
+                dotData.innerDot.style.backgroundColor = colors.main;
+            }
         }
     }
 
@@ -746,35 +752,68 @@ class MultiplayerClient {
         return group;
     }
 
-    createDistanceDotElement(color, playerId, name) {
-        // Create 2D HTML overlay dot
-        const dot = document.createElement('div');
-        dot.className = 'distance-indicator-dot';
-        dot.id = `distance-dot-${playerId}`;
-        dot.style.cssText = `
+    createDistanceDotElement(mainColor, highlightColor, playerId, name) {
+        // Create container for target dot
+        const container = document.createElement('div');
+        container.className = 'distance-indicator-dot';
+        container.id = `distance-dot-${playerId}`;
+        container.style.cssText = `
             position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: ${color};
-            border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 20px;
+            height: 20px;
             pointer-events: none;
             z-index: 1000;
             display: none;
             transform: translate(-50%, -50%);
         `;
         
+        // Create outer dot (highlight color)
+        const outerDot = document.createElement('div');
+        outerDot.style.cssText = `
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: ${highlightColor};
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            top: 0;
+            left: 0;
+        `;
+        
+        // Create inner dot (main color)
+        const innerDot = document.createElement('div');
+        innerDot.style.cssText = `
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: ${mainColor};
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            top: 5px;
+            left: 5px;
+        `;
+        
+        // Add dots to container
+        container.appendChild(outerDot);
+        container.appendChild(innerDot);
+        
         // Add tooltip with player name
-        dot.title = name || 'Unknown Pilot';
+        container.title = name || 'Unknown Pilot';
+        
+        // Store references to inner/outer dots for color updates
+        container.userData = {
+            outerDot: outerDot,
+            innerDot: innerDot
+        };
         
         // Add to container
-        const container = document.getElementById('distance-dots-container');
-        if (container) {
-            container.appendChild(dot);
+        const dotsContainer = document.getElementById('distance-dots-container');
+        if (dotsContainer) {
+            dotsContainer.appendChild(container);
         }
         
-        return dot;
+        return container;
     }
 
     sendUpdate(position, rotation, velocity, color, highlightColor, name) {
