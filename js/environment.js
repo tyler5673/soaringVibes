@@ -114,6 +114,7 @@ class CloudSystem {
         const spread = 80 + Math.random() * 80;
         
         const puffGeo = new THREE.SphereGeometry(1, 12, 12);
+        const puffs = [];
         
         for (let i = 0; i < puffCount; i++) {
             const opacity = 0.8 + Math.random() * 0.2;
@@ -140,6 +141,7 @@ class CloudSystem {
             puff.scale.set(scale, scale * (0.5 + Math.random() * 0.5), scale);
             
             cloudGroup.add(puff);
+            puffs.push(puff);
         }
         
         const altitude = 200 + Math.random() * 1200;
@@ -153,21 +155,43 @@ class CloudSystem {
             bobPhase: Math.random() * Math.PI * 2,
             bobSpeed: 0.5 + Math.random() * 0.5,
             bobAmount: 3 + Math.random() * 4,
-            baseY: altitude
+            baseY: altitude,
+            puffs: puffs
         };
         
         this.scene.add(cloudGroup);
         this.clouds.push(cloudGroup);
     }
     
-    update(delta, time) {
+    update(delta, time, camera) {
         if (!this.enabled) {
             this.clouds.forEach(cloud => { cloud.visible = false; });
             return;
         }
+        
+        const camPos = camera ? camera.position : null;
+        
         this.clouds.forEach(cloud => {
             cloud.visible = true;
             const ud = cloud.userData;
+            
+            let lodScale = 1.0;
+            if (camPos) {
+                const dist = camPos.distanceTo(cloud.position);
+                if (dist > 8000) {
+                    lodScale = 0.5;
+                } else if (dist > 4000) {
+                    lodScale = 0.75;
+                }
+            }
+            
+            const puffs = ud.puffs;
+            if (puffs) {
+                const puffsToShow = Math.ceil(puffs.length * lodScale);
+                for (let i = 0; i < puffs.length; i++) {
+                    puffs[i].visible = i < puffsToShow;
+                }
+            }
             
             cloud.position.x += ud.velocity.x * delta;
             cloud.position.z += ud.velocity.z * delta;

@@ -320,6 +320,8 @@
                 <div class="gauge-label">ALTITUDE</div>
             </div>
             
+        </div>
+            
 
         </div>
         <div id="controls-hint">WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset | C: Config</div>
@@ -334,23 +336,27 @@
             <div class="throttle-track">
                 <div id="throttle-handle" class="throttle-handle"></div>
             </div>
-            <div class="touch-label">THROTTLE</div>
         </div>
         
         <!-- Right stick: Pitch (vertical) + Roll (horizontal) + Yaw (requires new zone) -->
         <div id="right-stick-zone" class="touch-zone">
             <div id="right-stick" class="touch-stick"></div>
-            <div class="touch-label">Pitch/Roll</div>
         </div>
         
-        <!-- Yaw buttons below right stick -->
-        <div id="yaw-controls" class="yaw-container">
-            <div id="yaw-left-btn" class="yaw-button">↺</div>
-            <div id="yaw-right-btn" class="yaw-button">↻</div>
+        <!-- Rudder slider below right stick -->
+        <div id="rudder-zone" class="rudder-container">
+            <div class="rudder-track">
+                <div id="rudder-handle" class="rudder-handle"></div>
+            </div>
         </div>
         
         <!-- Reset button -->
         <div id="reset-btn-touch" class="reset-icon-button" title="Reset Aircraft">↻</div>
+        
+        <!-- Settings button -->
+        <div id="settings-btn-touch" class="settings-button-touch" title="Settings">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
+        </div>
         
         <!-- Back to menu button -->
         <div id="menu-btn" class="menu-button" title="Change name or colors">
@@ -632,6 +638,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const desktopMenuBtn = document.getElementById('desktop-menu-btn');
     const desktopResetBtn = document.getElementById('desktop-reset-btn');
     const menuBtn = document.getElementById('menu-btn');
+    const settingsBtnTouch = document.getElementById('settings-btn-touch');
+    const resetBtnTouch = document.getElementById('reset-btn-touch');
     
     function handleMenuClick() {
         showLoading();
@@ -648,6 +656,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (menuBtn) {
         menuBtn.addEventListener('click', handleMenuClick);
+    }
+    if (resetBtnTouch) {
+        resetBtnTouch.addEventListener('click', () => {
+            if (window.aircraft) window.aircraft.reset();
+            if (window.orbitCamera) window.orbitCamera.resetBehindTarget();
+        });
+    }
+    if (settingsBtnTouch) {
+        settingsBtnTouch.addEventListener('click', function() {
+            const settingsModal = document.getElementById('settings-modal');
+            if (settingsModal.style.display === 'flex') {
+                settingsModal.style.display = 'none';
+            } else {
+                // Sync sliders and open
+                const fm = window.floraManager;
+                const bm = window.buildingManager;
+                const fm2 = window.faunaManager;
+                const cs = window.cloudSystem;
+                
+                const vegDistSlider = document.getElementById('veg-distance-slider');
+                const vegDistValue = document.getElementById('veg-distance-value');
+                const vegDensitySlider = document.getElementById('veg-density-slider');
+                const vegDensityValue = document.getElementById('veg-density-value');
+                const bldDistSlider = document.getElementById('building-distance-slider');
+                const bldDistValue = document.getElementById('building-distance-value');
+                const bldDensitySlider = document.getElementById('building-density-slider');
+                const bldDensityValue = document.getElementById('building-density-value');
+                const faunaDistSlider = document.getElementById('fauna-distance-slider');
+                const faunaDistValue = document.getElementById('fauna-distance-value');
+                const faunaDensitySlider = document.getElementById('fauna-density-slider');
+                const faunaDensityValue = document.getElementById('fauna-density-value');
+                const cloudCountSlider = document.getElementById('cloud-count-slider');
+                const cloudCountValue = document.getElementById('cloud-count-value');
+                
+                if (fm) {
+                    vegDistSlider.value = fm.treeMaxDist;
+                    vegDistValue.textContent = fm.treeMaxDist + 'm';
+                    vegDensitySlider.value = Math.round(fm.densityMultiplier * 100);
+                    vegDensityValue.textContent = Math.round(fm.densityMultiplier * 100) + '%';
+                }
+                if (bm) {
+                    bldDistSlider.value = bm.buildingMaxDist;
+                    bldDistValue.textContent = bm.buildingMaxDist + 'm';
+                    bldDensitySlider.value = Math.round(bm.densityMultiplier * 100);
+                    bldDensityValue.textContent = Math.round(bm.densityMultiplier * 100) + '%';
+                }
+                if (fm2) {
+                    faunaDistSlider.value = fm2.animalMaxDist;
+                    faunaDistValue.textContent = fm2.animalMaxDist + 'm';
+                    faunaDensitySlider.value = Math.round(fm2.densityMultiplier * 100);
+                    const totalAnimals = Object.values(fm2.spawnedCount).reduce((a, b) => a + b, 0);
+                    faunaDensityValue.textContent = Math.round(fm2.densityMultiplier * 100) + '% (' + totalAnimals + ')';
+                }
+                if (cs) {
+                    cloudCountSlider.value = cs.clouds.length;
+                    cloudCountValue.textContent = cs.clouds.length;
+                }
+                
+                settingsModal.style.display = 'flex';
+            }
+        });
     }
     
     // Color picker modal functionality - simple RGB picker
@@ -1463,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             orbitCamera.update(delta);
-            cloudSystem.update(delta, time);
+            cloudSystem.update(delta, time, camera);
             wildlife.update(delta);
             if (window.boatManager) {
                 window.boatManager.update(delta, time, camera);

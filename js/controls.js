@@ -7,8 +7,7 @@ let scrollDelta = 0;
 const touchInput = {
     rightStick: { x: 0, y: 0, active: false },
     throttle: 0.5, // 0 to 1, set by slider position (default matches aircraft idle)
-    yawLeft: false,
-    yawRight: false,
+    yaw: 0, // -1 to 1 for rudder slider (center = 0)
     reset: false
 };
 
@@ -160,47 +159,66 @@ function initTouchControls() {
         }, { passive: false });
     }
     
-    // Yaw buttons (left/right rotation)
-    const yawLeftBtn = document.getElementById('yaw-left-btn');
-    const yawRightBtn = document.getElementById('yaw-right-btn');
+    // Rudder slider (horizontal, below joystick)
+    const rudderZone = document.getElementById('rudder-zone');
+    const rudderHandle = document.getElementById('rudder-handle');
+    let rudderTouchId = null;
+    let rudderTrackRect = null;
     
-    if (yawLeftBtn) {
-        yawLeftBtn.addEventListener('touchstart', (e) => {
+    if (rudderZone && rudderHandle) {
+        const updateRudderFromPosition = (clientX) => {
+            if (!rudderTrackRect) {
+                const track = rudderZone.querySelector('.rudder-track');
+                if (track) rudderTrackRect = track.getBoundingClientRect();
+            }
+            if (!rudderTrackRect) return;
+            
+            const trackWidth = rudderTrackRect.width - 60; // minus handle width
+            const relativeX = clientX - rudderTrackRect.left - 30; // offset for handle center
+            const percentage = Math.max(0, Math.min(1, relativeX / trackWidth));
+            
+            touchInput.yaw = (percentage - 0.5) * 2; // Range: -1 to 1
+            const handlePos = percentage * trackWidth;
+            rudderHandle.style.left = handlePos + 'px';
+        };
+        
+        rudderZone.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            touchInput.yawLeft = true;
-            yawLeftBtn.style.background = 'rgba(79, 195, 247, 0.4)';
+            const track = rudderZone.querySelector('.rudder-track');
+            if (track) rudderTrackRect = track.getBoundingClientRect();
+            
+            const touch = e.changedTouches[0];
+            rudderTouchId = touch.identifier;
+            updateRudderFromPosition(touch.clientX);
         }, { passive: false });
         
-        yawLeftBtn.addEventListener('touchend', (e) => {
+        rudderZone.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            touchInput.yawLeft = false;
-            yawLeftBtn.style.background = '';
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === rudderTouchId) {
+                    updateRudderFromPosition(e.changedTouches[i].clientX);
+                    break;
+                }
+            }
         }, { passive: false });
         
-        yawLeftBtn.addEventListener('touchcancel', (e) => {
+        rudderZone.addEventListener('touchend', (e) => {
             e.preventDefault();
-            touchInput.yawLeft = false;
-            yawLeftBtn.style.background = '';
-        }, { passive: false });
-    }
-    
-    if (yawRightBtn) {
-        yawRightBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            touchInput.yawRight = true;
-            yawRightBtn.style.background = 'rgba(79, 195, 247, 0.4)';
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === rudderTouchId) {
+                    rudderTouchId = null;
+                    touchInput.yaw = 0; // Reset to center (no rudder)
+                    rudderHandle.style.left = '50%';
+                    break;
+                }
+            }
         }, { passive: false });
         
-        yawRightBtn.addEventListener('touchend', (e) => {
+        rudderZone.addEventListener('touchcancel', (e) => {
             e.preventDefault();
-            touchInput.yawRight = false;
-            yawRightBtn.style.background = '';
-        }, { passive: false });
-        
-        yawRightBtn.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            touchInput.yawRight = false;
-            yawRightBtn.style.background = '';
+            rudderTouchId = null;
+            touchInput.yaw = 0; // Reset to center (no rudder)
+            rudderHandle.style.left = '50%';
         }, { passive: false });
     }
     
@@ -297,7 +315,7 @@ function initTouchCameraControls(cameraInstance) {
         if (touchCamera.pinchActive && e.touches.length === 2) {
             // Handle pinch zoom
             const currentDistance = getPinchDistance(e.touches);
-            const delta = currentDistance - touchCamera.lastPinchDistance;
+            const delta = touchCamera.lastPinchDistance - currentDistance; // Inverted: pinch out = zoom in
             
             if (orbitCameraRef) {
                 orbitCameraRef.handleScroll(delta * 0.5); // Scale factor for touch
@@ -349,12 +367,13 @@ function isTouchOnControlElement(target) {
     const controlSelectors = [
         '#throttle-zone',
         '#right-stick-zone', 
-        '#yaw-controls',
+        '#rudder-zone',
         '#reset-btn-touch',
         '.touch-zone',
         '.touch-button',
         '.yaw-button',
-        '.throttle-container'
+        '.throttle-container',
+        '.rudder-container'
     ];
     
     return controlSelectors.some(selector => target.closest(selector) !== null);
@@ -415,8 +434,8 @@ function getTouchInput() {
         pitch: touchInput.rightStick.active ? -touchInput.rightStick.y : 0,
         // Right stick X controls roll
         roll: touchInput.rightStick.active ? touchInput.rightStick.x : 0,
-        // Yaw buttons
-        yaw: (touchInput.yawRight ? 1 : 0) - (touchInput.yawLeft ? 1 : 0),
+        // Rudder slider value (-1 to 1)
+        yaw: touchInput.yaw || 0,
         // Throttle slider value (0 to 1)
         throttle: touchInput.throttle,
         reset: touchInput.reset

@@ -783,34 +783,9 @@ class BoatManager {
     }
     
     createCruiseShips(count) {
-        const positions = [
-            { x: 2000, z: 1500 },
-            { x: -3000, z: 2000 },
-            { x: 5000, z: -2000 },
-            { x: -8000, z: -5000 },
-            { x: 15000, z: 8000 },
-            { x: -12000, z: 10000 },
-            { x: 8000, z: -15000 },
-            { x: -15000, z: -8000 },
-            { x: 18000, z: 12000 },
-            { x: -20000, z: 5000 },
-            { x: 10000, z: 18000 },
-            { x: -6000, z: -12000 },
-            { x: 22000, z: -3000 },
-            { x: -18000, z: 15000 },
-            { x: 14000, z: -9000 },
-            { x: -10000, z: 20000 },
-            { x: 25000, z: 6000 },
-            { x: -7000, z: -18000 },
-            { x: 3000, z: 22000 },
-            { x: -22000, z: -6000 }
-        ];
-        
         for (let i = 0; i < count; i++) {
-            const pos = positions[i % positions.length];
-            const offsetX = (Math.random() - 0.5) * 1000;
-            const offsetZ = (Math.random() - 0.5) * 1000;
-            const ship = new CruiseShip(this.scene, new THREE.Vector3(pos.x + offsetX, BOAT_WATER_LEVEL, pos.z + offsetZ));
+            const pos = this.getCruiseShipPosition();
+            const ship = new CruiseShip(this.scene, pos);
             this.cruiseShips.push(ship);
         }
     }
@@ -819,6 +794,18 @@ class BoatManager {
         const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
         const angle = Math.random() * Math.PI * 2;
         const distance = 200 + Math.random() * 300;
+        
+        return new THREE.Vector3(
+            island.x + Math.cos(angle) * distance,
+            BOAT_WATER_LEVEL,
+            island.z + Math.sin(angle) * distance
+        );
+    }
+    
+    getCruiseShipPosition() {
+        const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 500 + Math.random() * 1500;
         
         return new THREE.Vector3(
             island.x + Math.cos(angle) * distance,
@@ -844,7 +831,11 @@ class BoatManager {
         }
         
         let newTarget;
-        if (isCoastal) {
+        if (boat instanceof CruiseShip) {
+            newTarget = this.getCruiseShipPosition();
+        } else if (boat instanceof PirateShip) {
+            newTarget = this.getCoastalPosition();
+        } else if (isCoastal) {
             newTarget = this.getCoastalPosition();
         } else {
             newTarget = this.getOpenWaterPosition();
@@ -853,7 +844,13 @@ class BoatManager {
         if (typeof getTerrainHeight === 'function' && typeof islandPositions !== 'undefined') {
             let attempts = 0;
             while (getTerrainHeight(newTarget.x, newTarget.z) > BOAT_WATER_LEVEL && attempts < 20) {
-                newTarget = isCoastal ? this.getCoastalPosition() : this.getOpenWaterPosition();
+                if (boat instanceof CruiseShip) {
+                    newTarget = this.getCruiseShipPosition();
+                } else if (boat instanceof PirateShip) {
+                    newTarget = this.getCoastalPosition();
+                } else {
+                    newTarget = isCoastal ? this.getCoastalPosition() : this.getOpenWaterPosition();
+                }
                 attempts++;
             }
         }

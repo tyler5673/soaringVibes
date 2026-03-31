@@ -1,5 +1,70 @@
+:root {
+    /* Primary palette */
+    --color-primary: #4fc3f7;
+    --color-primary-dark: #29b6f6;
+    --color-primary-darker: #03a9f4;
+    --color-primary-glow: rgba(79, 195, 247, 0.3);
+    --color-primary-glow-strong: rgba(79, 195, 247, 0.6);
+    --color-primary-glow-subtle: rgba(79, 195, 247, 0.2);
+    --color-primary-shadow: rgba(79, 195, 247, 0.4);
+
+    /* Accent colors */
+    --color-accent: #9b59b6;
+    --color-accent-glow: rgba(155, 89, 182, 0.3);
+
+    /* Button colors */
+    --color-button-orange-start: #ff6b35;
+    --color-button-orange-end: #f7931e;
+    --color-button-orange-shadow: rgba(255, 107, 53, 0.4);
+    --color-button-orange-shadow-strong: rgba(255, 107, 53, 0.6);
+
+    /* Danger / crash */
+    --color-danger: #ff0000;
+    --color-danger-dark: #cc0000;
+    --color-danger-bright: #ff3333;
+    --color-danger-glow: rgba(255, 0, 0, 0.4);
+    --color-danger-glow-strong: rgba(255, 0, 0, 0.6);
+
+    /* Text colors */
+    --color-text: #fff;
+    --color-text-muted: rgba(255, 255, 255, 0.5);
+    --color-text-subtle: rgba(255, 255, 255, 0.4);
+    --color-text-faint: rgba(255, 255, 255, 0.15);
+    --color-text-green: #0f0;
+
+    /* Background colors */
+    --color-bg-dark: #000;
+    --color-bg-overlay: rgba(0, 0, 0, 0.85);
+    --color-bg-surface: rgba(255, 255, 255, 0.1);
+    --color-bg-surface-hover: rgba(255, 255, 255, 0.15);
+    --color-bg-surface-active: rgba(255, 255, 255, 0.2);
+    --color-bg-surface-subtle: rgba(255, 255, 255, 0.05);
+
+    /* Border colors */
+    --color-border: rgba(255, 255, 255, 0.3);
+    --color-border-subtle: rgba(255, 255, 255, 0.2);
+    --color-border-strong: rgba(255, 255, 255, 0.5);
+
+    /* Shadow */
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.4);
+    --shadow-text: 1px 1px 2px #000;
+
+    /* Loading screen gradient */
+    --gradient-loading-top: #1a1a2e;
+    --gradient-loading-mid: #16213e;
+    --gradient-loading-bottom: #0f3460;
+    --gradient-loading-sky: #87CEEB;
+
+    /* Gauge colors */
+    --color-gauge-face-top: #e8e4dc;
+    --color-gauge-face-mid: #d4cfc4;
+    --color-gauge-face-bottom: #b8b2a4;
+    --color-gauge-tick: #333;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { overflow: hidden; background: #000; }
+body { overflow: hidden; background: var(--color-bg-dark); }
 #hud { 
     position: fixed; 
     top: 20px; 
@@ -44,14 +109,14 @@ body { overflow: hidden; background: #000; }
     right: 90px;
     width: 44px;
     height: 44px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: var(--color-bg-surface-hover);
+    border: 2px solid var(--color-border-strong);
     border-radius: 10px;
     cursor: pointer;
     display: none;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     z-index: 1001;
 }
@@ -68,11 +133,11 @@ body { overflow: hidden; background: #000; }
     display: none;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     z-index: 1001;
     font-size: 24px;
-    color: #fff;
+    color: var(--color-text);
 }
 
 /* Show desktop buttons during gameplay */
@@ -99,22 +164,22 @@ body { overflow: hidden; background: #000; }
     right: 20px;
     width: 44px;
     height: 44px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: var(--color-bg-surface);
+    border: 2px solid var(--color-border);
     border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     z-index: 1001;
-    color: #fff;
+    color: var(--color-text);
 }
 
 .desktop-settings-button:hover {
-    background: rgba(79, 195, 247, 0.3);
-    border-color: rgba(79, 195, 247, 0.8);
+    background: var(--color-primary-glow);
+    border-color: var(--color-primary);
     transform: scale(1.05);
 }
 
@@ -134,8 +199,8 @@ body { overflow: hidden; background: #000; }
 }
 
 .desktop-menu-button:hover {
-    background: rgba(79, 195, 247, 0.3);
-    border-color: rgba(79, 195, 247, 0.8);
+    background: var(--color-primary-glow);
+    border-color: var(--color-primary);
     transform: scale(1.05);
 }
 
@@ -144,10 +209,10 @@ body { overflow: hidden; background: #000; }
 }
 
 #velocity-display {
-    color: #0f0;
+    color: var(--color-text-green);
     font-family: monospace;
     font-size: 16px;
-    text-shadow: 1px 1px 2px #000;
+    text-shadow: var(--shadow-text);
     margin-bottom: 10px;
 }
 
@@ -159,17 +224,31 @@ body { overflow: hidden; background: #000; }
 
 .gauge-container {
     width: 100px;
-    height: 100px;
+    height: 120px;
     filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.gauge-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 9px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .gauge {
     width: 100%;
-    height: 100%;
+    height: 100px;
 }
 
 .gauge-marks line {
-    stroke: #333;
+    stroke: var(--color-gauge-tick);
     stroke-width: 2;
 }
 
@@ -180,7 +259,7 @@ body { overflow: hidden; background: #000; }
 .gauge-labels text {
     font-family: Arial, sans-serif;
     font-size: 8px;
-    fill: #333;
+    fill: var(--color-gauge-tick);
     font-weight: bold;
 }
 
@@ -191,8 +270,8 @@ body { overflow: hidden; background: #000; }
     left: 50%;
     transform: translateX(-50%);
     font-size: 12px;
-    color: #9b59b6;
-    text-shadow: 1px 1px 2px #000;
+    color: var(--color-accent);
+    text-shadow: var(--shadow-text);
     z-index: 100;
 }
 
@@ -213,7 +292,7 @@ body { overflow: hidden; background: #000; }
 #loading {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #87CEEB 100%);
+    background: linear-gradient(180deg, var(--gradient-loading-top) 0%, var(--gradient-loading-mid) 30%, var(--gradient-loading-bottom) 60%, var(--gradient-loading-sky) 100%);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -234,7 +313,7 @@ body { overflow: hidden; background: #000; }
 }
 .cloud {
     position: absolute;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--color-text-faint);
     border-radius: 50%;
     filter: blur(20px);
 }
@@ -421,18 +500,18 @@ body { overflow: hidden; background: #000; }
     font-size: 24px;
     font-weight: bold;
     font-family: 'Segoe UI', Arial, sans-serif;
-    color: #fff;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: var(--color-text);
+    background: linear-gradient(135deg, var(--color-button-orange-start) 0%, var(--color-button-orange-end) 100%);
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 6px 20px var(--color-button-orange-shadow);
     transition: transform 0.2s, box-shadow 0.2s;
     animation: pulse 2s ease-in-out infinite;
 }
 #start-button:hover {
     transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+    box-shadow: 0 8px 25px var(--color-button-orange-shadow-strong);
 }
 
 #loading {
@@ -446,21 +525,21 @@ body { overflow: hidden; background: #000; }
 #loading-bar {
     width: 300px;
     height: 20px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-bg-surface);
     border-radius: 10px;
     margin-top: 4px;
     overflow: visible;
     position: relative;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--color-border-subtle);
 }
 #loading-bar-fill {
     width: 0%;
     height: 100%;
-    background: linear-gradient(90deg, #4fc3f7 0%, #29b6f6 50%, #03a9f4 100%);
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 50%, var(--color-primary-darker) 100%);
     border-radius: 10px;
     transition: width 0.3s ease-out;
-    box-shadow: 0 0 10px rgba(79, 195, 247, 0.6), 0 0 20px rgba(79, 195, 247, 0.3);
+    box-shadow: 0 0 10px var(--color-primary-glow-strong), 0 0 20px var(--color-primary-glow);
 }
 #loading-plane {
     position: absolute;
@@ -478,7 +557,7 @@ body { overflow: hidden; background: #000; }
     object-fit: contain;
 }
 #loading-text {
-    color: #fff;
+    color: var(--color-text);
     font-size: 16px;
     margin-top: 4px;
     text-transform: uppercase;
@@ -486,7 +565,7 @@ body { overflow: hidden; background: #000; }
     font-weight: 500;
 }
 #selection-area {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-bg-surface);
     border-radius: 12px;
     padding: 16px 20px;
     margin-top: 10px;
@@ -502,7 +581,7 @@ body { overflow: hidden; background: #000; }
     margin-bottom: 0;
 }
 .selection-row label {
-    color: #fff;
+    color: var(--color-text);
     font-size: 14px;
     font-weight: 600;
     margin-right: 12px;
@@ -511,19 +590,19 @@ body { overflow: hidden; background: #000; }
 .selection-row input[type="text"] {
     flex: 1;
     padding: 10px 14px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--color-border);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--color-bg-surface);
+    color: var(--color-text);
     font-size: 15px;
     outline: none;
     transition: border-color 0.2s;
 }
 .selection-row input[type="text"]::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted);
 }
 .selection-row input[type="text"]:focus {
-    border-color: #4fc3f7;
+    border-color: var(--color-primary);
 }
 .dice-btn {
     width: 32px;
@@ -541,7 +620,7 @@ body { overflow: hidden; background: #000; }
 }
 .dice-btn:hover {
     transform: scale(1.15);
-    filter: drop-shadow(0 2px 4px rgba(79, 195, 247, 0.4));
+    filter: drop-shadow(0 2px 4px var(--color-primary-shadow));
 }
 .color-selector-with-arrows {
     display: flex;
@@ -551,10 +630,10 @@ body { overflow: hidden; background: #000; }
 .color-arrow-btn {
     width: 28px;
     height: 32px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--color-border);
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--color-bg-surface);
+    color: var(--color-text);
     font-size: 16px;
     cursor: pointer;
     display: flex;
@@ -564,19 +643,19 @@ body { overflow: hidden; background: #000; }
     flex-shrink: 0;
 }
 .color-arrow-btn:hover {
-    background: rgba(79, 195, 247, 0.3);
-    border-color: #4fc3f7;
+    background: var(--color-primary-glow);
+    border-color: var(--color-primary);
     transform: scale(1.05);
 }
 .selected-color-display {
     width: 50px;
     height: 36px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--color-border);
     border-radius: 6px;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
 }
 .selected-color-display.main {
-    border-color: #4fc3f7;
+    border-color: var(--color-primary);
 }
 #loading-bottom-left {
     position: absolute;
@@ -595,7 +674,7 @@ body { overflow: hidden; background: #000; }
     gap: 8px;
 }
 #loading-alarm {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted);
     font-size: 11px;
     text-align: left;
     line-height: 1.4;
@@ -606,7 +685,7 @@ body { overflow: hidden; background: #000; }
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    color: rgba(255, 255, 255, 0.4);
+    color: #9b59b6;
     font-size: 12px;
     font-style: italic;
     text-align: center;
@@ -618,19 +697,19 @@ body { overflow: hidden; background: #000; }
     align-items: center;
 }
 #asset-viewer-button {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-text-muted);
     font-size: 12px;
     text-decoration: none;
     padding: 6px 12px;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-bg-surface-subtle);
     transition: all 0.2s;
     font-family: 'Segoe UI', Arial, sans-serif;
     align-self: flex-start;
 }
 #asset-viewer-button:hover {
-    background: rgba(79, 195, 247, 0.2);
-    color: #4fc3f7;
+    background: var(--color-primary-glow-subtle);
+    color: var(--color-primary);
 }
 #server-button {
     font-size: 16px;
@@ -640,14 +719,14 @@ body { overflow: hidden; background: #000; }
 }
 #server-button:hover {
     transform: scale(1.15);
-    filter: drop-shadow(0 2px 4px rgba(79, 195, 247, 0.4));
+    filter: drop-shadow(0 2px 4px var(--color-primary-shadow));
 }
 
 #loading-version {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
-    color: rgba(255, 255, 255, 0.4);
+    bottom: 72px;
+    right: 16px;
+    color: var(--color-accent);
     font-size: 12px;
     font-family: monospace;
 }
@@ -664,8 +743,8 @@ body { overflow: hidden; background: #000; }
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    background: rgba(0, 0, 0, 0.85);
-    border: 3px solid #ff0000;
+    background: var(--color-bg-overlay);
+    border: 3px solid var(--color-danger);
     border-radius: 20px;
     padding: 40px 60px;
     text-align: center;
@@ -682,24 +761,24 @@ body { overflow: hidden; background: #000; }
 }
 
 .crash-text {
-    color: #ff0000;
+    color: var(--color-danger);
     font-size: 72px;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 8px;
-    text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4);
+    text-shadow: 0 0 20px var(--color-danger-glow-strong), 0 0 40px var(--color-danger-glow);
     animation: crashPulse 1.5s ease-in-out infinite;
     margin-bottom: 20px;
 }
 
 @keyframes crashPulse {
-    0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4); }
-    50% { transform: scale(1.05); text-shadow: 0 0 30px rgba(255, 0, 0, 1), 0 0 60px rgba(255, 0, 0, 0.6); }
+    0%, 100% { transform: scale(1); text-shadow: 0 0 20px var(--color-danger-glow-strong), 0 0 40px var(--color-danger-glow); }
+    50% { transform: scale(1.05); text-shadow: 0 0 30px var(--color-danger), 0 0 60px var(--color-danger-glow-strong); }
 }
 
 #reset-btn {
     display: none;
-    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+    background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
     color: white;
     border: none;
     padding: 15px 40px;
@@ -710,7 +789,7 @@ body { overflow: hidden; background: #000; }
     text-transform: uppercase;
     letter-spacing: 3px;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+    box-shadow: 0 4px 15px var(--color-danger-glow);
 }
 
 /* Reset button always shows when inside visible crash-message */
@@ -724,9 +803,9 @@ body { overflow: hidden; background: #000; }
 }
 
 #reset-btn:hover {
-    background: linear-gradient(135deg, #ff3333 0%, #dd0000 100%);
+    background: linear-gradient(135deg, var(--color-danger-bright) 0%, var(--color-danger-dark) 100%);
     transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(255, 0, 0, 0.6);
+    box-shadow: 0 6px 20px var(--color-danger-glow-strong);
 }
 
 /* Mobile Touch Controls - Only visible on touch devices */
@@ -750,8 +829,8 @@ body { overflow: hidden; background: #000; }
     width: 140px;
     height: 140px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: var(--color-bg-surface);
+    border: 2px solid var(--color-border);
     pointer-events: auto;
     touch-action: none;
 }
@@ -771,12 +850,12 @@ body { overflow: hidden; background: #000; }
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: rgba(79, 195, 247, 0.6);
+    background: var(--color-primary-glow-strong);
     border: 2px solid rgba(255, 255, 255, 0.8);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
+    box-shadow: 0 0 20px var(--color-primary-glow);
     transition: none;
 }
 
@@ -795,10 +874,10 @@ body { overflow: hidden; background: #000; }
 .touch-button {
     position: absolute;
     padding: 15px 25px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: var(--color-bg-surface-hover);
+    border: 2px solid var(--color-border-subtle);
     border-radius: 10px;
-    color: white;
+    color: var(--color-text);
     font-size: 14px;
     font-weight: bold;
     text-transform: uppercase;
@@ -810,8 +889,8 @@ body { overflow: hidden; background: #000; }
 }
 
 .touch-button:active {
-    background: rgba(79, 195, 247, 0.4);
-    border-color: rgba(79, 195, 247, 0.8);
+    background: var(--color-primary-glow);
+    border-color: var(--color-primary);
     transform: scale(0.95);
 }
 
@@ -829,16 +908,28 @@ body { overflow: hidden; background: #000; }
     height: 44px;
     padding: 0;
     font-size: 24px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 59, 48, 0.2);
+    border: 2px solid rgba(255, 59, 48, 0.5);
     border-radius: 10px;
-    color: #fff;
+    color: var(--color-text);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     z-index: 100;
+}
+
+#reset-btn-touch:hover {
+    background: rgba(255, 59, 48, 0.4);
+    border-color: rgba(255, 59, 48, 0.8);
+    transform: scale(1.05);
+}
+
+#reset-btn-touch:active {
+    background: rgba(255, 59, 48, 0.5);
+    transform: scale(0.95);
 }
 
 #reset-btn-touch.reset {
@@ -851,15 +942,44 @@ body { overflow: hidden; background: #000; }
     transform: scale(0.95);
 }
 
+/* Mobile settings button */
+.settings-button-touch {
+    position: absolute;
+    top: 20px;
+    right: 77px;
+    width: 44px;
+    height: 44px;
+    background: var(--color-bg-surface-hover);
+    border: 2px solid var(--color-border-strong);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    touch-action: none;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    z-index: 100;
+    color: var(--color-text);
+}
+
+.settings-button-touch:hover,
+.settings-button-touch:active {
+    background: var(--color-primary-glow);
+    border-color: var(--color-primary);
+    transform: scale(1.05);
+}
+
 /* Menu/Back button - hidden during loading */
 .menu-button {
     position: absolute;
     top: 20px;
-    right: 90px;
+    right: 134px;
     width: 44px;
     height: 44px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: var(--color-bg-surface-hover);
+    border: 2px solid var(--color-border-strong);
     border-radius: 10px;
     cursor: pointer;
     display: none;
@@ -867,7 +987,7 @@ body { overflow: hidden; background: #000; }
     justify-content: center;
     pointer-events: auto;
     touch-action: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
     z-index: 100;
 }
@@ -885,19 +1005,19 @@ body { overflow: hidden; background: #000; }
 }
 
 .menu-button:hover {
-    background: rgba(79, 195, 247, 0.3);
-    border-color: rgba(79, 195, 247, 0.8);
+    background: var(--color-primary-glow);
+    border-color: var(--color-primary);
     transform: scale(1.05);
 }
 
 .menu-button:active {
     transform: scale(0.95);
-    background: rgba(79, 195, 247, 0.4);
+    background: var(--color-primary-glow-strong);
 }
 
 @media (max-width: 768px) {
     .menu-button {
-        right: 100px;
+        right: 134px;
         width: 48px;
         height: 48px;
     }
@@ -905,13 +1025,23 @@ body { overflow: hidden; background: #000; }
         width: 32px;
         height: 32px;
     }
+    .settings-button-touch {
+        right: 77px;
+        width: 48px;
+        height: 48px;
+    }
+    #reset-btn-touch {
+        right: 20px;
+        width: 48px;
+        height: 48px;
+    }
 }
 
 /* Throttle Slider */
 .throttle-container {
     position: absolute;
     left: 20px;
-    bottom: 80px;
+    bottom: 0;
     width: 80px;
     height: 200px;
     pointer-events: auto;
@@ -924,8 +1054,8 @@ body { overflow: hidden; background: #000; }
     transform: translateX(-50%);
     width: 20px;
     height: 180px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: var(--color-bg-surface-hover);
+    border: 2px solid var(--color-border);
     border-radius: 10px;
     box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
 }
@@ -936,15 +1066,57 @@ body { overflow: hidden; background: #000; }
     transform: translateX(-50%);
     width: 50px;
     height: 60px;
-    background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     border: 2px solid rgba(255, 255, 255, 0.9);
     border-radius: 8px;
-    box-shadow: 0 0 15px rgba(79, 195, 247, 0.6);
+    box-shadow: 0 0 15px var(--color-primary-glow-strong);
     bottom: 0;
     transition: none;
 }
 
 .throttle-container .touch-label {
+    bottom: -30px;
+}
+
+/* Rudder Slider (horizontal, below joystick) */
+.rudder-container {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 140px; /* Same width as joystick zone */
+    height: 60px;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.rudder-track {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 24px;
+    background: var(--color-bg-surface-hover);
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.rudder-handle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 0 15px var(--color-primary-glow-strong);
+    left: 50%;
+    transition: none;
+}
+
+.rudder-container .touch-label {
     bottom: -30px;
 }
 
@@ -961,10 +1133,10 @@ body { overflow: hidden; background: #000; }
 .yaw-button {
     width: 60px;
     height: 60px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: var(--color-bg-surface-hover);
+    border: 2px solid var(--color-border-subtle);
     border-radius: 50%;
-    color: white;
+    color: var(--color-text);
     font-size: 24px;
     display: flex;
     align-items: center;
@@ -1016,6 +1188,15 @@ body { overflow: hidden; background: #000; }
         height: 70px;
     }
     
+    /* Rudder slider in landscape */
+    .rudder-container {
+        width: 180px; /* Match joystick zone size in landscape */
+    }
+    
+    .rudder-track {
+        width: 160px;
+    }
+    
     .yaw-button {
         width: 80px;
         height: 80px;
@@ -1055,12 +1236,12 @@ body { overflow: hidden; background: #000; }
 }
 
 .modal-content.color-picker-container {
-    background: #1a1a2e;
+    background: var(--gradient-loading-top);
     border-radius: 16px;
     padding: 30px;
     min-width: 260px;
     max-width: 90%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(79, 195, 247, 0.2);
+    box-shadow: 0 8px 32px var(--shadow-md), 0 0 40px var(--color-primary-glow-subtle);
     position: relative;
 }
 
@@ -1074,18 +1255,18 @@ body { overflow: hidden; background: #000; }
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid var(--color-border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
 }
 
 .modal-content.color-picker-container {
-    background: #1a1a2e;
+    background: var(--gradient-loading-top);
     border-radius: 16px;
     padding: 30px;
     min-width: 260px;
     max-width: 90%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(79, 195, 247, 0.2);
+    box-shadow: 0 8px 32px var(--shadow-md), 0 0 40px var(--color-primary-glow-subtle);
     position: relative;
 }
 
@@ -1151,7 +1332,7 @@ body { overflow: hidden; background: #000; }
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-bg-surface-subtle);
     border-radius: 10px;
 }
 
@@ -1163,7 +1344,7 @@ body { overflow: hidden; background: #000; }
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid var(--color-border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -1174,18 +1355,18 @@ body { overflow: hidden; background: #000; }
     font-size: 18px;
     font-weight: bold;
     font-family: 'Segoe UI', Arial, sans-serif;
-    color: #fff;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: var(--color-text);
+    background: linear-gradient(135deg, var(--color-button-orange-start) 0%, var(--color-button-orange-end) 100%);
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 6px 20px var(--color-button-orange-shadow);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .color-picker-ok-btn:hover {
     transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+    box-shadow: 0 8px 25px var(--color-button-orange-shadow-strong);
 }
 
 /* Mobile responsive */
@@ -1207,14 +1388,14 @@ body { overflow: hidden; background: #000; }
 
 /* Settings Modal */
 .settings-container {
-    background: #1a1a2e;
+    background: var(--gradient-loading-top);
     border-radius: 16px;
     padding: 30px 35px 35px;
     width: 420px;
     max-width: 90%;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(79, 195, 247, 0.15);
+    box-shadow: 0 8px 32px var(--shadow-md), 0 0 40px var(--color-primary-glow-subtle);
     position: relative;
 }
 
@@ -1224,7 +1405,7 @@ body { overflow: hidden; background: #000; }
     right: 16px;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted);
     font-size: 28px;
     cursor: pointer;
     transition: all 0.2s;
@@ -1233,12 +1414,12 @@ body { overflow: hidden; background: #000; }
 }
 
 .settings-close-btn:hover {
-    color: #4fc3f7;
+    color: var(--color-primary);
     transform: scale(1.1);
 }
 
 .settings-title {
-    color: #fff;
+    color: var(--color-text);
     font-size: 22px;
     font-weight: bold;
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -1249,7 +1430,7 @@ body { overflow: hidden; background: #000; }
 .settings-section {
     margin-bottom: 24px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--color-text-faint);
 }
 
 .settings-section:last-child {
@@ -1266,7 +1447,7 @@ body { overflow: hidden; background: #000; }
 }
 
 .settings-section-title {
-    color: #4fc3f7;
+    color: var(--color-primary);
     font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
@@ -1276,7 +1457,7 @@ body { overflow: hidden; background: #000; }
 }
 
 .settings-section.disabled .settings-section-title {
-    color: rgba(79, 195, 247, 0.4);
+    color: var(--color-primary-glow-subtle);
 }
 
 .settings-toggle {
@@ -1299,7 +1480,7 @@ body { overflow: hidden; background: #000; }
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--color-bg-surface-active);
     border-radius: 22px;
     transition: all 0.3s ease;
 }
@@ -1311,13 +1492,13 @@ body { overflow: hidden; background: #000; }
     width: 16px;
     left: 3px;
     bottom: 3px;
-    background-color: #fff;
+    background-color: var(--color-text);
     border-radius: 50%;
     transition: all 0.3s ease;
 }
 
 .settings-toggle input:checked + .toggle-slider {
-    background-color: #4fc3f7;
+    background-color: var(--color-primary);
 }
 
 .settings-toggle input:checked + .toggle-slider:before {
@@ -1330,7 +1511,7 @@ body { overflow: hidden; background: #000; }
 }
 
 .settings-section.disabled .setting-value {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--color-text-subtle);
 }
 
 .settings-section.disabled .setting-control input[type="range"] {
