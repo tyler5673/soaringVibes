@@ -1,5 +1,8 @@
 // ========== SAILBOATS & CRUISE SHIPS ==========
-class Sailboat {
+(function() {
+    if (typeof Sailboat !== 'undefined') return;
+    
+    class Sailboat {
     constructor(scene, position) {
         this.scene = scene;
         this.mesh = this.createMesh();
@@ -309,3 +312,4 @@ class BoatManager {
         });
     }
 }
+})();
