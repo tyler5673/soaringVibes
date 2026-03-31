@@ -491,8 +491,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show menu buttons during gameplay
                 const desktopMenuBtn = document.getElementById('desktop-menu-btn');
                 const menuBtn = document.getElementById('menu-btn');
+                const resetBtn = document.getElementById('reset-btn');
+                const controlsHint = document.getElementById('controls-hint');
                 if (desktopMenuBtn) desktopMenuBtn.classList.add('visible');
                 if (menuBtn) menuBtn.classList.add('visible');
+                if (resetBtn) resetBtn.classList.add('visible');
+                if (controlsHint) controlsHint.classList.add('visible');
                 
                 setTimeout(() => {
                     el.style.display = 'none';
@@ -509,8 +513,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Hide menu buttons during loading
                 const desktopMenuBtn = document.getElementById('desktop-menu-btn');
                 const menuBtn = document.getElementById('menu-btn');
+                const resetBtn = document.getElementById('reset-btn');
+                const controlsHint = document.getElementById('controls-hint');
                 if (desktopMenuBtn) desktopMenuBtn.classList.remove('visible');
                 if (menuBtn) menuBtn.classList.remove('visible');
+                if (resetBtn) resetBtn.classList.remove('visible');
+                if (controlsHint) controlsHint.classList.remove('visible');
             }
         }
 
