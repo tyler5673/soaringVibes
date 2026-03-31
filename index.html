@@ -17,6 +17,9 @@
             <div class="cloud"></div>
         </div>
         <div id="top-buttons">
+            <div id="desktop-menu-btn" class="desktop-menu-button" title="Change name or colors">
+                <img src="assets/images/icon.png" alt="Menu">
+            </div>
             <a href="https://ko-fi.com/tylereastman" target="_blank" id="kofi-button">
                 <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
             </a>
@@ -450,6 +453,21 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingEl.style.display = display || 'flex';
         }
     });
+    
+    // Menu buttons - show loading screen to change name/colors
+    const desktopMenuBtn = document.getElementById('desktop-menu-btn');
+    const menuBtn = document.getElementById('menu-btn');
+    
+    function handleMenuClick() {
+        showLoading();
+    }
+    
+    if (desktopMenuBtn) {
+        desktopMenuBtn.addEventListener('click', handleMenuClick);
+    }
+    if (menuBtn) {
+        menuBtn.addEventListener('click', handleMenuClick);
+    }
 });
 
 // ========== MAIN =======
@@ -484,6 +502,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     el.style.display = 'none';
                 }, 800);
+            }
+        }
+        
+        function showLoading() {
+            const el = document.getElementById('loading');
+            if (el) {
+                el.style.display = 'flex';
+                el.classList.remove('hidden');
             }
         }
 
