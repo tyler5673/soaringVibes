@@ -76,12 +76,15 @@ class MultiplayerClient {
         const currentIds = new Set(this.otherPlayers.keys());
         const newIds = new Set(Object.keys(players));
 
+        // Remove players who are no longer in the list
         for (const id of currentIds) {
             if (!newIds.has(id)) {
+                console.log(`Player left the game`);
                 this.removePlayer(id);
             }
         }
 
+        // Update or create players
         for (const [id, data] of Object.entries(players)) {
             this.updatePlayer(id, data);
         }
@@ -98,6 +101,7 @@ class MultiplayerClient {
         
         if (!mesh) {
             // Create new mesh with the player's colors
+            console.log(`Player ${data.name || playerId} joined at position: (${data.position.x.toFixed(0)}, ${data.position.y.toFixed(0)}, ${data.position.z.toFixed(0)})`);
             mesh = this.createPlayerMesh(newColors);
             mesh.userData.playerId = playerId;
             mesh.userData.name = data.name || 'Pilot';
@@ -818,7 +822,7 @@ class MultiplayerClient {
 
     sendUpdate(position, rotation, velocity, color, highlightColor, name) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
+            const updateData = {
                 type: 'update',
                 position: { x: position.x, y: position.y, z: position.z },
                 rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
@@ -826,7 +830,8 @@ class MultiplayerClient {
                 color: color,
                 highlightColor: highlightColor,
                 name: name
-            }));
+            };
+            this.ws.send(JSON.stringify(updateData));
         }
     }
 }
