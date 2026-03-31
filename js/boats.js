@@ -255,7 +255,7 @@ class BoatManager {
         }
         
         let attempts = 0;
-        while (getTerrainHeight(newTarget.x, newTarget.z) > 5 && attempts < 10) {
+        while (attempts < 5) {
             newTarget = isCoastal ? this.getCoastalPosition() : this.getOpenWaterPosition();
             attempts++;
         }
