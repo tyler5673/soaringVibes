@@ -1,11 +1,15 @@
 // ========== AIRPORT ==========
-function createAirport(scene, x, z, parentGroup = null) {
+function createAirport(scene, x, z, parentGroup = null, options = {}) {
+    const {
+        isLarge = true,
+        rotation = Math.PI / 2
+    } = options;
+    
+    const runwayLength = isLarge ? 600 : 400;
+    const runwayWidth = isLarge ? 30 : 20;
+    
     const group = new THREE.Group();
-    
-    const runwayLength = 600;
-    const runwayWidth = 30;
-    
-    group.rotation.y = Math.PI / 2;
+    group.rotation.y = rotation;
     
     const runwayGeo = new THREE.PlaneGeometry(runwayLength, runwayWidth);
     const runwayMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
@@ -97,7 +101,7 @@ function createAirport(scene, x, z, parentGroup = null) {
     group.add(hangarRoof);
     
     const localY = 18;
-    group.position.set(x, localY, z + 1500);
+    group.position.set(x, localY, z);
     
     if (parentGroup) {
         parentGroup.add(group);
