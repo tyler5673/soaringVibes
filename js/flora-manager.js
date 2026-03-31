@@ -9,7 +9,7 @@ class FloraManager {
         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
-        this.maxVisibleTrees = isMobile ? 200 : 600;
+        this.maxVisibleTrees = isMobile ? 0 : 600;
         
         this.updateInterval = 0.1;
         this.lastUpdate = 0;
@@ -117,7 +117,7 @@ class FloraManager {
     getDensityForBiome(biome) {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
-        const mobileMultiplier = isMobile ? 0.5 : 1.0;
+        const mobileMultiplier = isMobile ? 0 : 1.0;
         
         // BALANCED DENSITIES - Good coverage, not overwhelming
         switch(biome) {
