@@ -721,13 +721,13 @@ class BoatManager {
         this.createSailboats(105);
         this.createSpeedboats(45);
         this.createPirateShips(15);
-        this.createCruiseShips(30);
+        // TEMP: Disabled cruise ships temporarily
+        // this.createCruiseShips(30);
         
         console.log('BoatManager: Created', 
             this.sailboats.length, 'sailboats,', 
             this.speedboats.length, 'speedboats,',
-            this.pirateShips.length, 'pirate ships,',
-            this.cruiseShips.length, 'cruise ships');
+            this.pirateShips.length, 'pirate ships');
     }
     
     getRandomBoatColors() {
