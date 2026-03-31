@@ -16,6 +16,7 @@ class BuildingManager {
         // Configurable draw distance and density
         this.buildingMaxDist = 3500;
         this.densityMultiplier = 1.0;
+        this.enabled = true;
         
         this.islandGroups = new Map();
     }
@@ -279,7 +280,7 @@ class BuildingManager {
         this.allBuildings.forEach(buildingData => {
             const dist = camPos.distanceTo(buildingData.worldPos);
             
-            if (dist > maxDist) {
+            if (!this.enabled || dist > maxDist) {
                 buildingData.mesh.visible = false;
             } else {
                 buildingData.mesh.visible = true;

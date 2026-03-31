@@ -27,6 +27,7 @@ class FloraManager {
         // Configurable draw distance and density
         this.treeMaxDist = 1300;
         this.densityMultiplier = 1.0;
+        this.enabled = true;
         
         // Island groups reference for adding new trees
         this.islandGroups = new Map();
@@ -380,8 +381,7 @@ class FloraManager {
         this.allTrees.forEach(treeData => {
             const dist = camPos.distanceTo(treeData.worldPos);
 
-            // Simple distance-based visibility
-            if (dist > treeMaxDist) {
+            if (!this.enabled || dist > treeMaxDist) {
                 treeData.mesh.visible = false;
             } else {
                 treeData.mesh.visible = true;

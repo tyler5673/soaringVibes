@@ -34,6 +34,7 @@ class FaunaManager {
         // Configurable draw distance and density
         this.animalMaxDist = 6000;
         this.densityMultiplier = 1.0;
+        this.enabled = true;
         
         this.spawnedCount = {
             whale: 0,
@@ -252,6 +253,11 @@ class FaunaManager {
         if (!this.camera || !this.camera.position) return;
         
         const camPos = this.camera.position;
+
+        if (!this.enabled) {
+            this.animals.forEach(animal => { animal.mesh.visible = false; });
+            return;
+        }
 
         // Update dolphin pod cohesion
         const leadDolphins = this.dolphinPool.filter((_, i) => i < 5);

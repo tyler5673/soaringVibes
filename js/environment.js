@@ -80,6 +80,7 @@ class CloudSystem {
         this.clouds = [];
         this.scene = scene;
         this.bounds = 12000;
+        this.enabled = true;
         
         const islandPositions = [
             { x: 0, z: 0 },
@@ -160,7 +161,12 @@ class CloudSystem {
     }
     
     update(delta, time) {
+        if (!this.enabled) {
+            this.clouds.forEach(cloud => { cloud.visible = false; });
+            return;
+        }
         this.clouds.forEach(cloud => {
+            cloud.visible = true;
             const ud = cloud.userData;
             
             cloud.position.x += ud.velocity.x * delta;

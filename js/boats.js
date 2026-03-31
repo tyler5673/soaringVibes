@@ -708,6 +708,10 @@ class BoatManager {
         this.pirateShips = [];
         this.cruiseShips = [];
         
+        this.boatMaxDist = 8000;
+        this.densityMultiplier = 1.0;
+        this.enabled = true;
+        
         console.log('BoatManager: Creating boats, islandPositions available:', typeof islandPositions !== 'undefined');
         
         if (typeof islandPositions === 'undefined') {
@@ -857,7 +861,7 @@ class BoatManager {
         boat.targetWaypoint = newTarget;
     }
     
-    update(delta, time) {
+    update(delta, time, camera) {
         const allBoats = [
             ...this.sailboats, 
             ...this.speedboats,
@@ -865,7 +869,22 @@ class BoatManager {
             ...this.cruiseShips
         ];
         
-        allBoats.forEach(boat => {
+        const camPos = camera ? camera.position : new THREE.Vector3();
+        const effectiveCount = Math.floor(allBoats.length * this.densityMultiplier);
+        
+        allBoats.forEach((boat, index) => {
+            if (!this.enabled || index >= effectiveCount) {
+                boat.mesh.visible = false;
+                return;
+            }
+            
+            const dist = camPos.distanceTo(boat.mesh.position);
+            if (dist > this.boatMaxDist) {
+                boat.mesh.visible = false;
+                return;
+            }
+            
+            boat.mesh.visible = true;
             boat.waypointTimer -= delta;
             
             if (!boat.targetWaypoint || boat.waypointTimer <= 0) {

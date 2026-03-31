@@ -96,8 +96,14 @@
             <button id="settings-close-btn" class="settings-close-btn">&times;</button>
             <h2 class="settings-title">Configuration</h2>
             
-            <div class="settings-section">
-                <h3 class="settings-section-title">Vegetation</h3>
+            <div class="settings-section" id="veg-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Vegetation</h3>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="veg-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
                 
                 <div class="setting-row">
                     <label for="veg-distance-slider">Draw Distance</label>
@@ -116,8 +122,14 @@
                 </div>
             </div>
             
-            <div class="settings-section">
-                <h3 class="settings-section-title">Buildings</h3>
+            <div class="settings-section" id="building-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Buildings</h3>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="building-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
                 
                 <div class="setting-row">
                     <label for="building-distance-slider">Draw Distance</label>
@@ -136,8 +148,14 @@
                 </div>
             </div>
             
-            <div class="settings-section">
-                <h3 class="settings-section-title">Fauna</h3>
+            <div class="settings-section" id="fauna-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Fauna</h3>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="fauna-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
                 
                 <div class="setting-row">
                     <label for="fauna-distance-slider">Draw Distance</label>
@@ -156,14 +174,46 @@
                 </div>
             </div>
             
-            <div class="settings-section">
-                <h3 class="settings-section-title">Clouds</h3>
+            <div class="settings-section" id="cloud-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Clouds</h3>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="cloud-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
                 
                 <div class="setting-row">
                     <label for="cloud-count-slider">Cloud Count</label>
                     <div class="setting-control">
                         <input type="range" id="cloud-count-slider" min="0" max="300" value="100" step="10">
                         <span id="cloud-count-value" class="setting-value">100</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section" id="boats-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Boats</h3>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="boats-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="boats-distance-slider">Draw Distance</label>
+                    <div class="setting-control">
+                        <input type="range" id="boats-distance-slider" min="500" max="20000" value="8000" step="500">
+                        <span id="boats-distance-value" class="setting-value">8000m</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="boats-density-slider">Count</label>
+                    <div class="setting-control">
+                        <input type="range" id="boats-density-slider" min="0" max="200" value="100" step="5">
+                        <span id="boats-density-value" class="setting-value">100%</span>
                     </div>
                 </div>
             </div>
@@ -873,11 +923,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const cloudCountSlider = document.getElementById('cloud-count-slider');
     const cloudCountValue = document.getElementById('cloud-count-value');
     
+    const vegSection = document.getElementById('veg-section');
+    const vegToggle = document.getElementById('veg-toggle');
+    const buildingSection = document.getElementById('building-section');
+    const buildingToggle = document.getElementById('building-toggle');
+    const faunaSection = document.getElementById('fauna-section');
+    const faunaToggle = document.getElementById('fauna-toggle');
+    const cloudSection = document.getElementById('cloud-section');
+    const cloudToggle = document.getElementById('cloud-toggle');
+    const boatsSection = document.getElementById('boats-section');
+    const boatsToggle = document.getElementById('boats-toggle');
+    const boatsDistSlider = document.getElementById('boats-distance-slider');
+    const boatsDistValue = document.getElementById('boats-distance-value');
+    const boatsDensitySlider = document.getElementById('boats-density-slider');
+    const boatsDensityValue = document.getElementById('boats-density-value');
+    
+    function syncSectionState(section, toggle, manager, managerEnabledProp) {
+        if (manager) {
+            const enabled = manager[managerEnabledProp];
+            toggle.checked = enabled;
+            section.classList.toggle('disabled', !enabled);
+        }
+    }
+    
     function syncSlidersFromManagers() {
         const fm = window.floraManager;
         const bm = window.buildingManager;
         const fm2 = window.faunaManager;
         const cs = window.cloudSystem;
+        
+        syncSectionState(vegSection, vegToggle, fm, 'enabled');
+        syncSectionState(buildingSection, buildingToggle, bm, 'enabled');
+        syncSectionState(faunaSection, faunaToggle, fm2, 'enabled');
+        syncSectionState(cloudSection, cloudToggle, cs, 'enabled');
+        syncSectionState(boatsSection, boatsToggle, window.boatManager, 'enabled');
         
         if (fm) {
             vegDistSlider.value = fm.treeMaxDist;
@@ -904,6 +983,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cs) {
             cloudCountSlider.value = cs.clouds.length;
             cloudCountValue.textContent = cs.clouds.length;
+        }
+        
+        const boatMgr = window.boatManager;
+        if (boatMgr) {
+            boatsDistSlider.value = boatMgr.boatMaxDist;
+            boatsDistValue.textContent = boatMgr.boatMaxDist + 'm';
+            boatsDensitySlider.value = Math.round(boatMgr.densityMultiplier * 100);
+            const totalBoats = boatMgr.sailboats.length + boatMgr.speedboats.length + boatMgr.pirateShips.length + boatMgr.cruiseShips.length;
+            const visibleCount = Math.floor(totalBoats * boatMgr.densityMultiplier);
+            boatsDensityValue.textContent = Math.round(boatMgr.densityMultiplier * 100) + '% (' + visibleCount + ')';
         }
     }
     
@@ -994,6 +1083,69 @@ document.addEventListener('DOMContentLoaded', function() {
         const val = parseInt(this.value);
         if (window.cloudSystem && val !== window.cloudSystem.clouds.length) {
             window.cloudSystem.rebuild(val);
+        }
+    });
+    
+    // Vegetation toggle
+    vegToggle.addEventListener('change', function() {
+        const enabled = this.checked;
+        vegSection.classList.toggle('disabled', !enabled);
+        if (window.floraManager) {
+            window.floraManager.enabled = enabled;
+        }
+    });
+    
+    // Building toggle
+    buildingToggle.addEventListener('change', function() {
+        const enabled = this.checked;
+        buildingSection.classList.toggle('disabled', !enabled);
+        if (window.buildingManager) {
+            window.buildingManager.enabled = enabled;
+        }
+    });
+    
+    // Fauna toggle
+    faunaToggle.addEventListener('change', function() {
+        const enabled = this.checked;
+        faunaSection.classList.toggle('disabled', !enabled);
+        if (window.faunaManager) {
+            window.faunaManager.enabled = enabled;
+        }
+    });
+    
+    // Cloud toggle
+    cloudToggle.addEventListener('change', function() {
+        const enabled = this.checked;
+        cloudSection.classList.toggle('disabled', !enabled);
+        if (window.cloudSystem) {
+            window.cloudSystem.enabled = enabled;
+        }
+    });
+    
+    // Boats draw distance
+    boatsDistSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        boatsDistValue.textContent = val + 'm';
+        if (window.boatManager) {
+            window.boatManager.boatMaxDist = val;
+        }
+    });
+    
+    // Boats density
+    boatsDensitySlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        boatsDensityValue.textContent = val + '%';
+        if (window.boatManager) {
+            window.boatManager.densityMultiplier = val / 100;
+        }
+    });
+    
+    // Boats toggle
+    boatsToggle.addEventListener('change', function() {
+        const enabled = this.checked;
+        boatsSection.classList.toggle('disabled', !enabled);
+        if (window.boatManager) {
+            window.boatManager.enabled = enabled;
         }
     });
     
@@ -1314,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cloudSystem.update(delta, time);
             wildlife.update(delta);
             if (window.boatManager) {
-                window.boatManager.update(delta, time);
+                window.boatManager.update(delta, time, camera);
             }
             
             // Update flora LOD and culling
