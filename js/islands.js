@@ -731,12 +731,12 @@ async function createAllIslands(scene, onProgress) {
 
     const results = await Promise.all(loadPromises);
     
-    // Initialize FloraManager with global camera reference (skip on mobile)
+    // Initialize FloraManager with global camera reference
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
     
     console.log('createAllIslands: window.camera =', window.camera);
-    if (window.camera && !isMobile) {
+    if (window.camera) {
         console.log('Creating FloraManager...');
         const floraManager = new FloraManager(scene, window.camera);
         window.floraManager = floraManager;
@@ -746,8 +746,6 @@ async function createAllIslands(scene, onProgress) {
         }
         
         console.log(`FloraManager created with ${floraManager.allTrees.length} total trees`);
-    } else if (isMobile) {
-        console.log('Skipping FloraManager on mobile');
     } else {
         console.warn('No window.camera available, FloraManager not created');
     }
@@ -788,8 +786,8 @@ async function createAllIslands(scene, onProgress) {
         }
     }
 
-    // Create BuildingManager and place buildings (skip on mobile)
-    if (window.camera && !isMobile) {
+    // Create BuildingManager and place buildings
+    if (window.camera) {
         console.log('Creating BuildingManager...');
         const buildingManager = new BuildingManager(scene, window.camera);
         window.buildingManager = buildingManager;

@@ -7,7 +7,7 @@ class BuildingManager {
         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
-        this.maxVisibleBuildings = isMobile ? 0 : 400;
+        this.maxVisibleBuildings = 400; // Enable on mobile too
         
         this.updateInterval = 0.1;
         this.lastUpdate = 0;

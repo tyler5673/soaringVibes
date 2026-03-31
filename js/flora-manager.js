@@ -9,7 +9,7 @@ class FloraManager {
         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
-        this.maxVisibleTrees = isMobile ? 0 : 600;
+        this.maxVisibleTrees = 600; // Enable on mobile too
         
         this.updateInterval = 0.1;
         this.lastUpdate = 0;
