@@ -499,6 +499,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (el) {
                 el.classList.add('hidden');
                 
+                // Show menu buttons during gameplay
+                const desktopMenuBtn = document.getElementById('desktop-menu-btn');
+                const menuBtn = document.getElementById('menu-btn');
+                if (desktopMenuBtn) desktopMenuBtn.classList.add('visible');
+                if (menuBtn) menuBtn.classList.add('visible');
+                
                 setTimeout(() => {
                     el.style.display = 'none';
                 }, 800);
@@ -510,6 +516,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (el) {
                 el.style.display = 'flex';
                 el.classList.remove('hidden');
+                
+                // Hide menu buttons during loading
+                const desktopMenuBtn = document.getElementById('desktop-menu-btn');
+                const menuBtn = document.getElementById('menu-btn');
+                if (desktopMenuBtn) desktopMenuBtn.classList.remove('visible');
+                if (menuBtn) menuBtn.classList.remove('visible');
             }
         }
 
