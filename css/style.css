@@ -239,32 +239,38 @@ body { overflow: hidden; background: #000; }
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
-        padding: 10px;
+        align-items: center;
+        align-content: center;
+        padding: 5px;
+        height: 100vh;
     }
     #loading-logo {
-        display: none;
+        display: none !important;
     }
     #loading-text {
         display: none;
     }
+    #loading-bar {
+        display: none;
+    }
     #selection-area {
-        padding: 8px 12px;
-        margin-top: 0;
-        margin-bottom: 0;
+        padding: 6px 10px;
+        margin: 0;
         flex: 1;
-        max-width: 300px;
+        max-width: 280px;
+        min-width: 200px;
     }
     .selection-row {
-        margin-bottom: 6px;
+        margin-bottom: 4px;
     }
     .selection-row label {
-        font-size: 11px;
-        min-width: 60px;
-        margin-right: 6px;
+        font-size: 10px;
+        min-width: 50px;
+        margin-right: 4px;
     }
     .selection-row input[type="text"] {
-        padding: 6px 8px;
-        font-size: 12px;
+        padding: 5px 6px;
+        font-size: 11px;
     }
     .dice-btn {
         width: 24px;
@@ -286,11 +292,12 @@ body { overflow: hidden; background: #000; }
         margin-top: 8px;
     }
     #start-button {
-        margin-top: 0;
-        margin-left: 20px;
+        display: block !important;
+        margin: 0 0 0 15px;
         padding: 10px 24px;
         font-size: 16px;
         align-self: center;
+        white-space: nowrap;
     }
     #loading-top-left {
         top: 10px;
