@@ -168,6 +168,25 @@ class MultiplayerClient {
             const throttle = Math.min(speed / 60, 1); // Estimate throttle from speed
             mesh.userData.propeller.rotation.z += throttle * 0.5;
         }
+        
+        // Store target position and velocity for interpolation
+        mesh.userData.targetPosition = new THREE.Vector3(
+            data.position.x,
+            data.position.y,
+            data.position.z
+        );
+        mesh.userData.targetRotation = new THREE.Euler(
+            data.rotation.x,
+            data.rotation.y,
+            data.rotation.z,
+            'YXZ'
+        );
+        mesh.userData.velocity = data.velocity ? new THREE.Vector3(
+            data.velocity.x,
+            data.velocity.y,
+            data.velocity.z
+        ) : null;
+        mesh.userData.lastNetworkUpdate = Date.now();
     }
 
     updatePlayerColors(mesh, colors) {
@@ -284,6 +303,52 @@ class MultiplayerClient {
                 } else {
                     dotElement.style.display = 'none';
                 }
+            }
+        }
+    }
+    
+    // Smooth interpolation for player positions using velocity prediction
+    updateInterpolation(deltaTime) {
+        const now = Date.now();
+        const networkUpdateInterval = 250; // ms between network updates
+        const lerpFactor = 8; // Higher = snappier, lower = smoother
+        
+        for (const [playerId, mesh] of this.otherPlayers) {
+            if (!mesh || !mesh.userData.targetPosition) continue;
+            
+            const targetPos = mesh.userData.targetPosition;
+            const targetRot = mesh.userData.targetRotation;
+            const velocity = mesh.userData.velocity;
+            const lastUpdate = mesh.userData.lastNetworkUpdate || now;
+            const timeSinceUpdate = now - lastUpdate;
+            
+            // Calculate predicted position based on velocity
+            // This predicts where the player should be now based on last known velocity
+            let predictedPosition = targetPos.clone();
+            
+            if (velocity && timeSinceUpdate < 1000) {
+                // Extrapolate using velocity (simple linear prediction)
+                const timeSeconds = timeSinceUpdate / 1000;
+                predictedPosition.addScaledVector(velocity, timeSeconds);
+            }
+            
+            // Smoothly interpolate current position toward predicted position
+            // Using deltaTime-normalized lerp for consistent smoothness
+            const smoothFactor = 1 - Math.exp(-lerpFactor * deltaTime);
+            mesh.position.lerp(predictedPosition, smoothFactor);
+            
+            // Also smooth the rotation
+            if (targetRot) {
+                mesh.rotation.x += (targetRot.x - mesh.rotation.x) * smoothFactor;
+                mesh.rotation.y += (targetRot.y - mesh.rotation.y) * smoothFactor;
+                mesh.rotation.z += (targetRot.z - mesh.rotation.z) * smoothFactor;
+            }
+            
+            // Update propeller animation based on velocity
+            if (mesh.userData.propeller && velocity) {
+                const speed = velocity.length();
+                const throttle = Math.min(speed / 60, 1);
+                mesh.userData.propeller.rotation.z += throttle * 0.5;
             }
         }
     }
@@ -877,5 +942,11 @@ function updateMultiplayer(aircraft) {
 function updateMultiplayerLabels(camera, renderer) {
     if (multiplayer && multiplayer.connected) {
         multiplayer.updateLabels(camera, renderer);
+    }
+}
+
+function updateMultiplayerInterpolation(deltaTime) {
+    if (multiplayer && multiplayer.connected) {
+        multiplayer.updateInterpolation(deltaTime);
     }
 }

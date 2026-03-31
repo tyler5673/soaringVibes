@@ -644,6 +644,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMultiplayerLabels(camera, renderer);
             }
             
+            // Update multiplayer position interpolation (smooth movement)
+            if (typeof updateMultiplayerInterpolation === 'function') {
+                updateMultiplayerInterpolation(delta);
+            }
+            
             renderer.render(scene, camera);
         }
 
