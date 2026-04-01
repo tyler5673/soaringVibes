@@ -658,6 +658,9 @@ class BoatManager {
         // Create cruise ship 1500 feet above Oahu (~457m)
         const oahuPos = new THREE.Vector3(-6400, 457, -2800);
         const oahuShip = new CruiseShip(this.scene, oahuPos);
+        console.log('Cruise ship mesh:', oahuShip.mesh);
+        console.log('Cruise ship mesh position:', oahuShip.mesh.position);
+        console.log('Scene:', this.scene);
         this.cruiseShips.push(oahuShip);
         
         // Create UI marker for cruise ship (only if element exists)
