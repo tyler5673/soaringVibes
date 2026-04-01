@@ -353,8 +353,15 @@ class CruiseShip {
     createMesh() {
         const group = new THREE.Group();
         
-        const hullGeo = new THREE.BoxGeometry(300, 20, 45);
-        const hullMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.3 });
+        // Debug: purple cube instead of ship mesh
+        const debugGeo = new THREE.BoxGeometry(50, 50, 50);
+        const debugMat = new THREE.MeshStandardMaterial({ color: 0x8800FF });
+        const debugCube = new THREE.Mesh(debugGeo, debugMat);
+        debugCube.position.y = 25;
+        group.add(debugCube);
+        console.log('Cruise ship debug cube created at y=25');
+        
+        // Skip the real ship mesh for debugging
         const hull = new THREE.Mesh(hullGeo, hullMat);
         hull.position.y = 12;
         hull.castShadow = true;
