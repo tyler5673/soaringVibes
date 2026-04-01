@@ -333,7 +333,7 @@ class CruiseShip {
         }
         
         this.velocity = new THREE.Vector3();
-        this.speed = 10 + Math.random() * 10;
+        this.speed = 3 + Math.random() * 5;
         this.targetWaypoint = null;
         this.waypointTimer = Math.random() * 20;
         
@@ -376,16 +376,18 @@ class CruiseShip {
             deck.castShadow = true;
             group.add(deck);
             
-            for (let w = 0; w < 24; w++) {
-                const windowGeo = new THREE.BoxGeometry(6, 3, 0.5);
-                const windowMat = new THREE.MeshStandardMaterial({ 
-                    color: 0xFFFFAA, 
-                    emissive: 0xFFFFAA,
-                    emissiveIntensity: this.windowLightsOn ? 0.5 : 0
-                });
-                const windowMesh = new THREE.Mesh(windowGeo, windowMat);
-                windowMesh.position.set(-120 + w * 10, 26 + i * 6.5, deckWidth / 2 + 0.3);
-                group.add(windowMesh);
+            for (let side = -1; side <= 1; side += 2) {
+                for (let w = 0; w < 24; w++) {
+                    const windowGeo = new THREE.BoxGeometry(6, 3, 0.5);
+                    const windowMat = new THREE.MeshStandardMaterial({ 
+                        color: 0xFFFFAA, 
+                        emissive: 0xFFFFAA,
+                        emissiveIntensity: this.windowLightsOn ? 0.5 : 0
+                    });
+                    const windowMesh = new THREE.Mesh(windowGeo, windowMat);
+                    windowMesh.position.set(-120 + w * 10, 26 + i * 6.5, side * (deckWidth / 2 - 0.3));
+                    group.add(windowMesh);
+                }
             }
         }
         
@@ -401,7 +403,7 @@ class CruiseShip {
             const stackGeo = new THREE.CylinderGeometry(6, 8, stackHeight, 12);
             const stackMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
             const stack = new THREE.Mesh(stackGeo, stackMat);
-            stack.position.set(70 + i * 15, 61 + stackHeight / 2, -15);
+            stack.position.set(70 + i * 15, 61 + stackHeight / 2, 0);
             group.add(stack);
         }
         
@@ -413,20 +415,6 @@ class CruiseShip {
                 boat.position.set(-80 + i * 40, 34.5, side * 18);
                 group.add(boat);
             }
-        }
-        
-        for (let i = 0; i < 100; i++) {
-            const personGeo = new THREE.BoxGeometry(1.5, 4, 1);
-            const personMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-            const person = new THREE.Mesh(personGeo, personMat);
-            const deckLevel = Math.floor(Math.random() * 3);
-            person.position.set(
-                (Math.random() - 0.5) * 200,
-                23 + deckLevel * 6.5 + 4,
-                (Math.random() - 0.5) * 25
-            );
-            person.userData.walkOffset = Math.random() * Math.PI * 2;
-            group.add(person);
         }
         
         return group;
@@ -721,8 +709,9 @@ class BoatManager {
         this.createSailboats(105);
         this.createSpeedboats(45);
         this.createPirateShips(15);
-        // TEMP: Disabled cruise ships temporarily
-        // this.createCruiseShips(30);
+        
+        const oahuShip = new CruiseShip(this.scene, new THREE.Vector3(-6400, BOAT_WATER_LEVEL, -2800));
+        this.cruiseShips.push(oahuShip);
         
         console.log('BoatManager: Created', 
             this.sailboats.length, 'sailboats,', 
@@ -910,13 +899,7 @@ class BoatManager {
             boat.mesh.rotation.z = Math.sin(boat.rockTimer) * 0.05;
             boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
             
-            if (boat instanceof CruiseShip) {
-                boat.mesh.children.forEach(child => {
-                    if (child.userData.walkOffset !== undefined) {
-                        child.position.x += Math.sin(time * 2 + child.userData.walkOffset) * 0.01;
-                    }
-                });
-            }
+
             
             if ((boat instanceof Sailboat || boat instanceof PirateShip) && boat.mesh.children.length > 2) {
                 const sailChild = boat.mesh.children.find(c => c.userData && c.userData.isSail);

@@ -21,62 +21,65 @@
                 <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
             </a>
         </div>
-        <img src="assets/images/logo.png" id="loading-logo" alt="Soaring Vibes">
-        <div id="loading-text">Loading Flight Simulator...</div>
-        <div id="loading-bar"><div id="loading-bar-fill"></div><div id="loading-plane"><img src="assets/images/icon.png" alt="plane"></div></div>
-        <button id="start-button" style="display: none;">Let's Soar!</button>
         
-        <div id="selection-area">
-            <div class="selection-row">
-                <label for="plane-name">Plane Name:</label>
-                <button id="random-name-btn" class="dice-btn" title="Random name">🎲</button>
-                <input type="text" id="plane-name" placeholder="Enter name">
-            </div>
-            <div class="selection-row">
-                <label>Main Color:</label>
-                <button id="random-main-color-btn" class="dice-btn" title="Random main color">🎲</button>
-                <div class="color-selector-with-arrows">
-                    <button class="color-arrow-btn" id="main-color-left" title="Previous">◀</button>
-                    <div class="selected-color-display" id="main-color-display"></div>
-                    <button class="color-arrow-btn" id="main-color-right" title="Next">▶</button>
+        <div id="loading-content">
+            <img src="assets/images/logo.png" id="loading-logo" alt="Soaring Vibes">
+            <div id="loading-text">Loading Flight Simulator...</div>
+            <div id="loading-bar"><div id="loading-bar-fill"></div><div id="loading-plane"><img src="assets/images/icon.png" alt="plane"></div></div>
+            <button id="start-button" style="display: none;">Let's Soar!</button>
+            
+            <div id="selection-area">
+                <div class="selection-row">
+                    <label for="plane-name">Plane Name:</label>
+                    <button id="random-name-btn" class="dice-btn" title="Random name">🎲</button>
+                    <input type="text" id="plane-name" placeholder="Enter name">
+                </div>
+                <div class="selection-row">
+                    <label>Main Color:</label>
+                    <button id="random-main-color-btn" class="dice-btn" title="Random main color">🎲</button>
+                    <div class="color-selector-with-arrows">
+                        <button class="color-arrow-btn" id="main-color-left" title="Previous">◀</button>
+                        <div class="selected-color-display" id="main-color-display"></div>
+                        <button class="color-arrow-btn" id="main-color-right" title="Next">▶</button>
+                    </div>
+                </div>
+                <div class="selection-row">
+                    <label>Highlight:</label>
+                    <button id="random-highlight-btn" class="dice-btn" title="Random highlight">🎲</button>
+                    <div class="color-selector-with-arrows">
+                        <button class="color-arrow-btn" id="highlight-color-left" title="Previous">◀</button>
+                        <div class="selected-color-display" id="highlight-color-display"></div>
+                        <button class="color-arrow-btn" id="highlight-color-right" title="Next">▶</button>
+                    </div>
                 </div>
             </div>
-            <div class="selection-row">
-                <label>Highlight:</label>
-                <button id="random-highlight-btn" class="dice-btn" title="Random highlight">🎲</button>
-                <div class="color-selector-with-arrows">
-                    <button class="color-arrow-btn" id="highlight-color-left" title="Previous">◀</button>
-                    <div class="selected-color-display" id="highlight-color-display"></div>
-                    <button class="color-arrow-btn" id="highlight-color-right" title="Next">▶</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Color picker modal -->
-        <div id="color-picker-modal" class="modal">
-                <div class="modal-content color-picker-container">
-                    <div class="color-picker-layout">
-                        <div id="color-picker-preview"></div>
-                        <div class="rgb-color-picker">
-                            <div class="slider-row">
-                                <label style="color: #ff6b6b;">R</label>
-                                <input type="range" id="red-slider" min="0" max="255" value="79">
-                                <span id="red-value" style="color: #ff6b6b;">79</span>
-                            </div>
-                            <div class="slider-row">
-                                <label style="color: #4ecdc4;">G</label>
-                                <input type="range" id="green-slider" min="0" max="255" value="195">
-                                <span id="green-value" style="color: #4ecdc4;">195</span>
-                            </div>
-                            <div class="slider-row">
-                                <label style="color: #45b7d1;">B</label>
-                                <input type="range" id="blue-slider" min="0" max="255" value="247">
-                                <span id="blue-value" style="color: #45b7d1;">247</span>
+            
+            <!-- Color picker modal -->
+            <div id="color-picker-modal" class="modal">
+                    <div class="modal-content color-picker-container">
+                        <div class="color-picker-layout">
+                            <div id="color-picker-preview"></div>
+                            <div class="rgb-color-picker">
+                                <div class="slider-row">
+                                    <label style="color: #ff6b6b;">R</label>
+                                    <input type="range" id="red-slider" min="0" max="255" value="79">
+                                    <span id="red-value" style="color: #ff6b6b;">79</span>
+                                </div>
+                                <div class="slider-row">
+                                    <label style="color: #4ecdc4;">G</label>
+                                    <input type="range" id="green-slider" min="0" max="255" value="195">
+                                    <span id="green-value" style="color: #4ecdc4;">195</span>
+                                </div>
+                                <div class="slider-row">
+                                    <label style="color: #45b7d1;">B</label>
+                                    <input type="range" id="blue-slider" min="0" max="255" value="247">
+                                    <span id="blue-value" style="color: #45b7d1;">247</span>
+                                </div>
                             </div>
                         </div>
+                        <button id="color-picker-ok" class="color-picker-ok-btn">Ok!</button>
                     </div>
-                    <button id="color-picker-ok" class="color-picker-ok-btn">Ok!</button>
-                </div>
+            </div>
         </div>
         
         <div id="loading-top-left">

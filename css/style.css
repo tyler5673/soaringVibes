@@ -297,10 +297,17 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    padding-top: 15px;
+    justify-content: center;
     z-index: 1000;
     font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+#loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
 }
 .loading-clouds {
     position: absolute;
@@ -384,8 +391,15 @@ body { overflow: hidden; background: var(--color-bg-dark); }
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
-        align-items: flex-start;
+        align-items: center;
         padding: 10px;
+    }
+    #loading-content {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0;
+        margin-left: 20px;
+        gap: 0;
     }
     #loading-logo {
         display: none !important;
@@ -398,13 +412,11 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     }
     #loading-text {
         font-size: 16px;
-        margin-top: 8px;
     }
     #selection-area {
         width: 90%;
         max-width: 340px;
         padding: 12px 14px;
-        margin-top: 12px;
     }
     .selection-row {
         flex-wrap: wrap;
@@ -559,7 +571,6 @@ body { overflow: hidden; background: var(--color-bg-dark); }
 #loading-text {
     color: var(--color-text);
     font-size: 16px;
-    margin-top: 4px;
     text-transform: uppercase;
     letter-spacing: 3px;
     font-weight: 500;
@@ -568,8 +579,6 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     background: var(--color-bg-surface);
     border-radius: 12px;
     padding: 16px 20px;
-    margin-top: 10px;
-    margin-bottom: 20px;
     backdrop-filter: blur(10px);
 }
 .selection-row {
