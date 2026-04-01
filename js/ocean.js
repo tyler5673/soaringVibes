@@ -8,26 +8,26 @@ class WaveSystem {
       // Swell: Long wavelength base waves
       {
         direction: new THREE.Vector2(1, 0.3).normalize(),
-        amplitude: 2.0,
+        amplitude: 1.0,
         length: 100,
         steepness: 0.7,
-        speed: 6
+        speed: 4
       },
       // Chop: Medium wind-driven waves
       {
         direction: new THREE.Vector2(0.5, -1).normalize(),
-        amplitude: 0.8,
+        amplitude: 0.4,
         length: 30,
         steepness: 0.5,
-        speed: 12
+        speed: 8
       },
       // Ripple: Short surface detail
       {
         direction: new THREE.Vector2(-0.7, 0.9).normalize(),
-        amplitude: 0.2,
+        amplitude: 0.1,
         length: 8,
         steepness: 0.3,
-        speed: 20
+        speed: 13.33
       }
     ];
   }
