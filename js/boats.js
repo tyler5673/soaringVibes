@@ -353,13 +353,69 @@ class CruiseShip {
     createMesh() {
         const group = new THREE.Group();
         
-        // Debug: purple cube instead of ship mesh
-        const debugGeo = new THREE.BoxGeometry(50, 50, 50);
-        const debugMat = new THREE.MeshStandardMaterial({ color: 0x8800FF });
-        const debugCube = new THREE.Mesh(debugGeo, debugMat);
-        debugCube.position.y = 25;
-        group.add(debugCube);
-        console.log('Cruise ship debug cube created at y=25');
+        const hullGeo = new THREE.BoxGeometry(300, 20, 45);
+        const hullMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.3 });
+        const hull = new THREE.Mesh(hullGeo, hullMat);
+        hull.position.y = 12;
+        hull.castShadow = true;
+        group.add(hull);
+        
+        const stripeGeo = new THREE.BoxGeometry(280, 4, 45.1);
+        const stripeMat = new THREE.MeshStandardMaterial({ color: 0xCC0000 });
+        const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+        stripe.position.y = 15;
+        group.add(stripe);
+        
+        for (let i = 0; i < 7; i++) {
+            const deckWidth = 42 - i * 1.5;
+            const deckHeight = 6;
+            const deckGeo = new THREE.BoxGeometry(280, deckHeight, deckWidth);
+            const deckMat = new THREE.MeshStandardMaterial({ color: 0xDDDDDD });
+            const deck = new THREE.Mesh(deckGeo, deckMat);
+            deck.position.set(0, 23 + i * 6.5, 0);
+            deck.castShadow = true;
+            group.add(deck);
+            
+            for (let side = -1; side <= 1; side += 2) {
+                for (let w = 0; w < 24; w++) {
+                    const windowGeo = new THREE.BoxGeometry(6, 3, 0.5);
+                    const windowMat = new THREE.MeshStandardMaterial({ 
+                        color: 0xFFFFAA, 
+                        emissive: 0xFFFFAA,
+                        emissiveIntensity: this.windowLightsOn ? 0.5 : 0
+                    });
+                    const windowMesh = new THREE.Mesh(windowGeo, windowMat);
+                    windowMesh.position.set(-120 + w * 10, 26 + i * 6.5, side * (deckWidth / 2 - 0.3));
+                    group.add(windowMesh);
+                }
+            }
+        }
+        
+        const bridgeGeo = new THREE.BoxGeometry(40, 18, 35);
+        const bridgeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+        const bridge = new THREE.Mesh(bridgeGeo, bridgeMat);
+        bridge.position.set(-90, 76, 0);
+        bridge.castShadow = true;
+        group.add(bridge);
+        
+        for (let i = 0; i < 3; i++) {
+            const stackHeight = 15 + i * 3;
+            const stackGeo = new THREE.CylinderGeometry(6, 8, stackHeight, 12);
+            const stackMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            const stack = new THREE.Mesh(stackGeo, stackMat);
+            stack.position.set(70 + i * 15, 61 + stackHeight / 2, 0);
+            group.add(stack);
+        }
+        
+        for (let side = -1; side <= 1; side += 2) {
+            for (let i = 0; i < 6; i++) {
+                const boatGeo = new THREE.BoxGeometry(12, 3, 5);
+                const boatMat = new THREE.MeshStandardMaterial({ color: 0xFF6600 });
+                const boat = new THREE.Mesh(boatGeo, boatMat);
+                boat.position.set(-80 + i * 40, 34.5, side * 18);
+                group.add(boat);
+            }
+        }
         
         return group;
     }
@@ -658,9 +714,6 @@ class BoatManager {
         // Create cruise ship 1500 feet above Oahu (~457m)
         const oahuPos = new THREE.Vector3(-6400, 457, -2800);
         const oahuShip = new CruiseShip(this.scene, oahuPos);
-        console.log('Cruise ship mesh:', oahuShip.mesh);
-        console.log('Cruise ship mesh position:', oahuShip.mesh.position);
-        console.log('Scene:', this.scene);
         this.cruiseShips.push(oahuShip);
         
         // Create UI marker for cruise ship (only if element exists)
@@ -837,9 +890,6 @@ class BoatManager {
             }
             
             const dist = camPos.distanceTo(boat.mesh.position);
-            if (boat instanceof CruiseShip) {
-                console.log('Cruise ship distance:', dist, 'maxDist:', this.boatMaxDist);
-            }
             if (dist > this.boatMaxDist) {
                 boat.mesh.visible = false;
                 return;
@@ -878,10 +928,6 @@ class BoatManager {
                 const uiMarker = boat.mesh.userData.uiMarker;
                 camera.updateMatrixWorld();
                 const screenPos = boat.mesh.position.clone().project(camera);
-                console.log('Cruise ship world pos:', boat.mesh.position);
-                console.log('Camera position:', camera.position);
-                console.log('Camera matrix world inverse:', camera.matrixWorldInverse);
-                console.log('Cruise ship screenPos:', screenPos);
                 
                 // Check if in front of camera
                 if (screenPos.z < 1) {
@@ -890,8 +936,6 @@ class BoatManager {
                     
                     const x = (screenPos.x + 1) / 2 * width;
                     const y = (1 - screenPos.y) / 2 * height;
-                    
-                    console.log('Cruise ship screen coords:', x, y);
                     
                     uiMarker.style.display = 'flex';
                     uiMarker.style.left = `${x}px`;
