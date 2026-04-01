@@ -711,8 +711,8 @@ class BoatManager {
         this.createPirateShips(15);
         // this.createCruiseShips(15);
         
-        // Create cruise ship 1000 feet above Oahu (~305m)
-        const oahuPos = new THREE.Vector3(-6400, 305, -2800);
+        // Create cruise ship 1500 feet above Oahu (~457m)
+        const oahuPos = new THREE.Vector3(-6400, 457, -2800);
         const oahuShip = new CruiseShip(this.scene, oahuPos);
         this.cruiseShips.push(oahuShip);
         
@@ -822,7 +822,7 @@ class BoatManager {
         
         return new THREE.Vector3(
             island.x + Math.cos(angle) * distance,
-            BOAT_WATER_LEVEL + 305,
+            BOAT_WATER_LEVEL + 457, // 1500 feet
             island.z + Math.sin(angle) * distance
         );
     }
