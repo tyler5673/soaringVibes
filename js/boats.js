@@ -866,13 +866,12 @@ class BoatManager {
                 boat.mesh.rotation.y = Math.atan2(direction.x, direction.z);
             }
             
-            boat.bobTimer += delta * 2;
-            boat.rockTimer += delta * 1.5;
-            
-            boat.mesh.position.y = BOAT_WATER_LEVEL + Math.sin(boat.bobTimer) * 0.3;
-            
-            boat.mesh.rotation.z = Math.sin(boat.rockTimer) * 0.05;
-boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
+            // Only update Y position and rotation for water boats, not cruise ship (which flies at altitude)
+            if (!(boat instanceof CruiseShip)) {
+                boat.mesh.position.y = BOAT_WATER_LEVEL + Math.sin(boat.bobTimer) * 0.3;
+                boat.mesh.rotation.z = Math.sin(boat.rockTimer) * 0.05;
+                boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
+            }
             
             // Update UI marker for cruise ship
             if (boat instanceof CruiseShip && boat.mesh.userData.uiMarker) {
