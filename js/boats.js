@@ -710,8 +710,9 @@ class BoatManager {
         this.createSpeedboats(45);
         this.createPirateShips(15);
         
-        const oahuShip = new CruiseShip(this.scene, new THREE.Vector3(-6400, BOAT_WATER_LEVEL, -2800));
+        const oahuShip = new CruiseShip(this.scene, new THREE.Vector3(-6400, BOAT_WATER_LEVEL + 15, -2800));
         this.cruiseShips.push(oahuShip);
+        console.log('Cruise ship created at:', oahuShip.mesh.position.clone());
         
         console.log('BoatManager: Created', 
             this.sailboats.length, 'sailboats,', 
