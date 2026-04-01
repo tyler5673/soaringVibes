@@ -1,6 +1,6 @@
 {
   "name": "soaring-vibes",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Browser-based flight simulator featuring Hawaiian islands",
   "main": "index.js",
   "directories": {
