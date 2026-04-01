@@ -715,16 +715,24 @@ class BoatManager {
         const oahuShip = new CruiseShip(this.scene, oahuPos);
         this.cruiseShips.push(oahuShip);
         
-        // Add debug marker (bright green sphere) to mark Oahu center
-        const debugMarker = new THREE.Mesh(
-            new THREE.SphereGeometry(50, 16, 16),
-            new THREE.MeshBasicMaterial({ color: 0x00FF00, wireframe: true })
-        );
-        debugMarker.position.set(-6400, BOAT_WATER_LEVEL + 200, -2800);
-        this.scene.add(debugMarker);
+        // Create UI marker for cruise ship
+        const uiMarker = document.getElementById('cruise-ship-marker');
+        if (uiMarker) {
+            uiMarker.style.cssText = `
+                position: fixed;
+                font-size: 40px;
+                pointer-events: none;
+                z-index: 1001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+            `;
+            uiMarker.textContent = '🚢';
+            oahuShip.userData.uiMarker = uiMarker;
+        }
         
         console.log('Cruise ship created at:', oahuShip.mesh.position.clone());
-        console.log('Oahu center marker at:', debugMarker.position.clone());
         
         console.log('BoatManager: Created', 
             this.sailboats.length, 'sailboats,', 

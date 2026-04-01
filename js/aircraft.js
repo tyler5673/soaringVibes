@@ -21,6 +21,7 @@ class Aircraft {
         this.ias = 0;
         this.groundSpeed = 0;
         this.crashed = false;
+        this.abbyMode = false;
         
         this.propeller = null;
         this.leftFlap = null;
@@ -867,6 +868,9 @@ var spinnerStripeBottom = new THREE.Mesh(
     
     checkCrash() {
         if (this.crashed) return true;
+        
+        // Abby Mode: skip collision entirely
+        if (this.abbyMode) return false;
         
         // Get terrain height at current position
         // This now returns the actual mesh vertex height (scaled by 0.15)
