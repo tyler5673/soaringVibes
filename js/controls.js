@@ -6,8 +6,8 @@ let scrollDelta = 0;
 // Touch input state
 const touchInput = {
     rightStick: { x: 0, y: 0, active: false },
-    throttle: 0.5, // 0 to 1, set by slider position (default matches aircraft idle)
-    yaw: 0, // -1 to 1 for rudder slider (center = 0)
+    yaw: 0, // -1 to 1 for rudder (center = 0)
+    throttle: 0.5, // 0 to 1, default = center position (50%)
     reset: false
 };
 
