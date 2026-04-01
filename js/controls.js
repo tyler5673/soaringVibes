@@ -367,6 +367,10 @@ function initControls() {
     });
     
     window.addEventListener('wheel', (e) => {
+        // Allow scrolling in settings modal
+        if (e.target.closest('.settings-container')) {
+            return;
+        }
         scrollDelta += e.deltaY;
         if (Math.abs(scrollDelta) > 10000) scrollDelta = 0;
         e.preventDefault();

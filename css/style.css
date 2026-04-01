@@ -1367,8 +1367,25 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     max-width: 90%;
     max-height: 85vh;
     overflow-y: auto;
+    overflow-x: hidden;
     box-shadow: 0 8px 32px var(--shadow-md), 0 0 40px var(--color-primary-glow-subtle);
     position: relative;
+}
+
+/* Custom scrollbar for settings */
+.settings-container::-webkit-scrollbar {
+    width: 8px;
+}
+.settings-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+.settings-container::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 4px;
+}
+.settings-container::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
 }
 
 .settings-close-btn {
