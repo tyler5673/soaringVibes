@@ -663,12 +663,13 @@ function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, island
         
         if (!isPointOnIsland(worldX, worldZ, islandName)) continue;
         
-        const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
+        const terrainWorldY = getTerrainHeight(worldX, worldZ);
+        const terrainMeshY = getTerrainMeshHeight(worldX, worldZ, islandName);
         
         // Lighthouse should be on beach (above water level, low elevation)
         // Require more clearance above water to avoid being submerged
         const minBeachElevation = WATER_LEVEL + 8;
-        if (terrainY >= minBeachElevation && terrainY < 20) {
+        if (terrainWorldY >= minBeachElevation && terrainWorldY < 70) {
             // Check distance from other lighthouses
             let tooClose = false;
             for (const existing of lighthouses) {
@@ -682,7 +683,7 @@ function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, island
             
             if (!tooClose) {
                 const lighthouse = LighthouseGeometry.getGeometry('high');
-                lighthouse.position.set(worldX - islandWorldX, terrainY, worldZ - islandWorldZ);
+                lighthouse.position.set(worldX - islandWorldX, terrainMeshY, worldZ - islandWorldZ);
                 lighthouse.rotation.y = Math.random() * Math.PI * 2;
                 islandGroup.add(lighthouse);
                 lighthouses.push({ x: worldX, z: worldZ });
