@@ -729,7 +729,7 @@ class BoatManager {
                 filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
             `;
             uiMarker.textContent = '🚢';
-            oahuShip.userData.uiMarker = uiMarker;
+            oahuShip.mesh.userData.uiMarker = uiMarker;
         } else if (!uiMarker) {
             console.warn('Cruise ship marker element not found in DOM');
         }
@@ -923,8 +923,8 @@ class BoatManager {
 boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
             
             // Update UI marker for cruise ship
-            if (boat instanceof CruiseShip && boat.userData.uiMarker) {
-                const uiMarker = boat.userData.uiMarker;
+            if (boat instanceof CruiseShip && boat.mesh.userData.uiMarker) {
+                const uiMarker = boat.mesh.userData.uiMarker;
                 const screenPos = boat.mesh.position.clone().project(camera);
                 
                 // Check if in front of camera
