@@ -182,6 +182,17 @@ function initTouchControls() {
     }
 }
 
+function applySoftCurve(value) {
+    const absVal = Math.abs(value);
+    if (absVal <= 0.5) {
+        return value * 0.3;
+    } else {
+        const t = (absVal - 0.5) / 0.5;
+        const curved = 0.3 + t * 0.7;
+        return value < 0 ? -curved : curved;
+    }
+}
+
 function updateStick(stickElement, touch, startPos, stickData) {
     const maxDistance = 40;
     const dx = touch.clientX - startPos.x;
@@ -195,9 +206,11 @@ function updateStick(stickElement, touch, startPos, stickData) {
     stickElement.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
     
     // Normalize to -1 to 1 range
-    stickData.x = moveX / maxDistance;
-    // Reverse Y: push up (negative screen Y) = positive output (nose down), pull down = negative (nose up)
-    stickData.y = -moveY / maxDistance;
+    let normalizedX = moveX / maxDistance;
+    let normalizedY = -moveY / maxDistance;
+    
+    stickData.x = applySoftCurve(normalizedX);
+    stickData.y = applySoftCurve(normalizedY);
 }
 
 // Touch camera state

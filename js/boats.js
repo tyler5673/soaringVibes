@@ -710,9 +710,21 @@ class BoatManager {
         this.createSpeedboats(45);
         this.createPirateShips(15);
         
-        const oahuShip = new CruiseShip(this.scene, new THREE.Vector3(-6400, BOAT_WATER_LEVEL + 15, -2800));
+        // Create cruise ship above Oahu
+        const oahuPos = new THREE.Vector3(-6400, BOAT_WATER_LEVEL + 20, -2800);
+        const oahuShip = new CruiseShip(this.scene, oahuPos);
         this.cruiseShips.push(oahuShip);
+        
+        // Add debug marker (bright green sphere) to mark Oahu center
+        const debugMarker = new THREE.Mesh(
+            new THREE.SphereGeometry(50, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0x00FF00, wireframe: true })
+        );
+        debugMarker.position.set(-6400, BOAT_WATER_LEVEL + 200, -2800);
+        this.scene.add(debugMarker);
+        
         console.log('Cruise ship created at:', oahuShip.mesh.position.clone());
+        console.log('Oahu center marker at:', debugMarker.position.clone());
         
         console.log('BoatManager: Created', 
             this.sailboats.length, 'sailboats,', 
