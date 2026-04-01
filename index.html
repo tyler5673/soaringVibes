@@ -1432,6 +1432,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     main: selectedMainColor,
                     highlight: selectedHighlightColor
                 });
+                window.aircraft = aircraft;
             scene.add(aircraft.mesh);
             
             orbitCamera = new OrbitCamera(camera, aircraft);
