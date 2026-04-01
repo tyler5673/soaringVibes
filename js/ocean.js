@@ -195,6 +195,9 @@ class OceanManager {
     const waterLevel = window.WATER_LEVEL || typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2;
     this.waterLevel = waterLevel;
     
+    // Create infinite opaque yellow floor 50 feet below ocean
+    this.createOceanFloor(waterLevel);
+    
     // Detect mobile devices and use lighter LOD settings
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
@@ -226,7 +229,11 @@ class OceanManager {
       flatShading: false,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.95
+      opacity: 0.6175,
+      depthWrite: true,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1
     });
     
     for (const config of configs) {
@@ -254,6 +261,33 @@ class OceanManager {
     console.log('[Ocean] Total rings created:', this.rings.length);
   }
   
+  createOceanFloor(waterY) {
+    const floorY = waterY - 50 * 0.3048; // 50 feet below ocean in meters
+    
+    this.oceanFloorTiles = [];
+    this.oceanFloorTileSize = 2000;
+    this.oceanFloorGridSize = 10; // 10x10 grid = 20,000m coverage
+    
+    const geometry = new THREE.PlaneGeometry(this.oceanFloorTileSize, this.oceanFloorTileSize);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xE8D4A8,
+      transparent: false,
+      side: THREE.DoubleSide,
+      depthWrite: true
+    });
+    
+    for (let x = 0; x < this.oceanFloorGridSize; x++) {
+      for (let z = 0; z < this.oceanFloorGridSize; z++) {
+        const tile = new THREE.Mesh(geometry, material.clone());
+        tile.rotation.x = -Math.PI / 2;
+        tile.position.y = floorY;
+        tile.renderOrder = -1;
+        this.scene.add(tile);
+        this.oceanFloorTiles.push(tile);
+      }
+    }
+  }
+  
   update(deltaTime) {
     // Update wave time
     this.waveSystem.update(deltaTime);
@@ -275,6 +309,23 @@ class OceanManager {
         for (const ring of this.rings) {
           ring.mesh.position.x = snapX;
           ring.mesh.position.z = snapZ;
+        }
+        
+        // Move ocean floor tiles to follow camera
+        if (this.oceanFloorTiles && this.oceanFloorTiles.length > 0) {
+          const halfGrid = Math.floor(this.oceanFloorGridSize / 2);
+          const tileSize = this.oceanFloorTileSize;
+          let tileIndex = 0;
+          
+          for (let gx = -halfGrid; gx < halfGrid; gx++) {
+            for (let gz = -halfGrid; gz < halfGrid; gz++) {
+              if (tileIndex < this.oceanFloorTiles.length) {
+                this.oceanFloorTiles[tileIndex].position.x = snapX + gx * tileSize;
+                this.oceanFloorTiles[tileIndex].position.z = snapZ + gz * tileSize;
+                tileIndex++;
+              }
+            }
+          }
         }
         
         this.lastCameraPos.set(camX, this.camera.position.y, camZ);
