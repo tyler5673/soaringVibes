@@ -80,12 +80,13 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     }
 }
 
+/* Top buttons area - unused now but kept for potential future use */
 #top-buttons {
     position: absolute;
     top: 20px;
     right: 20px;
     z-index: 1001;
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 10px;
     align-items: flex-end;
@@ -673,6 +674,13 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+#loading-bottom-left #kofi-button img {
+    width: 150px;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+}
+#loading-bottom-left #kofi-button:hover img {
+    transform: scale(1.05);
 }
 #loading-top-left {
     position: absolute;

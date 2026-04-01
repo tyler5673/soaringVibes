@@ -197,7 +197,7 @@ class BuildingManager {
                     skipped.terrain++;
                     continue;
                 }
-                if (terrainY <= 2 + 5) {
+                if (terrainY <= (window.WATER_LEVEL || 2) + 10) {
                     skipped.water++;
                     continue;
                 }

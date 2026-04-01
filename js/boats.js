@@ -709,32 +709,33 @@ class BoatManager {
         this.createSailboats(105);
         this.createSpeedboats(45);
         this.createPirateShips(15);
+        // this.createCruiseShips(15);
         
-        // Create cruise ship above Oahu
-        const oahuPos = new THREE.Vector3(-6400, BOAT_WATER_LEVEL + 20, -2800);
-        const oahuShip = new CruiseShip(this.scene, oahuPos);
-        this.cruiseShips.push(oahuShip);
+        // Create cruise ship above Oahu (position so hull bottom sits at water level)
+        // const oahuPos = new THREE.Vector3(-6400, 0, -2800);
+        // const oahuShip = new CruiseShip(this.scene, oahuPos);
+        // this.cruiseShips.push(oahuShip);
         
         // Create UI marker for cruise ship (only if element exists)
-        const uiMarker = document.getElementById('cruise-ship-marker');
-        if (uiMarker && oahuShip) {
-            uiMarker.style.cssText = `
-                position: fixed;
-                font-size: 40px;
-                pointer-events: none;
-                z-index: 1001;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
-            `;
-            uiMarker.textContent = '🚢';
-            oahuShip.mesh.userData.uiMarker = uiMarker;
-        } else if (!uiMarker) {
-            console.warn('Cruise ship marker element not found in DOM');
-        }
+        // const uiMarker = document.getElementById('cruise-ship-marker');
+        // if (uimarker && oahuship) {
+        //     uiMarker.style.cssText = `
+        //         position: fixed;
+        //         font-size: 40px;
+        //         pointer-events: none;
+        //         z-index: 1001;
+        //         display: flex;
+        //         align-items: center;
+        //         justify-content: center;
+        //         filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+        //     `;
+        //     uiMarker.textContent = '🚢';
+        //     oahuShip.mesh.userData.uiMarker = uiMarker;
+        // } else if (!uiMarker) {
+        //     console.warn('Cruise ship marker element not found in DOM');
+        // }
         
-        console.log('Cruise ship created at:', oahuShip.mesh.position.clone());
+        // console.log('Cruise ship created at:', oahuShip.mesh.position.clone());
         
         console.log('BoatManager: Created', 
             this.sailboats.length, 'sailboats,', 
@@ -821,7 +822,7 @@ class BoatManager {
         
         return new THREE.Vector3(
             island.x + Math.cos(angle) * distance,
-            BOAT_WATER_LEVEL,
+            BOAT_WATER_LEVEL + 305,
             island.z + Math.sin(angle) * distance
         );
     }
@@ -844,7 +845,8 @@ class BoatManager {
         
         let newTarget;
         if (boat instanceof CruiseShip) {
-            newTarget = this.getCruiseShipPosition();
+            // newTarget = this.getCruiseShipPosition();
+            newTarget = this.getCoastalPosition();
         } else if (boat instanceof PirateShip) {
             newTarget = this.getCoastalPosition();
         } else if (isCoastal) {

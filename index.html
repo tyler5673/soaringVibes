@@ -16,11 +16,11 @@
             <div class="cloud"></div>
             <div class="cloud"></div>
         </div>
-        <div id="top-buttons">
-            <a href="https://ko-fi.com/tylereastman" target="_blank" id="kofi-button">
-                <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
-            </a>
-        </div>
+            <div id="loading-bottom-left">
+                <a href="https://ko-fi.com/tylereastman" target="_blank" id="kofi-button">
+                    <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
+                </a>
+            </div>
         
         <div id="loading-content">
             <img src="assets/images/logo.png" id="loading-logo" alt="Soaring Vibes">
@@ -217,6 +217,32 @@
                     <div class="setting-control">
                         <input type="range" id="boats-density-slider" min="0" max="200" value="100" step="5">
                         <span id="boats-density-value" class="setting-value">100%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section" id="balloons-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Hot Air Balloons</h3>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="balloons-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="balloons-distance-slider">Distance</label>
+                    <div class="setting-control">
+                        <input type="range" id="balloons-distance-slider" min="1000" max="20000" value="10000" step="500">
+                        <span id="balloons-distance-value" class="setting-value">10000m</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="balloons-density-slider">Count</label>
+                    <div class="setting-control">
+                        <input type="range" id="balloons-density-slider" min="0" max="200" value="100" step="5">
+                        <span id="balloons-density-value" class="setting-value">100%</span>
                     </div>
                 </div>
             </div>
@@ -1037,6 +1063,7 @@ document.addEventListener('DOMContentLoaded', function() {
         syncSectionState(faunaSection, faunaToggle, fm2, 'enabled');
         syncSectionState(cloudSection, cloudToggle, cs, 'enabled');
         syncSectionState(boatsSection, boatsToggle, window.boatManager, 'enabled');
+        syncSectionState(balloonsSection, balloonsToggle, window.balloonSystem, 'enabled');
         
         if (fm) {
             vegDistSlider.value = fm.treeMaxDist;
@@ -1073,6 +1100,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalBoats = boatMgr.sailboats.length + boatMgr.speedboats.length + boatMgr.pirateShips.length + boatMgr.cruiseShips.length;
             const visibleCount = Math.floor(totalBoats * boatMgr.densityMultiplier);
             boatsDensityValue.textContent = Math.round(boatMgr.densityMultiplier * 100) + '% (' + visibleCount + ')';
+        }
+        
+        const balloonSys = window.balloonSystem;
+        if (balloonSys) {
+            balloonsDistSlider.value = balloonSys.maxDrawDist;
+            balloonsDistValue.textContent = balloonSys.maxDrawDist + 'm';
+            balloonsDensitySlider.value = Math.round(balloonSys.densityMultiplier * 100);
+            balloonsDensityValue.textContent = Math.round(balloonSys.densityMultiplier * 100) + '%';
         }
     }
     
@@ -1208,6 +1243,39 @@ document.addEventListener('DOMContentLoaded', function() {
         boatsDistValue.textContent = val + 'm';
         if (window.boatManager) {
             window.boatManager.boatMaxDist = val;
+        }
+    });
+    
+    // Balloons toggle
+    const balloonsToggle = document.getElementById('balloons-toggle');
+    const balloonsSection = document.getElementById('balloons-section');
+    balloonsToggle.addEventListener('change', function() {
+        const enabled = this.checked;
+        balloonsSection.classList.toggle('disabled', !enabled);
+        if (window.balloonSystem) {
+            window.balloonSystem.enabled = enabled;
+        }
+    });
+    
+    // Balloons draw distance
+    const balloonsDistSlider = document.getElementById('balloons-distance-slider');
+    const balloonsDistValue = document.getElementById('balloons-distance-value');
+    balloonsDistSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        balloonsDistValue.textContent = val + 'm';
+        if (window.balloonSystem) {
+            window.balloonSystem.maxDrawDist = val;
+        }
+    });
+    
+    // Balloons density
+    const balloonsDensitySlider = document.getElementById('balloons-density-slider');
+    const balloonsDensityValue = document.getElementById('balloons-density-value');
+    balloonsDensitySlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        balloonsDensityValue.textContent = val + '%';
+        if (window.balloonSystem) {
+            window.balloonSystem.densityMultiplier = val / 100;
         }
     });
     

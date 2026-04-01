@@ -144,7 +144,7 @@ function getTerrainHeight(worldX, worldZ) {
         return height;
     }
     
-    return -50; // Return ocean level when not on any island
+    return WATER_LEVEL - 10; // Return below water level when not on any island (allows going underwater in abby mode)
 }
 
 function createIslandFromHeightmap(scene, islandName, worldX, worldZ, options = {}) {
@@ -420,7 +420,8 @@ function isPointOnIsland(worldX, worldZ, islandName) {
     
     const normalizedHeight = getHeightFromData(data, 1024, 1024, imgX, imgY) / 255;
     
-    return normalizedHeight >= 0.05;
+    // Also require terrain to be above water level (not submerged)
+    return normalizedHeight >= 0.05 && getTerrainMeshHeight(worldX, worldZ, islandName) > WATER_LEVEL + 1;
 }
 
 function getTerrainMeshHeight(worldX, worldZ, islandName) {
@@ -621,26 +622,9 @@ function addRocks(group, scale, islandRadius, islandName) {
     }
 }
 
-async function loadAirportPositions() {
-    const airportMap = {};
-    
-    for (const island of islandPositions) {
-        try {
-            const airports = await parseAirportMap(island.name);
-            airportMap[island.name] = airports;
-            console.log(`Loaded ${airports.length} airports for ${island.name}`);
-        } catch (e) {
-            console.warn(`No airport map for ${island.name}:`, e.message);
-            airportMap[island.name] = [];
-        }
-    }
-    
-    return airportMap;
-}
-
 const islandPositions = [
-    { name: 'maui', x: 0, z: 0, hasAirport: true, airports: [], worldScale: 0.08, bounds: { north: 21.031, south: 20.574, east: -155.979, west: -156.697 } },
-    { name: 'big-island', x: 3200, z: -6400, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 20.310, south: 18.861, east: -154.756, west: -156.124 } },
+    { name: 'maui', x: 0, z: 0, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 21.031, south: 20.574, east: -155.979, west: -156.697 } },
+    { name: 'big-island', x: 3200, z: -6400, hasAirport: true, airports: [], worldScale: 0.08, bounds: { north: 20.310, south: 18.861, east: -154.756, west: -156.124 } },
     { name: 'oahu', x: -6400, z: -2800, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 21.712, south: 21.254, east: -157.648, west: -158.280 } },
     { name: 'kauai', x: -12000, z: -4000, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 22.238, south: 21.855, east: -159.281, west: -159.798 } },
     { name: 'molokai', x: -1400, z: -3600, hasAirport: false, airports: [], worldScale: 0.08, bounds: { north: 21.224, south: 21.046, east: -156.709, west: -157.310 } },
@@ -678,8 +662,10 @@ function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, island
         
         const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
         
-        // Lighthouse should be near water (low elevation but not underwater)
-        if (terrainY > 2 + 2 && terrainY < 15) {
+        // Lighthouse should be on beach (above water level, low elevation)
+        // Require more clearance above water to avoid being submerged
+        const minBeachElevation = WATER_LEVEL + 8;
+        if (terrainY >= minBeachElevation && terrainY < 20) {
             // Check distance from other lighthouses
             let tooClose = false;
             for (const existing of lighthouses) {
@@ -705,13 +691,6 @@ function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, island
 }
 
 async function createAllIslands(scene, onProgress) {
-    console.log('Loading airport positions...');
-    const airportPositions = await loadAirportPositions();
-    
-    for (const island of islandPositions) {
-        island.airports = airportPositions[island.name] || [];
-    }
-    
     const total = islandPositions.length;
     let loaded = 0;
     
@@ -750,39 +729,17 @@ async function createAllIslands(scene, onProgress) {
         console.warn('No window.camera available, FloraManager not created');
     }
 
-    // Create airports for all islands
-    console.log('Creating airports...');
-    for (const { island: islandGroup, info } of results) {
-        if (!info.airports || info.airports.length === 0) {
-            console.log(`No airports found for ${info.name}`);
-            continue;
-        }
-        
-        for (const airport of info.airports) {
-            const meta = islandMetadataCache[info.name];
-            if (!meta) {
-                console.warn(`No metadata for ${info.name}, skipping airport`);
-                continue;
-            }
-            
-            const terrainWidth = meta.worldWidth * info.worldScale;
-            const terrainHeight = meta.worldHeight * info.worldScale;
-            
-            const u = airport.x / 1023;
-            const v = 1 - (airport.y / 1023);
-            
-            const localX = (u - 0.5) * terrainWidth;
-            const localZ = (v - 0.5) * terrainHeight;
-            
-            const worldX = info.x + localX;
-            const worldZ = info.z + localZ;
-            
-            const isLarge = ['maui', 'oahu', 'kauai', 'big-island'].includes(info.name);
-            
-            const terrainY = getTerrainHeight(worldX, worldZ);
-            
-            createAirport(scene, worldX, worldZ, islandGroup, { isLarge });
-            console.log(`Created ${isLarge ? 'large' : 'small'} airport on ${info.name} at`, { worldX, worldZ, terrainY });
+    // Create airport on highest point of Big Island (Mauna Kea area)
+    if (window.camera) {
+        console.log('Creating airport on Big Island...');
+        const bigIslandResult = results.find(r => r.info.name === 'big-island');
+        if (bigIslandResult) {
+            const { island: islandGroup } = bigIslandResult;
+            // Hardcoded highest point coordinates from heightmap analysis
+            const AIRPORT_X = 2321.76;
+            const AIRPORT_Z = -6080.15;
+            createAirport(scene, AIRPORT_X, AIRPORT_Z, islandGroup, { isLarge: true });
+            console.log(`Created large airport on Big Island at`, { x: AIRPORT_X, z: AIRPORT_Z, y: 580 });
         }
     }
 

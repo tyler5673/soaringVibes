@@ -338,10 +338,15 @@ class HotAirBalloonSystem {
         this.balloons = [];
         
         // Spawning configuration
-        this.maxBalloons = 16;
+        this.maxBalloons = 30;
         this.spawnRadius = 8000;
         this.altitudeMin = 400;
         this.altitudeMax = 1200;
+        
+        // Draw distance and density
+        this.maxDrawDist = 10000;
+        this.densityMultiplier = 1.0;
+        this.enabled = true;
         
         // Wind pattern (trade winds)
         this.windDirection = new THREE.Vector3(-0.8, 0, -0.2).normalize();
@@ -394,22 +399,42 @@ class HotAirBalloonSystem {
     }
     
     update(delta) {
+        if (!this.enabled) {
+            this.balloons.forEach(b => {
+                if (b.mesh) b.mesh.visible = false;
+            });
+            return;
+        }
+        
+        const effectiveMaxDist = this.maxDrawDist;
+        
         // Update all balloons
         this.balloons.forEach((balloon, index) => {
+            // Apply density multiplier - hide some balloons based on index
+            if (this.densityMultiplier < 1.0) {
+                const shouldShow = (index + 1) / this.balloons.length <= this.densityMultiplier;
+                balloon.mesh.visible = shouldShow;
+            } else {
+                balloon.mesh.visible = true;
+            }
+            
+            if (!balloon.mesh.visible) return;
+            
             balloon.update(delta, this.windDirection, this.windSpeed);
             
             // Check if balloon is too far from camera
             if (this.camera) {
                 const dist = balloon.mesh.position.distanceTo(this.camera.position);
-                if (dist > 10000) {
+                if (dist > effectiveMaxDist) {
                     // Reposition near camera
                     balloon.mesh.position.copy(this.getRespawnPosition());
                 }
             }
         });
         
-        // Maintain balloon count
-        if (this.balloons.length < this.maxBalloons && Math.random() < 0.02) {
+        // Maintain balloon count based on density multiplier
+        const targetCount = Math.floor(this.maxBalloons * this.densityMultiplier);
+        if (this.balloons.length < targetCount && Math.random() < 0.02) {
             this.spawnBalloon(true);
         }
     }
