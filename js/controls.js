@@ -24,11 +24,6 @@ function isTouchDevice() {
            navigator.maxTouchPoints > 0;
 }
 
-// Helper function for clamping values
-function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-}
-
 // Initialize touch controls
 function initTouchControls() {
     if (!isTouchDevice()) return;
@@ -125,8 +120,8 @@ function initTouchControls() {
             touchInput.throttle = clamp(0.5 - (normalizedY * 0.5), 0, 1);
 
             // Use percentage-based positioning with centering transform preserved
-            const stickLeftPct = 50 + (normalizedX * 50);  // -1→0%, 0→50%, +1→100%
-            const stickTopPct = 50 - (normalizedY * 50);   // inverted: -1(top)→100%, +1(bottom)→0%
+            const stickLeftPct = 50 + (normalizedX * 50);
+            const stickTopPct = 50 + (normalizedY * 50);
 
             throttleRudderStick.style.left = stickLeftPct + '%';
             throttleRudderStick.style.top = stickTopPct + '%';
@@ -168,59 +163,6 @@ function initTouchControls() {
 
         throttleRudderZone.addEventListener('touchend', resetYawToCenter);
         throttleRudderZone.addEventListener('touchcancel', resetYawToCenter);
-    }
-    
-    if (throttleZone && throttleHandle) {
-        const updateThrottleFromPosition = (clientY) => {
-            if (!throttleTrackRect) {
-                const track = throttleZone.querySelector('.throttle-track');
-                if (track) throttleTrackRect = track.getBoundingClientRect();
-            }
-            if (!throttleTrackRect) return;
-            
-            const trackHeight = throttleTrackRect.height - 60; // minus handle height
-            const relativeY = throttleTrackRect.bottom - clientY - 30; // offset for handle center
-            const percentage = Math.max(0, Math.min(1, relativeY / trackHeight));
-            
-            touchInput.throttle = percentage;
-            const handlePos = percentage * trackHeight;
-            throttleHandle.style.bottom = handlePos + 'px';
-        };
-        
-        throttleZone.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const track = throttleZone.querySelector('.throttle-track');
-            if (track) throttleTrackRect = track.getBoundingClientRect();
-            
-            const touch = e.changedTouches[0];
-            throttleTouchId = touch.identifier;
-            updateThrottleFromPosition(touch.clientY);
-        }, { passive: false });
-        
-        throttleZone.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === throttleTouchId) {
-                    updateThrottleFromPosition(e.changedTouches[i].clientY);
-                    break;
-                }
-            }
-        }, { passive: false });
-        
-        throttleZone.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === throttleTouchId) {
-                    throttleTouchId = null;
-                    break;
-                }
-            }
-        }, { passive: false });
-        
-        throttleZone.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            throttleTouchId = null;
-        }, { passive: false });
     }
     
     // Reset button

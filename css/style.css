@@ -842,7 +842,7 @@ body { overflow: hidden; background: var(--color-bg-dark); }
 
 #right-stick-zone {
     right: 20px;
-    bottom: 100px;
+    bottom: 20px;
 }
 
 .touch-stick {
@@ -1127,7 +1127,7 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     .touch-zone {
         width: 180px;
         height: 180px;
-        bottom: 80px !important;
+        bottom: 40px !important;
     }
     
     .touch-stick {
