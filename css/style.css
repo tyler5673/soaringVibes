@@ -1572,3 +1572,30 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     min-width: 50px;
     text-align: right;
 }
+
+.setting-control select.setting-select {
+    background: #2a2a4e;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    cursor: pointer;
+    outline: none;
+    min-width: 160px;
+}
+
+.setting-control select.setting-select:hover {
+    border-color: #4fc3f7;
+}
+
+.setting-control select.setting-select:focus {
+    border-color: #4fc3f7;
+    box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.25);
+}
+
+.setting-control select.setting-select option {
+    background: #1e1e3a;
+    color: #fff;
+}

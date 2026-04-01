@@ -256,6 +256,22 @@
                     </label>
                 </div>
             </div>
+
+            <div class="settings-section" id="wireframe-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Render Mode</h3>
+                </div>
+                <div class="setting-row">
+                    <label for="wireframe-select">Display</label>
+                    <div class="setting-control">
+                        <select id="wireframe-select" class="setting-select">
+                            <option value="normal">Normal</option>
+                            <option value="overlay">Normal + Wireframe</option>
+                            <option value="wireframe">Wireframe Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -1305,6 +1321,195 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // ========== WIREFRAME RENDER MODE ==========
+    const wireframeSelect = document.getElementById('wireframe-select');
+    const wireframeSection = document.getElementById('wireframe-section');
+    var wireframeOverlayGroup = null;
+    
+    function applyWireframeMode(mode) {
+        var isWireframeOnly = mode === 'wireframe';
+        var isOverlay = mode === 'overlay';
+        
+        function setWireframe(obj, enabled) {
+            if (obj && obj.traverse) {
+                obj.traverse(function(child) {
+                    if (child.isMesh && child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(function(mat) {
+                                mat.wireframe = enabled;
+                            });
+                        } else {
+                            child.material.wireframe = enabled;
+                        }
+                    }
+                });
+            }
+        }
+        
+        function removeOverlays() {
+            if (wireframeOverlayGroup) {
+                if (wireframeOverlayGroup.parent) {
+                    wireframeOverlayGroup.parent.remove(wireframeOverlayGroup);
+                }
+                wireframeOverlayGroup.traverse(function(c) {
+                    if (c.geometry) c.geometry.dispose();
+                    if (c.material) c.material.dispose();
+                });
+            }
+            wireframeOverlayGroup = null;
+        }
+        
+        function addOverlayWireframes(obj) {
+            if (!obj || !obj.traverse) return;
+            if (!wireframeOverlayGroup) {
+                wireframeOverlayGroup = new THREE.Group();
+                wireframeOverlayGroup.name = 'wireframe-overlays';
+                wireframeOverlayGroup.renderOrder = 999;
+                if (typeof scene !== 'undefined' && scene) {
+                    scene.add(wireframeOverlayGroup);
+                }
+            }
+            
+            obj.traverse(function(child) {
+                if (!child.isMesh || !child.geometry) return;
+                var overlayMat = new THREE.MeshBasicMaterial({
+                    color: 0xbf40ff,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.6,
+                    depthTest: true,
+                    depthWrite: false
+                });
+                var overlayMesh = new THREE.Mesh(child.geometry, overlayMat);
+                overlayMesh.renderOrder = 999;
+                child.updateWorldMatrix(true, false);
+                overlayMesh.matrix.copy(child.matrixWorld);
+                overlayMesh.matrixAutoUpdate = false;
+                wireframeOverlayGroup.add(overlayMesh);
+            });
+        }
+        
+        removeOverlays();
+        
+        // Aircraft
+        if (window.aircraft && window.aircraft.mesh) {
+            setWireframe(window.aircraft.mesh, isWireframeOnly);
+            if (isOverlay) addOverlayWireframes(window.aircraft.mesh);
+        }
+        
+        // Multiplayer aircraft
+        if (window.multiplayer && window.multiplayer.otherPlayers) {
+            window.multiplayer.otherPlayers.forEach(function(mesh) {
+                if (mesh) {
+                    setWireframe(mesh, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(mesh);
+                }
+            });
+        }
+        
+        // Island terrain meshes
+        if (window.islandGroups) {
+            window.islandGroups.forEach(function(group) {
+                if (group) {
+                    setWireframe(group, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(group);
+                }
+            });
+        }
+        
+        // Ocean
+        if (window.oceanManager && window.oceanManager.rings) {
+            window.oceanManager.rings.forEach(function(ring) {
+                if (ring && ring.mesh) {
+                    setWireframe(ring.mesh, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(ring.mesh);
+                }
+            });
+        }
+        if (window.oceanManager && window.oceanManager.oceanFloorTiles) {
+            window.oceanManager.oceanFloorTiles.forEach(function(tile) {
+                if (tile) {
+                    setWireframe(tile, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(tile);
+                }
+            });
+        }
+        
+        // Clouds
+        if (window.cloudSystem && window.cloudSystem.clouds) {
+            window.cloudSystem.clouds.forEach(function(cloud) {
+                if (cloud) {
+                    setWireframe(cloud, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(cloud);
+                }
+            });
+        }
+        
+        // Buildings
+        if (window.buildingManager && window.buildingManager.allBuildings) {
+            window.buildingManager.allBuildings.forEach(function(b) {
+                if (b && b.mesh) {
+                    setWireframe(b.mesh, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(b.mesh);
+                }
+            });
+        }
+        
+        // Flora
+        if (window.floraManager && window.floraManager.allTrees) {
+            window.floraManager.allTrees.forEach(function(tree) {
+                if (tree && tree.mesh) {
+                    setWireframe(tree.mesh, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(tree.mesh);
+                }
+            });
+        }
+        
+        // Fauna
+        if (window.faunaManager && window.faunaManager.animals) {
+            window.faunaManager.animals.forEach(function(animal) {
+                if (animal && animal.mesh) {
+                    setWireframe(animal.mesh, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(animal.mesh);
+                }
+            });
+        }
+        
+        // Boats
+        if (window.boatManager) {
+            var boatArrays = [
+                window.boatManager.sailboats,
+                window.boatManager.speedboats,
+                window.boatManager.pirateShips,
+                window.boatManager.cruiseShips
+            ];
+            boatArrays.forEach(function(arr) {
+                if (arr) {
+                    arr.forEach(function(boat) {
+                        if (boat && boat.mesh) {
+                            setWireframe(boat.mesh, isWireframeOnly);
+                            if (isOverlay) addOverlayWireframes(boat.mesh);
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Hot air balloons
+        if (window.balloonSystem && window.balloonSystem.balloons) {
+            window.balloonSystem.balloons.forEach(function(balloon) {
+                if (balloon && balloon.mesh) {
+                    setWireframe(balloon.mesh, isWireframeOnly);
+                    if (isOverlay) addOverlayWireframes(balloon.mesh);
+                }
+            });
+        }
+    }
+    
+    wireframeSelect.addEventListener('change', function() {
+        applyWireframeMode(this.value);
+    });
+    
     // C key opens settings
     window.addEventListener('keydown', function(e) {
         if (e.code === 'KeyC' && !e.ctrlKey && !e.metaKey) {
@@ -1464,7 +1669,8 @@ document.addEventListener('DOMContentLoaded', function() {
             updateLoading(10);
             createAllIslands(scene, (progress) => {
                 updateLoading(10 + Math.round(progress * 0.8));
-            }).then(() => {
+            }).then((islandGroups) => {
+                window.islandGroups = islandGroups;
                 updateLoading(90);
                 
                 // Set aircraft to random start position near an island
