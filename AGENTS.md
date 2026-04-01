@@ -20,45 +20,50 @@ Browser-based flight simulator using Three.js featuring the Hawaiian islands. Ru
 ## File Structure
 ```
 soaringVibes/
-├── index.html              # Main entry point
-├── package.json            # Dependencies (sharp, utm)
-├── AGENTS.md               # This file
-├── css/style.css           # Styling including loading screen
+├── index.html                 # Main entry point
+├── package.json               # Dependencies (jest, jsdom for testing)
+├── AGENTS.md                  # This file
+├── css/style.css              # Styling including loading screen
 ├── js/
-│   ├── utils.js            # Utility functions
-│   ├── controls.js         # Input handling (keyboard, touch, mouse)
-│   ├── aircraft.js         # Cessna 182 with physics and animations
-│   ├── camera.js          # Orbit camera with mouse/scroll controls
-│   ├── environment.js      # Sky, ocean, clouds
-│   ├── islands.js          # Heightmap terrain generation, getTerrainHeight()
-│   ├── ocean.js            # Dynamic ocean system (Gerstner waves, LOD rings)
-│   ├── airport.js         # Runway and buildings on Maui
-│   ├── wildlife.js        # Birds and balloons (legacy)
-│   ├── boats.js           # Boat manager
-│   ├── gauges.js          # SVG cockpit gauges (airspeed, altimeter)
-│   ├── performance.js     # Performance monitor
-│   ├── spatial-grid.js    # Spatial partitioning for culling
-│   ├── multiplayer.js     # WebSocket multiplayer
-│   ├── flora-manager.js   # Flora LOD and culling system
-│   ├── fauna-manager.js   # Animal manager
-│   ├── hot-air-balloons.js# Hot air balloon system
-│   ├── trees/             # Tree species classes
-│   │   ├── palm.js, coconut-palm.js, koa.js, giant-koa.js
-│   │   ├── ohia.js, banyan.js, tree-fern.js, ti-plant.js
-│   │   ├── bamboo.js, wiliwili.js, shrub.js, grass.js
-│   │   ├── ground-fern.js, naupaka.js, beach-morning-glory.js
-│   │   ├── driftwood.js, lava-rock.js
-│   └── animals/           # Animal species classes
-│       ├── animal-base.js, whale.js, dolphin.js
-│       ├── seaturtle.js, albatross.js, frigatebird.js
-│       ├── honeycreeper.js, nene.js
-├── viewer/                # Asset viewer
-├── tests/                 # Jest tests
-├── docs/                  # Design documents
+│   ├── utils.js               # Utility functions (lerp, clamp, deg/rad conversion)
+│   ├── controls.js            # Input handling (keyboard, touch, mouse)
+│   ├── aircraft.js            # Cessna 182 with physics and animations
+│   ├── camera.js              # Orbit camera with mouse/scroll controls
+│   ├── environment.js         # Sky, ocean, clouds
+│   ├── islands.js             # Heightmap terrain generation, getTerrainHeight()
+│   ├── ocean.js               # Dynamic ocean system (Gerstner waves, LOD rings)
+│   ├── airport.js             # Runway generation for Hawaiian airports
+│   ├── airport-map-parser.js  # Parses airport map files for detailed layouts
+│   ├── boats.js               # Boat manager (cruise ships, fishing boats)
+│   ├── gauges.js              # SVG cockpit gauges (airspeed, altimeter)
+│   ├── performance.js         # Performance monitor
+│   ├── spatial-grid.js        # Spatial partitioning for culling
+│   ├── multiplayer.js         # WebSocket multiplayer
+│   ├── flora-manager.js       # Flora LOD and culling system
+│   ├── fauna-manager.js       # Animal manager (marine, aerial, ground)
+│   ├── building-manager.js    # Building placement and LOD system
+│   └── hot-air-balloons.js    # Hot air balloon system
+├── js/trees/                  # Tree species classes (17 types)
+│   ├── palm.js, coconut-palm.js, koa.js, giant-koa.js
+│   ├── ohia.js, banyan.js, tree-fern.js, ti-plant.js
+│   ├── bamboo.js, wiliwili.js, shrub.js, grass.js
+│   ├── ground-fern.js, naupaka.js, beach-morning-glory.js
+│   └── driftwood.js, lava-rock.js
+├── js/animals/                # Animal species classes (7 types)
+│   ├── animal-base.js         # Base class for all animals
+│   ├── whale.js, dolphin.js, seaturtle.js  # Marine animals
+│   └── albatross.js, frigatebird.js, honeycreeper.js, nene.js  # Birds
+├── js/buildings/              # Building geometry classes
+│   ├── residential.js         # Small, medium, large homes
+│   ├── commercial.js          # Shops, hotels, restaurants
+│   └── lighthouse.js          # Lighthouse structures
+├── viewer/                    # Asset viewer
+├── tests/                     # Jest tests (aircraft-spawn.test.js, visibility.test.js)
+├── docs/                      # Design documents
 └── assets/
-    ├── heightmaps/        # Heightmap PNGs + metadata JSONs
-    ├── images/            # Logo and icon
-    └── maps/              # Airport maps
+    ├── heightmaps/            # Heightmap PNGs + metadata JSONs
+    ├── images/                # Logo and icon
+    └── maps/                  # Airport maps (MAUI_airports_10m.txt)
 ```
 
 ## Key Systems

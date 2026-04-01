@@ -430,7 +430,6 @@
     <script src="js/islands.js"></script>
     <script src="js/airport.js"></script>
     <script src="js/airport-map-parser.js"></script>
-    <script src="js/wildlife.js"></script>
     <script src="js/boats.js"></script>
     <script src="js/gauges.js"></script>
     <script src="js/performance.js"></script>
@@ -1718,9 +1717,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Keep old wildlife for backward compatibility (balloons)
-            wildlife = new Wildlife(scene);
-            
             window.addEventListener('resize', onWindowResize);
 
             animate();
@@ -1835,7 +1831,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             orbitCamera.update(delta);
             cloudSystem.update(delta, time, camera);
-            wildlife.update(delta);
             if (window.boatManager) {
                 window.boatManager.update(delta, time, camera);
             }
