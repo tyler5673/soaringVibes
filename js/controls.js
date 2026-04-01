@@ -328,12 +328,22 @@ function getPinchDistance(touches) {
 
 function initControls() {
     window.addEventListener('keydown', (e) => {
-        keys[e.code] = true;
-        if (GAME_KEYS.has(e.code)) e.preventDefault();
+        const activeEl = document.activeElement;
+        const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+        
+        if (!isInputFocused) {
+            keys[e.code] = true;
+            if (GAME_KEYS.has(e.code)) e.preventDefault();
+        }
     });
     
     window.addEventListener('keyup', (e) => {
-        keys[e.code] = false;
+        const activeEl = document.activeElement;
+        const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+        
+        if (!isInputFocused) {
+            keys[e.code] = false;
+        }
     });
     
     window.addEventListener('mousemove', (e) => {
