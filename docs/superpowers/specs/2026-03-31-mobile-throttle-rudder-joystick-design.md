@@ -23,6 +23,8 @@ Replace the separate throttle slider and rudder slider widgets with a unified sq
 - **Vertical axis (Y)**: Throttle control
   - Up = increase throttle
   - Down = decrease throttle
+  - Center position = 50% throttle
+  - Full up = max throttle (1.0), full down = min throttle (0.0)
   - Value persists when user releases touch
   - Range: 0 to 1 (normalized)
   
@@ -61,6 +63,8 @@ Remove existing:
 
 #### Container (`.throttle-rudder-container`)
 - Position: `absolute`, left side, bottom-aligned
+- Portrait: `left: 20px; bottom: 20px`
+- Landscape: `left: 20px; bottom: 40px`
 - Dimensions: 140x140px portrait, 180x180px landscape
 - Pointer events enabled
 - Touch-action: none
@@ -77,6 +81,7 @@ Remove existing:
 - Absolute positioning for X/Y movement
 - CSS transition on `left` property only (for rudder reset)
 - No transition on `top` property (for throttle persistence)
+- Visual feedback when at boundaries: subtle border highlight or glow intensification
 
 ### 3. JavaScript Logic
 
@@ -87,7 +92,7 @@ const touchInput = {
     pitch: 0,      // existing from right joystick
     roll: 0,       // existing from right joystick  
     yaw: 0,        // rudder input (-1 to 1)
-    throttle: 0.5, // throttle value (0 to 1), default ~idle
+    throttle: 0.5, // throttle value (0 to 1), default = center position
 };
 ```
 
@@ -95,11 +100,13 @@ const touchInput = {
 
 **touchstart**: 
 - Capture touch ID
+- On touch anywhere within zone boundary, stick snaps to touch position (clamped to bounds)
 - Calculate initial stick position from touch point
 - Update both yaw and throttle immediately
 
 **touchmove**:
 - Track only the captured touch ID
+- Multi-touch fully supported; each joystick tracks independent touch ID
 - Normalize X position → `touchInput.yaw` (-1 to 1)
 - Normalize Y position (inverted) → `touchInput.throttle` (0 to 1)
 - Clamp values to valid ranges
@@ -133,10 +140,17 @@ touchInput.throttle = Math.max(0, Math.min(1, 0.5 - (normalizedY * 0.5))); // in
 ### 4. Integration Points
 
 #### Aircraft Input Processing
+
+##### Throttle Mapping Formula
+```javascript
+// normalizedY: -1 (top) to +1 (bottom), 0 = center
+// throttle: 1.0 (full up) to 0.0 (full down), 0.5 = center
+touchInput.throttle = 0.5 - (normalizedY * 0.5);
+```
+
 In `aircraft.js` or wherever throttle is consumed:
 - Read from `touchInput.throttle` instead of previous throttle slider value
-- Ensure idle throttle (~20-30%) maps to center stick position
-- Full up = max throttle (1.0), full down = min throttle (0.0)
+- Full up = max throttle (1.0), center = cruise throttle (0.5), full down = min throttle (0.0)
 
 #### Yaw Processing
 Existing yaw processing should continue to work with `touchInput.yaw`
@@ -145,11 +159,10 @@ Existing yaw processing should continue to work with `touchInput.yaw`
 ### 5. Cleanup Tasks
 
 Remove from codebase:
-- `.throttle-container`, `.throttle-track`, `.throttle-handle` CSS classes
-- `.rudder-container`, `.rudder-track`, `.rudder-handle` CSS classes  
-- Throttle slider touch event handlers in controls.js (lines ~1040-1080)
-- Rudder slider touch event handlers in controls.js (lines ~162-232)
-- `resetRudderToCenter()` function (replaced by joystick reset logic)
+- `.throttle-container`, `.throttle-track`, `.throttle-handle` CSS classes and HTML elements
+- `.rudder-container`, `.rudder-track`, `.rudder-handle` CSS classes and HTML elements  
+- Throttle slider touch event handlers in controls.js (search for `throttle-zone`)
+- Rudder slider touch event handlers in controls.js (search for `rudder-zone`, `resetRudderToCenter()`)
 - References to `throttleHandle`, `rudderHandle` DOM elements
 
 ## Success Criteria
@@ -160,7 +173,7 @@ Remove from codebase:
 - [ ] Horizontal movement adjusts rudder (auto-centers when released)
 - [ ] Diagonal movement works for combined inputs
 - [ ] Smooth CSS animation on horizontal reset
-- [ ] No throttle/rutter sliders visible or functional
+- [ ] No throttle/rudder sliders visible or functional
 - [ ] Responsive sizing in landscape orientation
 - [ ] No console errors or warnings
 
