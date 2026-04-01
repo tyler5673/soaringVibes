@@ -880,8 +880,16 @@ var spinnerStripeBottom = new THREE.Mesh(
         }
         
         // Check for water collision (ocean crash)
-        const WATER_LEVEL = 2;
-        const isBelowWater = this.position.y < WATER_LEVEL;
+        const baseWaterLevel = typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2;
+
+        // Sample dynamic ocean height if available (only in non-Abby mode)
+        let effectiveWaterLevel = baseWaterLevel;
+        if (!this.abbyMode && window.oceanManager) {
+          const waveHeight = window.oceanManager.getHeight(this.position.x, this.position.z);
+          effectiveWaterLevel = baseWaterLevel + waveHeight * 0.85; // Slightly dampen for collision buffer
+        }
+
+        const isBelowWater = this.position.y < effectiveWaterLevel;
         
         // Check if plane is below terrain (land collision)
         const groundClearance = 1.5;

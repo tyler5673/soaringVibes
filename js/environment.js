@@ -23,56 +23,47 @@ function createSky(scene) {
     scene.add(hemiLight);
 }
 
-let oceanMesh;
-let cameraReference = null;
+// ========== DYNAMIC OCEAN ==========
+// Dynamic ocean imported from ocean.js - exposed globally for boat integration
+let oceanManagerInstance = null;
 
-function createOcean(scene, camera) {
-    cameraReference = camera;
-    
-    // Create ocean that follows camera - much larger to cover all islands
-    const geometry = new THREE.PlaneGeometry(40000, 40000, 256, 256);
-    const material = new THREE.MeshStandardMaterial({
-        color: 0x006994,
-        roughness: 0.3,
-        metalness: 0.1,
-        flatShading: false
-    });
-    oceanMesh = new THREE.Mesh(geometry, material);
-    oceanMesh.rotation.x = -Math.PI / 2;
-    oceanMesh.position.y = 2;
-    oceanMesh.receiveShadow = true;
-    oceanMesh.userData.originalPositions = geometry.attributes.position.array.slice();
-    scene.add(oceanMesh);
+/**
+ * Initialize dynamic ocean with LOD system
+ */
+function createDynamicOcean(scene, camera) {
+  // OceanManager is loaded via script tag, should be globally available
+  if (typeof OceanManager === 'undefined') {
+    console.error('[Ocean] OceanManager not found - check if ocean.js loaded correctly');
+    return;
+  }
+  
+  oceanManagerInstance = new OceanManager(scene, camera);
+  window.oceanManager = oceanManagerInstance; // Global for boats/aircraft access
+  console.log('[Ocean] Dynamic ocean system initialized');
 }
 
-function updateOceanWaves(time) {
-    if (!oceanMesh) return;
-    
-    // Make ocean follow camera horizontally (infinite ocean effect)
-    if (cameraReference && cameraReference.position) {
-        const camPos = cameraReference.position;
-        // Snap to grid to avoid jitter
-        const gridSize = 1000;
-        oceanMesh.position.x = Math.floor(camPos.x / gridSize) * gridSize;
-        oceanMesh.position.z = Math.floor(camPos.z / gridSize) * gridSize;
-    }
-    
-    const positions = oceanMesh.geometry.attributes.position;
-    const original = oceanMesh.userData.originalPositions;
-    
-    for (let i = 0; i < positions.count; i++) {
-        const x = original[i * 3] + oceanMesh.position.x;
-        const y = original[i * 3 + 1] + oceanMesh.position.z;
-        
-        const wave1 = Math.sin(x * 0.003 + time * 0.8) * Math.cos(y * 0.003 + time * 0.5) * 0.5;
-        const wave2 = Math.sin(x * 0.008 + y * 0.006 + time * 1.2) * 0.25;
-        const wave3 = Math.cos(x * 0.001 - y * 0.002 + time * 0.3) * 0.4;
-        
-        positions.setZ(i, wave1 + wave2 + wave3);
-    }
-    positions.needsUpdate = true;
-    oceanMesh.geometry.computeVertexNormals();
+/**
+ * Update ocean waves and camera tracking
+ */
+function updateOcean(deltaTime) {
+  if (oceanManagerInstance) {
+    oceanManagerInstance.update(deltaTime);
+  }
 }
+
+// Expose globally for index.html access
+window.createDynamicOcean = createDynamicOcean;
+window.updateOcean = updateOcean;
+
+/**
+ * Get wave height at world coordinates (for boats, collision)
+ */
+function getOceanHeight(x, z) {
+  return oceanManagerInstance ? oceanManagerInstance.getHeight(x, z) : 0;
+}
+
+// Expose globally for index.html access
+window.getOceanHeight = getOceanHeight;
 
 // ========== CLOUDS ==========
 class CloudSystem {

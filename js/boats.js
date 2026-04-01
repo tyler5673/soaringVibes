@@ -918,7 +918,13 @@ class BoatManager {
             
             // Only update Y position and rotation for water boats, not cruise ship (which flies at altitude)
             if (!(boat instanceof CruiseShip)) {
-                boat.mesh.position.y = BOAT_WATER_LEVEL + Math.sin(boat.bobTimer) * 0.3;
+                // Sample ocean height at boat position for realistic water following
+                const getOceanHeight = window.getOceanHeight || (() => 0);
+                const waveHeight = getOceanHeight(boat.mesh.position.x, boat.mesh.position.z);
+                
+                // Combine wave height with small bobbing offset for natural motion
+                const bobOffset = Math.sin(boat.bobTimer) * 0.2;
+                boat.mesh.position.y = BOAT_WATER_LEVEL + waveHeight * 0.7 + bobOffset;
                 boat.mesh.rotation.z = Math.sin(boat.rockTimer) * 0.05;
                 boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
             }

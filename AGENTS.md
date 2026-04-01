@@ -5,6 +5,7 @@ Browser-based flight simulator using Three.js featuring the Hawaiian islands. Ru
 
 ## Current Features
 - **Terrain**: Real heightmap data from USGS 10m DEM for Hawaiian islands (8 islands: Big Island, Maui, Oahu, Kauai, Molokai, Lanai, Niihau, Kahoolawe)
+- **Ocean**: Dynamic Gerstner wave system with 3 LOD levels, follows camera with grid snapping, mobile-optimized segment counts
 - **Aircraft**: Detailed Cessna 182 Skylane with animated propeller and control surfaces
 - **Ecosystem**: Palm trees, native Hawaiian flora (koa, ohia, banyan, etc.), marine animals (whales, dolphins, sea turtles), birds (albatross, frigatebirds, nene)
 - **Aircraft customization**: Custom name and color selection at spawn
@@ -30,6 +31,7 @@ soaringVibes/
 │   ├── camera.js          # Orbit camera with mouse/scroll controls
 │   ├── environment.js      # Sky, ocean, clouds
 │   ├── islands.js          # Heightmap terrain generation, getTerrainHeight()
+│   ├── ocean.js            # Dynamic ocean system (Gerstner waves, LOD rings)
 │   ├── airport.js         # Runway and buildings on Maui
 │   ├── wildlife.js        # Birds and balloons (legacy)
 │   ├── boats.js           # Boat manager
@@ -113,6 +115,9 @@ soaringVibes/
 
 ## Known Issues
 - Heightmaps are 8-bit (limited precision) - server didn't support float32 export
+- Ocean waves use CPU-based vertex displacement (may impact very low-end devices)
+- Foam effect not yet implemented (planned for future enhancement)
+- No dynamic wave generation from aircraft/boat wakes (cosmetic only)
 
 ## Development Commands
 ```bash

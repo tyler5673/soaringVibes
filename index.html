@@ -409,6 +409,7 @@
     <script src="js/controls.js"></script>
     <script src="js/aircraft.js"></script>
     <script src="js/camera.js"></script>
+    <script src="js/ocean.js"></script>
     <script src="js/environment.js"></script>
     <script src="js/islands.js"></script>
     <script src="js/airport.js"></script>
@@ -1404,7 +1405,8 @@ document.addEventListener('DOMContentLoaded', function() {
             scene = new THREE.Scene();
             // Warm afternoon sky
             scene.background = new THREE.Color(0x87CEEB);
-            scene.fog = new THREE.Fog(0x87CEEB, 2000, 15000);
+            // FogExp2 with density tuned for 3km ocean ring - smooth fade at outer edge
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.00015);
             
             // Share scene with multiplayer
             if (typeof setMultiplayerScene === 'function') {
@@ -1451,7 +1453,11 @@ document.addEventListener('DOMContentLoaded', function() {
             initTouchCameraControls(orbitCamera);
             
             createSky(scene);
-            createOcean(scene, camera);
+            
+            // Create dynamic ocean (function is global from environment.js)
+            if (typeof createDynamicOcean === 'function') {
+              createDynamicOcean(scene, camera);
+            }
             
             cloudSystem = new CloudSystem(scene);
             
@@ -1539,7 +1545,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const delta = clock.getDelta();
             const time = clock.getElapsedTime();
             
-            updateOceanWaves(time);
+            // Update ocean waves (function is global from environment.js)
+            if (typeof updateOcean === 'function') {
+              updateOcean(delta);
+            }
             
             const keyboardInput = getKeyboardInput();
             const touchInputData = getTouchInput();
