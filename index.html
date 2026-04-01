@@ -331,23 +331,16 @@
         <button id="reset-btn" onclick="aircraft.reset(); hideCrashMessage(); orbitCamera.resetBehindTarget();">Reset</button>
     </div>
     <div id="touch-controls" style="display: none;">
-        <!-- Left side: Throttle slider -->
-        <div id="throttle-zone" class="throttle-container">
-            <div class="throttle-track">
-                <div id="throttle-handle" class="throttle-handle"></div>
+        <!-- Throttle+Rudder Joystick (square zone on left) -->
+        <div id="throttle-rudder-zone" class="throttle-rudder-container">
+            <div class="throttle-rudder-zone-bg">
+                <div id="throttle-rudder-stick" class="throttle-rudder-stick"></div>
             </div>
         </div>
         
-        <!-- Right stick: Pitch (vertical) + Roll (horizontal) + Yaw (requires new zone) -->
+        <!-- Right stick: Pitch (vertical) + Roll (horizontal) -->
         <div id="right-stick-zone" class="touch-zone">
             <div id="right-stick" class="touch-stick"></div>
-        </div>
-        
-        <!-- Rudder slider below right stick -->
-        <div id="rudder-zone" class="rudder-container">
-            <div class="rudder-track">
-                <div id="rudder-handle" class="rudder-handle"></div>
-            </div>
         </div>
         
         <!-- Reset button -->
