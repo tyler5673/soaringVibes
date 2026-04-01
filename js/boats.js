@@ -878,6 +878,8 @@ boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
             if (boat instanceof CruiseShip && boat.mesh.userData.uiMarker) {
                 const uiMarker = boat.mesh.userData.uiMarker;
                 const screenPos = boat.mesh.position.clone().project(camera);
+                console.log('Cruise ship world pos:', boat.mesh.position);
+                console.log('Camera position:', camera.position);
                 console.log('Cruise ship screenPos:', screenPos);
                 
                 // Check if in front of camera
