@@ -715,9 +715,9 @@ class BoatManager {
         const oahuShip = new CruiseShip(this.scene, oahuPos);
         this.cruiseShips.push(oahuShip);
         
-        // Create UI marker for cruise ship
+        // Create UI marker for cruise ship (only if element exists)
         const uiMarker = document.getElementById('cruise-ship-marker');
-        if (uiMarker) {
+        if (uiMarker && oahuShip) {
             uiMarker.style.cssText = `
                 position: fixed;
                 font-size: 40px;
@@ -730,6 +730,8 @@ class BoatManager {
             `;
             uiMarker.textContent = '🚢';
             oahuShip.userData.uiMarker = uiMarker;
+        } else if (!uiMarker) {
+            console.warn('Cruise ship marker element not found in DOM');
         }
         
         console.log('Cruise ship created at:', oahuShip.mesh.position.clone());
@@ -918,9 +920,28 @@ class BoatManager {
             boat.mesh.position.y = BOAT_WATER_LEVEL + Math.sin(boat.bobTimer) * 0.3;
             
             boat.mesh.rotation.z = Math.sin(boat.rockTimer) * 0.05;
-            boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
+boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
             
-
+            // Update UI marker for cruise ship
+            if (boat instanceof CruiseShip && boat.userData.uiMarker) {
+                const uiMarker = boat.userData.uiMarker;
+                const screenPos = boat.mesh.position.clone().project(camera);
+                
+                // Check if in front of camera
+                if (screenPos.z < 1) {
+                    const width = window.innerWidth || renderer?.domElement?.clientWidth;
+                    const height = window.innerHeight || renderer?.domElement?.clientHeight;
+                    
+                    const x = (screenPos.x + 1) / 2 * width;
+                    const y = (1 - screenPos.y) / 2 * height;
+                    
+                    uiMarker.style.display = 'flex';
+                    uiMarker.style.left = `${x}px`;
+                    uiMarker.style.top = `${y}px`;
+                } else {
+                    uiMarker.style.display = 'none';
+                }
+            }
             
             if ((boat instanceof Sailboat || boat instanceof PirateShip) && boat.mesh.children.length > 2) {
                 const sailChild = boat.mesh.children.find(c => c.userData && c.userData.isSail);
