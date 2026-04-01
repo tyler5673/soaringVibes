@@ -845,8 +845,8 @@ class BoatManager {
         
         let newTarget;
         if (boat instanceof CruiseShip) {
-            // newTarget = this.getCruiseShipPosition();
-            newTarget = this.getCoastalPosition();
+            // Keep cruise ship at altitude
+            newTarget = this.getCruiseShipPosition();
         } else if (boat instanceof PirateShip) {
             newTarget = this.getCoastalPosition();
         } else if (isCoastal) {
