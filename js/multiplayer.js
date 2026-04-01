@@ -254,11 +254,11 @@ class MultiplayerClient {
         context.fill();
         
         // Draw text
-        context.font = 'bold 32px Arial, sans-serif';
+        context.font = 'bold 64px Arial, sans-serif';
         context.fillStyle = 'white';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.fillText(name, 128, 32);
+        context.fillText(name, 256, 64);
         
         // Create texture and sprite
         const texture = new THREE.CanvasTexture(canvas);
@@ -268,14 +268,14 @@ class MultiplayerClient {
             opacity: 0.9
         });
         const sprite = new THREE.Sprite(material);
-        sprite.scale.set(3, 0.75, 1);
+        sprite.scale.set(6, 1.5, 1);
         
         return sprite;
     }
 
     updateLabels(camera, renderer) {
-        const maxLabelDistance = 1219.2; // 4000ft in meters - show name label
-        const dotThreshold = 609.6; // 2000ft in meters - show dot instead of detailed aircraft
+        const maxLabelDistance = 2438.4; // 8000ft in meters - show name label
+        const dotThreshold = 1219.2; // 4000ft in meters - show dot instead of detailed aircraft
         
         // Get CSS pixel dimensions (not internal canvas buffer size)
         const width = renderer.domElement.clientWidth || window.innerWidth;
