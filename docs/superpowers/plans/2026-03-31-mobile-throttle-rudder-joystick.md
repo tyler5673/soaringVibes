@@ -25,7 +25,17 @@
 **Files:**
 - Modify: `js/controls.js:7-12`
 
-- [ ] **Step 1: Update touchInput object**
+- [ ] **Step 1: Verify current touchInput usage**
+
+Search for where `touchInput.throttle` is consumed in the codebase:
+
+```bash
+grep -rn "touchInput\.throttle" js/
+```
+
+Expected output should show it's used in controls.js and potentially aircraft.js or input processing.
+
+- [ ] **Step 2: Update touchInput object**
 
 Replace current structure with new one that includes throttle as a value (not derived):
 
@@ -38,16 +48,42 @@ const touchInput = {
 };
 ```
 
-- [ ] **Step 2: Verify no syntax errors**
+- [ ] **Step 3: Verify no syntax errors**
 
 Open browser console on mobile or use Chrome DevTools Device Mode. Expected: No JavaScript errors.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add js/controls.js
 git commit -m "feat: update touchInput state for throttle+rudder joystick"
 ```
+
+---
+
+### Task 1b: Verify throttle consumption in aircraft physics
+
+**Files:**
+- Check: `js/aircraft.js`, `js/controls.js` (input processing section)
+
+- [ ] **Step 1: Find where throttle is consumed**
+
+Search for how throttle input affects the aircraft:
+
+```bash
+grep -rn "throttle" js/aircraft.js | head -20
+grep -rn "setThrottle\|applyThrottle" js/
+```
+
+- [ ] **Step 2: Verify it reads from touchInput.throttle**
+
+Check if the physics/update loop reads from `touchInput.throttle` or calculates throttle differently. If it uses a different source, note where for potential update in later tasks.
+
+Expected: Should find something like `aircraft.setThrottle(touchInput.throttle)` or similar in the main game loop.
+
+- [ ] **Step 3: Document findings**
+
+If throttle consumption is already using `touchInput.throttle`, no changes needed. If not, add a new task to update it before Task 4.
 
 ---
 
@@ -235,12 +271,13 @@ if (throttleRudderZone && throttleRudderStick && throttleRudderZoneBg) {
         touchInput.yaw = normalizedX;
         touchInput.throttle = clamp(0.5 - (normalizedY * 0.5), 0, 1);
 
-        const stickLeft = 50 + (normalizedX * maxDistance);
-        const stickTop = 50 - (normalizedY * maxDistance);
+        // Use percentage-based positioning with centering transform preserved
+        const stickLeftPct = 50 + (normalizedX * 50);  // -1→0%, 0→50%, +1→100%
+        const stickTopPct = 50 - (normalizedY * 50);   // inverted: -1(top)→100%, +1(bottom)→0%
 
-        throttleRudderStick.style.left = stickLeft + '%';
-        throttleRudderStick.style.top = stickTop + '%';
-        throttleRudderStick.style.transform = 'translate(0, 0)';
+        throttleRudderStick.style.left = stickLeftPct + '%';
+        throttleRudderStick.style.top = stickTopPct + '%';
+        throttleRudderStick.style.transform = 'translate(-50%, -50%)'; // Keep centering transform!
 
         if (Math.abs(normalizedX) >= 0.95 || Math.abs(normalizedY) >= 0.95) {
             throttleRudderStick.classList.add('at-boundary');
@@ -250,14 +287,11 @@ if (throttleRudderZone && throttleRudderStick && throttleRudderZoneBg) {
     };
 
     const resetYawToCenter = () => {
-        const currentTop = throttleRudderStick.style.top;
         touchInput.yaw = 0;
+        throttleRudderStick.style.transition = 'left 0.3s ease-out'; // Enable transition for smooth reset
         throttleRudderStick.style.left = '50%';
+        // Don't modify top - preserve current vertical position
         throttleRudderStick.style.transform = 'translate(-50%, -50%)';
-        if (currentTop) {
-            throttleRudderStick.style.top = currentTop;
-            throttleRudderStick.style.transform = 'translate(0, 0)';
-        }
         throttleRudderStick.classList.remove('at-boundary');
     };
 
@@ -265,6 +299,7 @@ if (throttleRudderZone && throttleRudderStick && throttleRudderZoneBg) {
         e.preventDefault();
         const touch = e.changedTouches[0];
         trTouchId = touch.identifier;
+        throttleRudderStick.style.transition = 'none'; // Disable transition during active drag
         updateFromPosition(touch.clientX, touch.clientY);
     }, { passive: false });
 
@@ -408,15 +443,24 @@ In the `@media (max-width: 768px) and (orientation: landscape)` block, remove:
 .yaw-container { ... }
 ```
 
-- [ ] **Step 4: Verify no broken references**
+- [ ] **Step 4: Verify no remaining yaw button HTML**
+
+Search index.html for any yaw button references:
+```bash
+grep -n "yaw.*button\|yaw-btn" index.html
+```
+
+Expected: No matches (or only in comments). If found, remove those elements too.
+
+- [ ] **Step 5: Verify no broken references**
 
 Run `npx serve` and check console. Expected: No "undefined class" warnings or similar errors.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add css/style.css
-git commit -m "refactor: remove old slider CSS styles"
+git add css/style.css index.html
+git commit -m "refactor: remove old slider CSS styles and HTML elements"
 ```
 
 ---
