@@ -637,7 +637,7 @@ const islandPositions = [
 ];
 
 // Place lighthouses on beaches - 3 per island
-function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, islandWorldZ, scene) {
+function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, islandWorldZ, scene, buildingManager) {
     const meta = islandMetadataCache[islandName];
     if (!meta) return;
     
@@ -687,6 +687,16 @@ function placeLighthousesForIsland(islandGroup, islandName, islandWorldX, island
                 lighthouse.rotation.y = Math.random() * Math.PI * 2;
                 islandGroup.add(lighthouse);
                 lighthouses.push({ x: worldX, z: worldZ });
+                
+                if (buildingManager) {
+                    buildingManager.allBuildings.push({
+                        mesh: lighthouse,
+                        type: 'lighthouse',
+                        worldPos: new THREE.Vector3(worldX, terrainWorldY, worldZ),
+                        currentLOD: 'high',
+                        islandName
+                    });
+                }
             }
         }
     }
@@ -760,7 +770,7 @@ async function createAllIslands(scene, onProgress) {
         // Place lighthouses on beaches (3 per island)
         console.log('Creating lighthouses...');
         for (const { island: islandGroup, info } of results) {
-            placeLighthousesForIsland(islandGroup, info.name, info.x, info.z, scene);
+            placeLighthousesForIsland(islandGroup, info.name, info.x, info.z, scene, buildingManager);
         }
         
         console.log(`BuildingManager created with ${buildingManager.allBuildings.length} total buildings`);

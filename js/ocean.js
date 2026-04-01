@@ -11,7 +11,7 @@ class WaveSystem {
         amplitude: 1.0,
         length: 100,
         steepness: 0.7,
-        speed: 4
+        speed: 2
       },
       // Chop: Medium wind-driven waves
       {
@@ -19,7 +19,7 @@ class WaveSystem {
         amplitude: 0.4,
         length: 30,
         steepness: 0.5,
-        speed: 8
+        speed: 4
       },
       // Ripple: Short surface detail
       {
@@ -27,7 +27,7 @@ class WaveSystem {
         amplitude: 0.1,
         length: 8,
         steepness: 0.3,
-        speed: 13.33
+        speed: 6.67
       }
     ];
   }
@@ -229,7 +229,7 @@ class OceanManager {
       flatShading: false,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.75,
       depthWrite: true,
       depthTest: true
     });
@@ -268,11 +268,13 @@ class OceanManager {
     this.oceanFloorGridSize = 10; // 10x10 grid = 20,000m coverage
     
     const geometry = new THREE.PlaneGeometry(this.oceanFloorTileSize, this.oceanFloorTileSize);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x1a3a5c,
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x40c4ff,
       transparent: false,
       side: THREE.DoubleSide,
-      depthWrite: true
+      depthWrite: true,
+      roughness: 1,
+      metalness: 0
     });
     
     for (let x = 0; x < this.oceanFloorGridSize; x++) {
