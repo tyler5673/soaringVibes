@@ -114,7 +114,9 @@ class CloudSystem {
                 transparent: true,
                 opacity: opacity,
                 roughness: 0.5,
-                depthWrite: false
+                depthWrite: false,
+                depthTest: true,
+                renderOrder: 1000
             });
             
             const puff = new THREE.Mesh(puffGeo, puffMat);

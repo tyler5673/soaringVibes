@@ -231,9 +231,7 @@ class OceanManager {
       transparent: true,
       opacity: 0.85,
       depthWrite: true,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1
+      depthTest: true
     });
     
     for (const config of configs) {
@@ -253,6 +251,7 @@ class OceanManager {
       mesh.position.y = waterY;
       mesh.receiveShadow = true;
       mesh.userData.waveIntensity = config.intensity;
+      mesh.renderOrder = -10;
       
       this.scene.add(mesh);
       this.rings.push({ mesh, geometry, original: originalPositions });
