@@ -24,6 +24,11 @@ function isTouchDevice() {
            navigator.maxTouchPoints > 0;
 }
 
+// Helper function for clamping values
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
 // Initialize touch controls
 function initTouchControls() {
     if (!isTouchDevice()) return;
@@ -104,6 +109,82 @@ function initTouchControls() {
             touchInput.rightStick.y = 0;
             rightStick.style.transform = 'translate(-50%, -50%)';
         }, { passive: false });
+    }
+    
+    // Throttle+Rudder Joystick (square zone on left)
+    const throttleRudderZone = document.getElementById('throttle-rudder-zone');
+    const throttleRudderStick = document.getElementById('throttle-rudder-stick');
+    const throttleRudderZoneBg = throttleRudderZone?.querySelector('.throttle-rudder-zone-bg');
+    let trTouchId = null;
+
+    if (throttleRudderStick) {
+        throttleRudderStick.style.left = '50%';
+        throttleRudderStick.style.top = '50%';
+        throttleRudderStick.style.transform = 'translate(-50%, -50%)';
+    }
+
+    if (throttleRudderZone && throttleRudderStick && throttleRudderZoneBg) {
+        const updateFromPosition = (clientX, clientY) => {
+            const zoneRect = throttleRudderZoneBg.getBoundingClientRect();
+            const centerX = zoneRect.left + zoneRect.width / 2;
+            const centerY = zoneRect.top + zoneRect.height / 2;
+
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+
+            const stickWidth = throttleRudderStick.offsetWidth;
+            const maxDistance = (zoneRect.width - stickWidth) / 2;
+
+            const normalizedX = clamp(dx / maxDistance, -1, 1);
+            const normalizedY = clamp(dy / maxDistance, -1, 1);
+
+            touchInput.yaw = normalizedX;
+            touchInput.throttle = clamp(0.5 - (normalizedY * 0.5), 0, 1);
+
+            // Use percentage-based positioning with centering transform preserved
+            const stickLeftPct = 50 + (normalizedX * 50);  // -1→0%, 0→50%, +1→100%
+            const stickTopPct = 50 - (normalizedY * 50);   // inverted: -1(top)→100%, +1(bottom)→0%
+
+            throttleRudderStick.style.left = stickLeftPct + '%';
+            throttleRudderStick.style.top = stickTopPct + '%';
+            throttleRudderStick.style.transform = 'translate(-50%, -50%)'; // Keep centering transform!
+
+            if (Math.abs(normalizedX) >= 0.95 || Math.abs(normalizedY) >= 0.95) {
+                throttleRudderStick.classList.add('at-boundary');
+            } else {
+                throttleRudderStick.classList.remove('at-boundary');
+            }
+        };
+
+        const resetYawToCenter = () => {
+            touchInput.yaw = 0;
+            throttleRudderStick.style.transition = 'left 0.3s ease-out'; // Enable transition for smooth reset
+            throttleRudderStick.style.left = '50%';
+            // Don't modify top - preserve current vertical position
+            throttleRudderStick.style.transform = 'translate(-50%, -50%)';
+            throttleRudderStick.classList.remove('at-boundary');
+        };
+
+        throttleRudderZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            trTouchId = touch.identifier;
+            throttleRudderStick.style.transition = 'none'; // Disable transition during active drag
+            updateFromPosition(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        throttleRudderZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === trTouchId) {
+                    updateFromPosition(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        throttleRudderZone.addEventListener('touchend', resetYawToCenter);
+        throttleRudderZone.addEventListener('touchcancel', resetYawToCenter);
     }
     
     if (throttleZone && throttleHandle) {
