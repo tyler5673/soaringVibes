@@ -366,15 +366,12 @@ function initTouchCameraControls(cameraInstance) {
 // Check if a touch target is a control element
 function isTouchOnControlElement(target) {
     const controlSelectors = [
-        '#throttle-zone',
+        '#throttle-rudder-zone',
         '#right-stick-zone', 
-        '#rudder-zone',
         '#reset-btn-touch',
         '.touch-zone',
         '.touch-button',
-        '.yaw-button',
-        '.throttle-container',
-        '.rudder-container'
+        '.yaw-button'
     ];
     
     return controlSelectors.some(selector => target.closest(selector) !== null);
