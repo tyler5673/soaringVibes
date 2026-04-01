@@ -837,6 +837,9 @@ class BoatManager {
             }
             
             const dist = camPos.distanceTo(boat.mesh.position);
+            if (boat instanceof CruiseShip) {
+                console.log('Cruise ship distance:', dist, 'maxDist:', this.boatMaxDist);
+            }
             if (dist > this.boatMaxDist) {
                 boat.mesh.visible = false;
                 return;
