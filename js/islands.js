@@ -253,7 +253,7 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
         
         let color;
         
-        const isUnderwater = height < waterLevel;
+        const isUnderwater = (height - 50) < waterLevel;
         const isFlat = slope < 8;
         const isSteep = slope > 450;
         const isModeratelySteep = slope > 120 && slope <= 400;
@@ -263,10 +263,13 @@ function createTerrainMesh(scene, heightData, meta, worldX, worldZ, options) {
         
         if (isSteep) {
             color = rockColor.clone().lerp(darkRockColor, variation);
+        } else if (isUnderwater) {
+            const t = Math.max(0, Math.min(1, (height - (waterLevel - 20)) / 20));
+            color = darkSandColor.clone().lerp(beachColor, t);
         } else if (isModeratelySteep && realHeight > 15) {
             color = deepRainforestColor.clone().lerp(forestColor, variation);
-        } else if ((isUnderwater && height > waterLevel - 20) || (!isUnderwater && realHeight < 500)) {
-            const t = isUnderwater ? (height - (waterLevel - 20)) / 20 : (realHeight / 500);
+        } else if (realHeight < 500) {
+            const t = realHeight / 500;
             color = darkSandColor.clone().lerp(beachColor, Math.min(1, t));
         } else if (realHeight >= 300) {
             color = forestColor.clone().lerp(new THREE.Color(0x2E7D32), variation);

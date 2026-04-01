@@ -192,15 +192,17 @@ class BuildingManager {
                     continue;
                 }
                 
-                const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
-                if (terrainY === null || isNaN(terrainY)) {
+                const terrainWorldY = getTerrainHeight(worldX, worldZ);
+                if (terrainWorldY === null || isNaN(terrainWorldY)) {
                     skipped.terrain++;
                     continue;
                 }
-                if (terrainY <= (window.WATER_LEVEL || 2) + 10) {
+                if (terrainWorldY <= (window.WATER_LEVEL || 2) + 10) {
                     skipped.water++;
                     continue;
                 }
+                
+                const terrainY = getTerrainMeshHeight(worldX, worldZ, islandName);
                 
                 // Check slope
                 const slope = this.getTerrainSlope(worldX, worldZ, islandName);
@@ -209,7 +211,7 @@ class BuildingManager {
                     continue;
                 }
                 
-                if (terrainY > 500) {
+                if (terrainWorldY > 500) {
                     skipped.elevation++;
                     continue;
                 }
@@ -238,7 +240,7 @@ class BuildingManager {
                     this.allBuildings.push({
                         mesh: building,
                         type: buildingConfig.type,
-                        worldPos: new THREE.Vector3(worldX, terrainY, worldZ),
+                        worldPos: new THREE.Vector3(worldX, terrainWorldY, worldZ),
                         currentLOD: 'high',
                         islandName
                     });

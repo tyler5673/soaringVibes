@@ -214,13 +214,13 @@ class OceanManager {
   createRings(waterY) {
     // Create concentric rings (edge to edge, no overlap)
     const configs = this.mobileMode ? [
-      { inner: 0, outer: 2000, segments: 64, intensity: 1.0, color: 0x1e90ff },   // Center disk
-      { inner: 2000, outer: 7000, segments: 32, intensity: 0.5, color: 0x3da0ff }, // Middle ring
-      { inner: 7000, outer: 14000, segments: 16, intensity: 0.2, color: 0x5eb3ff } // Outer ring (fog hides edge)
+      { inner: 0, outer: 2000, segments: 64, intensity: 1.0, color: 0x40c4ff },   // Center disk
+      { inner: 2000, outer: 7000, segments: 32, intensity: 0.5, color: 0x5ecfff }, // Middle ring
+      { inner: 7000, outer: 14000, segments: 16, intensity: 0.2, color: 0x7dd8ff } // Outer ring (fog hides edge)
     ] : [
-      { inner: 0, outer: 3000, segments: 96, intensity: 1.0, color: 0x1e90ff },   // Center disk
-      { inner: 3000, outer: 9000, segments: 48, intensity: 0.5, color: 0x3da0ff }, // Middle ring
-      { inner: 9000, outer: 18000, segments: 24, intensity: 0.2, color: 0x5eb3ff } // Outer ring (fog hides edge)
+      { inner: 0, outer: 3000, segments: 96, intensity: 1.0, color: 0x40c4ff },   // Center disk
+      { inner: 3000, outer: 9000, segments: 48, intensity: 0.5, color: 0x5ecfff }, // Middle ring
+      { inner: 9000, outer: 18000, segments: 24, intensity: 0.2, color: 0x7dd8ff } // Outer ring (fog hides edge)
     ];
     
     const baseMaterial = new THREE.MeshStandardMaterial({
@@ -229,7 +229,7 @@ class OceanManager {
       flatShading: false,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.6175,
+      opacity: 0.85,
       depthWrite: true,
       polygonOffset: true,
       polygonOffsetFactor: 1,
@@ -270,7 +270,7 @@ class OceanManager {
     
     const geometry = new THREE.PlaneGeometry(this.oceanFloorTileSize, this.oceanFloorTileSize);
     const material = new THREE.MeshBasicMaterial({
-      color: 0xE8D4A8,
+      color: 0x1a3a5c,
       transparent: false,
       side: THREE.DoubleSide,
       depthWrite: true
