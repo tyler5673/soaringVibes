@@ -40,24 +40,7 @@ function initTouchControls() {
         touchControls.classList.add('visible');
     }
     
-    // Throttle slider
-    const throttleZone = document.getElementById('throttle-zone');
-    const throttleHandle = document.getElementById('throttle-handle');
-    let throttleTouchId = null;
-    let throttleTrackRect = null;
-    
-    // Initialize throttle handle position to match default throttle (0.5 = 50% = middle)
-    if (throttleZone && throttleHandle) {
-        const track = throttleZone.querySelector('.throttle-track');
-        if (track) {
-            const trackRect = track.getBoundingClientRect();
-            const trackHeight = trackRect.height - 60;
-            const handlePos = touchInput.throttle * trackHeight;
-            throttleHandle.style.bottom = handlePos + 'px';
-        }
-    }
-    
-    // Right stick: Pitch (Y) + Roll (X)
+    // Right stick: Pitch + Roll
     const rightZone = document.getElementById('right-stick-zone');
     const rightStick = document.getElementById('right-stick');
     let rightTouchId = null;
@@ -237,78 +220,6 @@ function initTouchControls() {
         throttleZone.addEventListener('touchcancel', (e) => {
             e.preventDefault();
             throttleTouchId = null;
-        }, { passive: false });
-    }
-    
-    // Rudder slider (horizontal, below joystick)
-    const rudderZone = document.getElementById('rudder-zone');
-    const rudderHandle = document.getElementById('rudder-handle');
-    let rudderTouchId = null;
-    let rudderTrackRect = null;
-    
-    if (rudderZone && rudderHandle) {
-        const updateRudderFromPosition = (clientX) => {
-            if (!rudderTrackRect) {
-                const track = rudderZone.querySelector('.rudder-track');
-                if (track) rudderTrackRect = track.getBoundingClientRect();
-            }
-            if (!rudderTrackRect) return;
-            
-            const trackWidth = rudderTrackRect.width - 60; // minus handle width
-            const relativeX = clientX - rudderTrackRect.left - 30; // offset for handle center
-            const percentage = Math.max(0, Math.min(1, relativeX / trackWidth));
-            
-            touchInput.yaw = (percentage - 0.5) * 2; // Range: -1 to 1
-            const handlePos = percentage * trackWidth;
-            rudderHandle.style.left = handlePos + 'px';
-        };
-        
-        const resetRudderToCenter = () => {
-            if (!rudderTrackRect) {
-                const track = rudderZone.querySelector('.rudder-track');
-                if (track) rudderTrackRect = track.getBoundingClientRect();
-            }
-            touchInput.yaw = 0; // Reset to center (no rudder)
-            // Set handle to center of track in pixels for smooth transition
-            const centerX = (rudderTrackRect ? rudderTrackRect.width : 120) / 2 - 30;
-            rudderHandle.style.left = centerX + 'px';
-        };
-        
-        rudderZone.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const track = rudderZone.querySelector('.rudder-track');
-            if (track) rudderTrackRect = track.getBoundingClientRect();
-            
-            const touch = e.changedTouches[0];
-            rudderTouchId = touch.identifier;
-            updateRudderFromPosition(touch.clientX);
-        }, { passive: false });
-        
-        rudderZone.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === rudderTouchId) {
-                    updateRudderFromPosition(e.changedTouches[i].clientX);
-                    break;
-                }
-            }
-        }, { passive: false });
-        
-        rudderZone.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === rudderTouchId) {
-                    rudderTouchId = null;
-                    resetRudderToCenter();
-                    break;
-                }
-            }
-        }, { passive: false });
-        
-        rudderZone.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            rudderTouchId = null;
-            resetRudderToCenter();
         }, { passive: false });
     }
     
