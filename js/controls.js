@@ -116,7 +116,7 @@ function initTouchControls() {
             const normalizedX = clamp(dx / maxDistance, -1, 1);
             const normalizedY = clamp(dy / maxDistance, -1, 1);
 
-            touchInput.yaw = normalizedX;
+            touchInput.yaw = -normalizedX;
             touchInput.throttle = clamp(0.5 - (normalizedY * 0.5), 0, 1);
 
             // Use percentage-based positioning with centering transform preserved
