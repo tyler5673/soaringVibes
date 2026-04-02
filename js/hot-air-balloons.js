@@ -338,13 +338,13 @@ class HotAirBalloonSystem {
         this.balloons = [];
         
         // Spawning configuration
-        this.maxBalloons = 30;
+        this.maxBalloons = 15;
         this.spawnRadius = 8000;
         this.altitudeMin = 400;
         this.altitudeMax = 1200;
         
-        // Draw distance and density
-        this.maxDrawDist = 10000;
+        // Draw distance and density (defaults to ~50% of cloud bounds which is 12000)
+        this.maxDrawDist = 6000;
         this.densityMultiplier = 1.0;
         this.enabled = true;
         
