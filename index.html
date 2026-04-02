@@ -99,6 +99,20 @@
             <button id="settings-close-btn" class="settings-close-btn">&times;</button>
             <h2 class="settings-title">Configuration</h2>
             
+            <div class="settings-section" id="preset-section">
+                <div class="setting-row">
+                    <label for="preset-select">Preset</label>
+                    <div class="setting-control">
+                        <select id="preset-select" class="setting-select">
+                            <option value="desktop">Default</option>
+                            <option value="mobile">Mobile Optimized</option>
+                            <option value="highPerformance">High Performance</option>
+                            <option value="ultra">Ultra</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
             <div class="settings-section" id="veg-section">
                 <div class="settings-section-header">
                     <h3 class="settings-section-title">Vegetation</h3>
@@ -440,10 +454,10 @@
     
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script src="js/utils.js"></script>
-    <script>
-      window.MULTIPLAYER_URL = 'wss://multiplayer.soaringvibes.com/ws';
-    </script>
-    <script src="js/multiplayer.js"></script>
+    <script src="js/config.js"></script>
+
+        <!-- Core game modules -->
+        <script src="js/multiplayer.js"></script>
     <script src="js/controls.js"></script>
     <script src="js/aircraft.js"></script>
     <script src="js/camera.js"></script>
@@ -1052,6 +1066,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsBtn = document.getElementById('desktop-settings-btn');
     const settingsCloseBtn = document.getElementById('settings-close-btn');
     
+    const presetSelect = document.getElementById('preset-select');
+    
     const vegDistSlider = document.getElementById('veg-distance-slider');
     const vegDistValue = document.getElementById('veg-distance-value');
     const vegDensitySlider = document.getElementById('veg-density-slider');
@@ -1166,6 +1182,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function openSettings() {
         syncSlidersFromManagers();
+        
+        // Auto-apply device default preset
+        const defaultPreset = getDeviceDefaultPreset();
+        presetSelect.value = defaultPreset;
+        applyPreset(defaultPreset);
+        
         settingsModal.style.display = 'flex';
     }
     
@@ -1379,6 +1401,13 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCruiseShipMarkerVisibility(this.checked);
     });
 
+    // Preset selector
+    if (presetSelect) {
+        presetSelect.addEventListener('change', function() {
+            applyPreset(this.value);
+        });
+    }
+    
     function updateCruiseShipMarkerVisibility(show) {
         const allMarkers = document.querySelectorAll('[id^="cruise-ship-marker"]');
         allMarkers.forEach(marker => {
