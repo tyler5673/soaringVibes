@@ -12,7 +12,7 @@ If you found this project compelling or useful and want to fuel the experiment, 
 
 ## The Vibe-Coating Experiment
 
-> *This entire project has been vibe coated.*
+> *This entire project has been vibe coded.*
 
 This flight simulator is an **agentic engineering experiment** to see just how complete a casual flight simulator can be created **without writing a single line of code manually** — only using prompts to steer the project.
 
