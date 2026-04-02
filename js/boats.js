@@ -697,6 +697,7 @@ class BoatManager {
         this.cruiseShips = [];
         
         this.boatMaxDist = 8000;
+        this.cruiseShipMaxDist = 6000;
         this.densityMultiplier = 1.0;
         this.enabled = true;
         
@@ -709,33 +710,50 @@ class BoatManager {
         this.createSailboats(105);
         this.createSpeedboats(45);
         this.createPirateShips(15);
-        // this.createCruiseShips(15);
         
-        // Create cruise ship 1500 feet above Oahu (~457m)
-        const oahuPos = new THREE.Vector3(-6400, 457, -2800);
-        const oahuShip = new CruiseShip(this.scene, oahuPos);
-        this.cruiseShips.push(oahuShip);
+        // Create cruise ships near each island at ocean surface altitude (y=8)
+        const cruiseShipConfigs = [
+            // Maui - 1 ship (south of center)
+            { pos: new THREE.Vector3(0, 8, -1800), island: 'maui' },
+            // Big Island - 1 ship (south of center)
+            { pos: new THREE.Vector3(3200, 8, -7200), island: 'big-island' },
+            // Oahu - 3 ships (spread out around the island)
+            { pos: new THREE.Vector3(-6400, 8, -1400), island: 'oahu' },
+            { pos: new THREE.Vector3(-5000, 8, -2800), island: 'oahu' },
+            { pos: new THREE.Vector3(-7800, 8, -2800), island: 'oahu' },
+            // Kauai - 1 ship (south of center)
+            { pos: new THREE.Vector3(-12000, 8, -2800), island: 'kauai' },
+        ];
         
-        // Create UI marker for cruise ship (only if element exists)
-        const uiMarker = document.getElementById('cruise-ship-marker');
-        if (uiMarker && oahuShip) {
-            uiMarker.style.cssText = `
-                position: fixed;
-                font-size: 40px;
-                pointer-events: none;
-                z-index: 1001;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
-            `;
-            uiMarker.textContent = '🚢';
-            oahuShip.mesh.userData.uiMarker = uiMarker;
-        } else if (!uiMarker) {
-            console.warn('Cruise ship marker element not found in DOM');
-        }
+        window.showCruiseShipMarkers = false; // Disabled by default
         
-        console.log('Cruise ship created at:', oahuShip.mesh.position.clone());
+        cruiseShipConfigs.forEach((config, index) => {
+            const ship = new CruiseShip(this.scene, config.pos);
+            ship.mesh.userData.island = config.island;
+            this.cruiseShips.push(ship);
+            
+            // Create UI marker for each cruise ship
+            const uiMarker = document.getElementById('cruise-ship-marker');
+            if (uiMarker) {
+                const markerClone = uiMarker.cloneNode(true);
+                markerClone.id = `cruise-ship-marker-${index}`;
+                markerClone.style.cssText = `
+                    position: fixed;
+                    font-size: 40px;
+                    pointer-events: none;
+                    z-index: 1001;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+                `;
+                markerClone.textContent = '🚢';
+                document.body.appendChild(markerClone);
+                ship.mesh.userData.uiMarker = markerClone;
+            }
+        });
+        
+        console.log(`Cruise ships created: ${this.cruiseShips.length} ships near Hawaiian islands`);
         
         console.log('BoatManager: Created', 
             this.sailboats.length, 'sailboats,', 
@@ -795,14 +813,6 @@ class BoatManager {
         }
     }
     
-    createCruiseShips(count) {
-        for (let i = 0; i < count; i++) {
-            const pos = this.getCruiseShipPosition();
-            const ship = new CruiseShip(this.scene, pos);
-            this.cruiseShips.push(ship);
-        }
-    }
-    
     getCoastalPosition() {
         const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
         const angle = Math.random() * Math.PI * 2;
@@ -811,18 +821,6 @@ class BoatManager {
         return new THREE.Vector3(
             island.x + Math.cos(angle) * distance,
             BOAT_WATER_LEVEL,
-            island.z + Math.sin(angle) * distance
-        );
-    }
-    
-    getCruiseShipPosition() {
-        const island = islandPositions[Math.floor(Math.random() * islandPositions.length)];
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 500 + Math.random() * 1500;
-        
-        return new THREE.Vector3(
-            island.x + Math.cos(angle) * distance,
-            BOAT_WATER_LEVEL + 457, // 1500 feet
             island.z + Math.sin(angle) * distance
         );
     }
@@ -844,10 +842,7 @@ class BoatManager {
         }
         
         let newTarget;
-        if (boat instanceof CruiseShip) {
-            // Keep cruise ship at altitude
-            newTarget = this.getCruiseShipPosition();
-        } else if (boat instanceof PirateShip) {
+        if (boat instanceof PirateShip) {
             newTarget = this.getCoastalPosition();
         } else if (isCoastal) {
             newTarget = this.getCoastalPosition();
@@ -858,9 +853,7 @@ class BoatManager {
         if (typeof getTerrainHeight === 'function' && typeof islandPositions !== 'undefined') {
             let attempts = 0;
             while (getTerrainHeight(newTarget.x, newTarget.z) > BOAT_WATER_LEVEL && attempts < 20) {
-                if (boat instanceof CruiseShip) {
-                    newTarget = this.getCruiseShipPosition();
-                } else if (boat instanceof PirateShip) {
+                if (boat instanceof PirateShip) {
                     newTarget = this.getCoastalPosition();
                 } else {
                     newTarget = isCoastal ? this.getCoastalPosition() : this.getOpenWaterPosition();
@@ -876,8 +869,7 @@ class BoatManager {
         const allBoats = [
             ...this.sailboats, 
             ...this.speedboats,
-            ...this.pirateShips,
-            ...this.cruiseShips
+            ...this.pirateShips
         ];
         
         const camPos = camera ? camera.position : new THREE.Vector3();
@@ -900,7 +892,7 @@ class BoatManager {
             
             if (!boat.targetWaypoint || boat.waypointTimer <= 0) {
                 this.pickNewWaypoint(boat);
-                const baseTime = boat instanceof CruiseShip ? 20 : (boat instanceof Speedboat ? 5 : 15);
+                const baseTime = boat instanceof Speedboat ? 5 : 15;
                 boat.waypointTimer = baseTime + Math.random() * 10;
             }
             
@@ -916,29 +908,47 @@ class BoatManager {
                 boat.mesh.rotation.y = Math.atan2(direction.x, direction.z);
             }
             
-            // Only update Y position and rotation for water boats, not cruise ship (which flies at altitude)
-            if (!(boat instanceof CruiseShip)) {
-                // Sample ocean height at boat position for realistic water following
-                const getOceanHeight = window.getOceanHeight || (() => 0);
-                const waveHeight = getOceanHeight(boat.mesh.position.x, boat.mesh.position.z);
-                
-                // Combine wave height with small bobbing offset for natural motion
-                const bobOffset = Math.sin(boat.bobTimer) * 0.2;
-                boat.mesh.position.y = BOAT_WATER_LEVEL + waveHeight * 0.7 + bobOffset;
-                boat.mesh.rotation.z = Math.sin(boat.rockTimer) * 0.05;
-                boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
-            }
+            // Sample ocean height at boat position for realistic water following
+            const getOceanHeight = window.getOceanHeight || (() => 0);
+            const waveHeight = getOceanHeight(boat.mesh.position.x, boat.mesh.position.z);
             
-            // Update UI marker for cruise ship
-            if (boat instanceof CruiseShip && boat.mesh.userData.uiMarker) {
-                const uiMarker = boat.mesh.userData.uiMarker;
-                camera.updateMatrixWorld();
-                const screenPos = boat.mesh.position.clone().project(camera);
+            // Combine wave height with small bobbing offset for natural motion
+            const bobOffset = Math.sin(boat.bobTimer) * 0.2;
+            boat.mesh.position.y = BOAT_WATER_LEVEL + waveHeight * 0.7 + bobOffset;
+            boat.mesh.rotation.z = Math.sin(boat.rockTimer) * 0.05;
+            boat.mesh.rotation.x = Math.cos(boat.rockTimer * 0.7) * 0.03;
+            
+            if ((boat instanceof Sailboat || boat instanceof PirateShip) && boat.mesh.children.length > 2) {
+                const sailChild = boat.mesh.children.find(c => c.userData && c.userData.isSail);
+                if (sailChild) {
+                    sailChild.rotation.z = Math.sin(time * 3 + boat.bobTimer) * 0.02;
+                }
+            }
+        });
+        
+        // Update UI markers for all cruise ships
+        this.cruiseShips.forEach((ship) => {
+            if (ship.mesh.userData.uiMarker) {
+                const uiMarker = ship.mesh.userData.uiMarker;
+                const showLabels = window.showCruiseShipMarkers !== false;
                 
-                // Check if in front of camera
+                if (!showLabels) {
+                    uiMarker.style.display = 'none';
+                    return;
+                }
+                
+                const dist = camPos.distanceTo(ship.mesh.position);
+                if (dist > this.cruiseShipMaxDist) {
+                    uiMarker.style.display = 'none';
+                    return;
+                }
+                
+                camera.updateMatrixWorld();
+                const screenPos = ship.mesh.position.clone().project(camera);
+                
                 if (screenPos.z < 1) {
-                    const width = window.innerWidth || renderer?.domElement?.clientWidth;
-                    const height = window.innerHeight || renderer?.domElement?.clientHeight;
+                    const width = window.innerWidth;
+                    const height = window.innerHeight;
                     
                     const x = (screenPos.x + 1) / 2 * width;
                     const y = (1 - screenPos.y) / 2 * height;
@@ -948,13 +958,6 @@ class BoatManager {
                     uiMarker.style.top = `${y}px`;
                 } else {
                     uiMarker.style.display = 'none';
-                }
-            }
-            
-            if ((boat instanceof Sailboat || boat instanceof PirateShip) && boat.mesh.children.length > 2) {
-                const sailChild = boat.mesh.children.find(c => c.userData && c.userData.isSail);
-                if (sailChild) {
-                    sailChild.rotation.z = Math.sin(time * 3 + boat.bobTimer) * 0.02;
                 }
             }
         });

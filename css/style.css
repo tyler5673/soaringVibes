@@ -1526,6 +1526,11 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     min-width: 100px;
 }
 
+.setting-row .settings-toggle {
+    min-width: auto;
+    flex-shrink: 0;
+}
+
 .setting-control {
     display: flex;
     align-items: center;

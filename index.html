@@ -16,11 +16,11 @@
             <div class="cloud"></div>
             <div class="cloud"></div>
         </div>
-            <div id="loading-bottom-left">
+            <!-- <div id="loading-bottom-left">
                 <a href="https://ko-fi.com/tylereastman" target="_blank" id="kofi-button">
                     <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" alt="Buy Me a Coffee">
                 </a>
-            </div>
+            </div> -->
         
         <div id="loading-content">
             <img src="assets/images/logo.png" id="loading-logo" alt="Soaring Vibes">
@@ -252,6 +252,20 @@
                     <h3 class="settings-section-title">Abby Mode (No Crash)</h3>
                     <label class="settings-toggle">
                         <input type="checkbox" id="abby-mode-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section" id="labels-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Labels</h3>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="cruise-ship-labels-toggle">Cruise Ship Marker</label>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="cruise-ship-labels-toggle">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -1053,6 +1067,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const boatsToggle = document.getElementById('boats-toggle');
     const abbyModeSection = document.getElementById('abby-mode-section');
     const abbyModeToggle = document.getElementById('abby-mode-toggle');
+    const labelsSection = document.getElementById('labels-section');
+    const cruiseShipLabelsToggle = document.getElementById('cruise-ship-labels-toggle');
     const boatsDistSlider = document.getElementById('boats-distance-slider');
     const boatsDistValue = document.getElementById('boats-distance-value');
     const boatsDensitySlider = document.getElementById('boats-density-slider');
@@ -1319,6 +1335,19 @@ document.addEventListener('DOMContentLoaded', function() {
             window.aircraft.abbyMode = enabled;
         }
     });
+
+    // Cruise ship labels toggle
+    cruiseShipLabelsToggle.addEventListener('change', function() {
+        window.showCruiseShipMarkers = this.checked;
+        updateCruiseShipMarkerVisibility(this.checked);
+    });
+
+    function updateCruiseShipMarkerVisibility(show) {
+        const allMarkers = document.querySelectorAll('[id^="cruise-ship-marker"]');
+        allMarkers.forEach(marker => {
+            marker.style.display = show ? 'flex' : 'none';
+        });
+    }
     
     // ========== WIREFRAME RENDER MODE ==========
     const wireframeSelect = document.getElementById('wireframe-select');
