@@ -193,6 +193,14 @@
                         <span id="cloud-count-value" class="setting-value">100</span>
                     </div>
                 </div>
+                
+                <div class="setting-row">
+                    <label for="cloud-distance-slider">Draw Distance</label>
+                    <div class="setting-control">
+                        <input type="range" id="cloud-distance-slider" min="5000" max="30000" value="15000" step="500">
+                        <span id="cloud-distance-value" class="setting-value">15000m</span>
+                    </div>
+                </div>
             </div>
             
             <div class="settings-section" id="boats-section">
@@ -775,6 +783,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (cs) {
                     cloudCountSlider.value = cs.clouds.length;
                     cloudCountValue.textContent = cs.clouds.length;
+                    
+                    const cloudDistSlider = document.getElementById('cloud-distance-slider');
+                    const cloudDistValue = document.getElementById('cloud-distance-value');
+                    if (cloudDistSlider && cloudDistValue) {
+                        cloudDistSlider.value = cs.maxDrawDist || 15000;
+                        cloudDistValue.textContent = (cs.maxDrawDist || 15000) + 'm';
+                    }
                 }
                 
                 settingsModal.style.display = 'flex';
@@ -1120,6 +1135,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cs) {
             cloudCountSlider.value = cs.clouds.length;
             cloudCountValue.textContent = cs.clouds.length;
+            
+            // Sync cloud distance slider with system value
+            const cloudDistSlider = document.getElementById('cloud-distance-slider');
+            const cloudDistValue = document.getElementById('cloud-distance-value');
+            if (cloudDistSlider && cloudDistValue) {
+                cloudDistSlider.value = cs.maxDrawDist || 15000;
+                cloudDistValue.textContent = (cs.maxDrawDist || 15000) + 'm';
+            }
         }
         
         const boatMgr = window.boatManager;
@@ -1230,6 +1253,20 @@ document.addEventListener('DOMContentLoaded', function() {
             window.cloudSystem.rebuild(val);
         }
     });
+    
+    // Cloud draw distance
+    const cloudDistSlider = document.getElementById('cloud-distance-slider');
+    const cloudDistValue = document.getElementById('cloud-distance-value');
+    
+    if (cloudDistSlider && cloudDistValue) {
+        cloudDistSlider.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            cloudDistValue.textContent = val + 'm';
+            if (window.cloudSystem) {
+                window.cloudSystem.maxDrawDist = val;
+            }
+        });
+    }
     
     // Vegetation toggle
     vegToggle.addEventListener('change', function() {

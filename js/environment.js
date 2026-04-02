@@ -71,6 +71,7 @@ class CloudSystem {
         this.clouds = [];
         this.scene = scene;
         this.bounds = 12000;
+        this.maxDrawDist = 15000;
         this.enabled = true;
         
         const islandPositions = [
@@ -163,6 +164,7 @@ class CloudSystem {
         }
         
         const camPos = camera ? camera.position : null;
+        const maxDist = this.maxDrawDist;
         
         this.clouds.forEach(cloud => {
             cloud.visible = true;
@@ -171,6 +173,13 @@ class CloudSystem {
             let lodScale = 1.0;
             if (camPos) {
                 const dist = camPos.distanceTo(cloud.position);
+                
+                // Hide clouds beyond draw distance
+                if (dist > maxDist) {
+                    cloud.visible = false;
+                    return;
+                }
+                
                 if (dist > 8000) {
                     lodScale = 0.5;
                 } else if (dist > 4000) {
