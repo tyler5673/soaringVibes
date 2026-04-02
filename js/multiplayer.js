@@ -242,33 +242,45 @@ class MultiplayerClient {
     }
 
     createNameLabel(name) {
-        // Create canvas for text
+        // Create canvas for text with dynamic sizing
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 256;
-        canvas.height = 64;
+        
+        const fontSize = 64;
+        context.font = `bold ${fontSize}px Arial, sans-serif`;
+        const textMetrics = context.measureText(name);
+        const textWidth = textMetrics.width;
+        
+        const padding = 20;
+        canvas.width = Math.max(128, Math.ceil(textWidth + padding * 2));
+        canvas.height = Math.ceil(fontSize * 1.6);
         
         // Draw background
         context.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        context.roundRect(0, 0, 256, 64, 8);
+        const radius = 8;
+        context.beginPath();
+        context.roundRect(0, 0, canvas.width, canvas.height, radius);
         context.fill();
         
         // Draw text
-        context.font = 'bold 64px Arial, sans-serif';
+        context.font = `bold ${fontSize}px Arial, sans-serif`;
         context.fillStyle = 'white';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.fillText(name, 256, 64);
+        context.fillText(name, canvas.width / 2, canvas.height / 2);
         
         // Create texture and sprite
         const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
         const material = new THREE.SpriteMaterial({ 
             map: texture,
             transparent: true,
             opacity: 0.9
         });
         const sprite = new THREE.Sprite(material);
-        sprite.scale.set(6, 1.5, 1);
+        
+        const aspect = canvas.width / canvas.height;
+        sprite.scale.set(aspect * 2, 2, 1);
         
         return sprite;
     }
@@ -294,13 +306,11 @@ class MultiplayerClient {
             const showLabel = distance <= maxLabelDistance && !showDot;
             const showDetailed = !showDot;
             
-            // Update label visibility (3D sprite label)
+            // Update label visibility (3D sprite label) - always show
             if (label) {
-                label.visible = showLabel;
-                if (label.visible) {
-                    const scale = Math.max(1.5, distance / 50);
-                    label.scale.set(scale * 3, scale * 0.75, 1);
-                }
+                label.visible = true;
+                const scale = Math.max(1.5, distance / 50);
+                label.scale.set(scale * 3, scale * 0.75, 1);
             }
             
             // Show/hide detailed 3D mesh
