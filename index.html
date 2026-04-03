@@ -1183,10 +1183,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function openSettings() {
         syncSlidersFromManagers();
         
-        // Auto-apply device default preset
-        const defaultPreset = getDeviceDefaultPreset();
-        presetSelect.value = defaultPreset;
-        applyPreset(defaultPreset);
+        // If no preset has been selected yet, use device default and apply it
+        if (!presetSelect.dataset.initialized) {
+            const defaultPreset = getDeviceDefaultPreset();
+            presetSelect.value = defaultPreset;
+            applyPreset(defaultPreset);
+            presetSelect.dataset.initialized = 'true';
+        }
         
         settingsModal.style.display = 'flex';
     }
