@@ -101,3 +101,39 @@ function getDeviceDefaultPreset() {
     const deviceType = detectDeviceType();
     return deviceType === 'mobile' ? 'mobile' : 'desktop';
 }
+
+// Physics mode configuration
+let physicsMode = localStorage.getItem('physicsMode') || 'arcade';
+
+function getPhysicsMode() {
+    return physicsMode;
+}
+
+function setPhysicsMode(mode) {
+    physicsMode = mode;
+    localStorage.setItem('physicsMode', mode);
+    
+    // Update aircraft if exists
+    if (window.aircraft) {
+        window.aircraft.setPhysicsMode(mode);
+    }
+    
+    // Update controls hint
+    updateControlsHint(mode);
+}
+
+function updateControlsHint(mode) {
+    const hint = document.getElementById('controls-hint');
+    if (!hint) return;
+    
+    if (mode === 'realistic') {
+        hint.textContent = 'WASD: Pitch/Roll | QE: Rudder (coordinate turns) | Shift/Ctrl: Throttle | Space: Brake | R: Reset | C: Config';
+    } else {
+        hint.textContent = 'WASD: Pitch/Roll | QE: Yaw | Shift/Ctrl: Throttle | Space: Brake | R: Reset | C: Config';
+    }
+}
+
+// Export for global access
+window.getPhysicsMode = getPhysicsMode;
+window.setPhysicsMode = setPhysicsMode;
+window.updateControlsHint = updateControlsHint;
