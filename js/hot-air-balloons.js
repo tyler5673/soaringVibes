@@ -79,7 +79,7 @@ class HotAirBalloon {
         const maxRadius = 12;
         
         // Main balloon shape - classic teardrop
-        const envelopeGeo = new THREE.SphereGeometry(maxRadius, 24, 24);
+        const envelopeGeo = new THREE.SphereGeometry(maxRadius, 16, 16);
         envelopeGeo.scale(1, 1.4, 1); // Elongate vertically
         
         // Create multi-colored envelope with pattern
