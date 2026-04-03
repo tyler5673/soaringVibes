@@ -3,6 +3,7 @@ class Aircraft {
     constructor(colors) {
         this.mass = 1100;
         this.wingArea = 16;
+        this.wingspan = 11;  // meters
         this.maxThrust = 3500;
         this.maxSpeed = 80;
         this.airDensity = 1.225;
@@ -22,6 +23,8 @@ class Aircraft {
         this.groundSpeed = 0;
         this.crashed = false;
         this.abbyMode = false;
+        this.physicsMode = 'arcade';  // 'arcade' or 'realistic'
+        this.physics = null;  // Will be initialized in initPhysics()
         
         this.propeller = null;
         this.leftFlap = null;
@@ -687,134 +690,20 @@ var spinnerStripeBottom = new THREE.Mesh(
             console.log(`Frame ${this._debugFrame}: vel=(${this.velocity.x.toFixed(1)}, ${this.velocity.y.toFixed(1)}, ${this.velocity.z.toFixed(1)}), rotY=${this.rotation.y.toFixed(2)}`);
         }
         
-        // Animate propeller based on throttle
-        if (this.propeller) {
-            this.propeller.rotation.z += this.throttle * 25 * delta;
+        // Initialize physics if not set
+        if (!this.physics) {
+            this.initPhysics();
         }
         
-        // Animate control surfaces based on input
-        const flapAngle = this.controlInput.roll * 0.35;
-        if (this.leftFlap) this.leftFlap.rotation.x = flapAngle;
-        if (this.rightFlap) this.rightFlap.rotation.x = flapAngle;
+        // Delegate to physics strategy
+        this.physics.update(delta);
         
-        const aileronAngle = this.controlInput.roll * 0.3;
-        if (this.aileronL) this.aileronL.rotation.x = -aileronAngle;
-        if (this.aileronR) this.aileronR.rotation.x = aileronAngle;
-        
-        const elevatorAngle = this.controlInput.pitch * 0.3;
-        if (this.elevator) this.elevator.rotation.x = -elevatorAngle;
-        
-        const rudderAngle = this.controlInput.yaw * 0.35;
-        if (this.rudder) this.rudder.rotation.y = rudderAngle;
-        
-        // Physics
-        const forward = new THREE.Vector3(0, 0, -1);
-        forward.applyEuler(this.rotation);
-        
-        const aircraftUp = new THREE.Vector3(0, 1, 0);
-        aircraftUp.applyEuler(this.rotation);
-        
-        const right = new THREE.Vector3(1, 0, 0);
-        right.applyEuler(this.rotation);
-        
-        const thrustMagnitude = this.throttle * this.maxThrust;
-        const thrust = forward.clone().multiplyScalar(thrustMagnitude);
-        
-        const speed = this.velocity.length();
-        
-        let aoa = 0;
-        if (speed > 1) {
-            const velocityDir = this.velocity.clone().normalize();
-            aoa = forward.angleTo(velocityDir);
-            const pitchComponent = velocityDir.dot(aircraftUp);
-            if (pitchComponent > 0) aoa = -aoa;
-        }
-        
-        const stallAngle = degreesToRadians(15);
-        let cl;
-        if (Math.abs(aoa) < stallAngle) {
-            cl = 2 * Math.PI * aoa;
-        } else {
-            cl = 2 * Math.PI * stallAngle * 0.5 * Math.sign(aoa);
-        }
-        cl = clamp(cl, -1.5, 1.5);
-        
-        const cd0 = 0.025;
-        const k = 0.04;
-        const cd = cd0 + k * cl * cl;
-        
-        const q = 0.5 * this.airDensity * speed * speed;
-        
-        // Lift perpendicular to velocity, in plane of aircraft up
-        const velocityDir = speed > 0.1 ? this.velocity.clone().normalize() : forward.clone();
-        let liftDir = new THREE.Vector3().crossVectors(right, velocityDir).normalize();
-        if (liftDir.length() < 0.1) {
-            liftDir = aircraftUp.clone();
-        }
-        const lift = liftDir.multiplyScalar(q * this.wingArea * cl);
-        
-        const drag = velocityDir.clone().multiplyScalar(-q * this.wingArea * cd);
-        
-        const weight = new THREE.Vector3(0, -this.mass * 9.81, 0);
-        
-        const groundEffectHeight = 20;
-        if (this.position.y < groundEffectHeight && this.position.y > 0) {
-            const effect = 1 - (this.position.y / groundEffectHeight);
-            lift.multiplyScalar(1 + effect * 0.5);
-            drag.multiplyScalar(1 - effect * 0.3);
-        }
-        
-        const totalForce = new THREE.Vector3().add(thrust).add(lift).add(drag).add(weight);
-        const acceleration = totalForce.divideScalar(this.mass);
-        
-        this.velocity.add(acceleration.multiplyScalar(delta));
-        
-        if (speed > this.maxSpeed) {
-            this.velocity.multiplyScalar(this.maxSpeed / speed);
-        }
-        
-        this.position.add(this.velocity.clone().multiplyScalar(delta));
-        
-        if (this.position.y < 0) {
-            this.position.y = 0;
-            if (this.velocity.y < 0) this.velocity.y = 0;
-        }
-        
-        this.updateRotation(delta, speed);
-        
-        this.altitude = this.position.y;
-        this.groundSpeed = speed;
-        this.ias = speed * 1.944;
-        
+        // Update mesh
         this.mesh.position.copy(this.position);
         this.mesh.rotation.copy(this.rotation);
         
         // Apply auto-brake when on ground with low throttle
         this.applyAutoBrake(delta);
-    }
-    
-    updateRotation(delta, speed) {
-        const controlEffectiveness = Math.min(1, speed / 30);
-        
-        this.rotation.x += this.controlInput.pitch * this.pitchRate * delta * controlEffectiveness;
-        this.rotation.x = clamp(this.rotation.x, degreesToRadians(-45), degreesToRadians(45));
-        
-        this.rotation.z -= this.controlInput.roll * this.rollRate * delta * controlEffectiveness;
-        this.rotation.z = clamp(this.rotation.z, degreesToRadians(-60), degreesToRadians(60));
-        
-        this.rotation.y += this.controlInput.yaw * this.yawRate * delta * controlEffectiveness;
-        
-        if (speed > 20) {
-            this.rotation.z *= 0.99;
-        }
-        
-        if (speed > 20 && Math.abs(this.controlInput.pitch) < 0.1) {
-            this.rotation.x *= 0.98;
-        }
-        
-        if (speed > 20) {
-            this.rotation.y += Math.sin(this.rotation.z) * 0.3 * delta;
-        }
     }
     
     reset() {
@@ -824,6 +713,10 @@ var spinnerStripeBottom = new THREE.Mesh(
         // Clear any residual physics state
         this.controlInput = { pitch: 0, roll: 0, yaw: 0 };
         this.throttle = 0.5;
+        
+        // Re-initialize physics
+        this.initPhysics();
+        
         this.ias = 0;
         this.groundSpeed = 0;
         this.crashed = false;
@@ -864,6 +757,26 @@ var spinnerStripeBottom = new THREE.Mesh(
                 }
             }
         });
+    }
+    
+    initPhysics() {
+        if (this.physicsMode === 'arcade') {
+            this.physics = new ArcadePhysics(this);
+        } else {
+            this.physics = new RealisticPhysics(this);
+        }
+    }
+    
+    setPhysicsMode(mode) {
+        if (this.physicsMode === mode) return;
+        
+        this.physicsMode = mode;
+        this.initPhysics();
+        
+        // Reset angular velocity for realistic mode
+        if (mode === 'realistic' && this.physics.angularVelocity) {
+            this.physics.angularVelocity = { pitch: 0, roll: 0, yaw: 0 };
+        }
     }
     
     checkCrash() {
