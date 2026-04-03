@@ -136,7 +136,7 @@ class RealisticPhysics {
         const rudderDeflection = aircraft.controlInput.yaw * this.maxRudderDeflection * Math.PI / 180;
         
         const M_pitch = q * aircraft.wingArea * 1.5 * this.Cm_elevator * elevatorDeflection;
-        const M_roll = q * aircraft.wingArea * 11 * this.Cl_aileron * aileronDeflection;
+        let M_roll = q * aircraft.wingArea * 11 * this.Cl_aileron * aileronDeflection;
         
         const adverseYaw = -aileronDeflection * 0.1 * q * aircraft.wingArea * 11;
         const M_yaw = q * aircraft.wingArea * 11 * this.Cn_rudder * rudderDeflection + adverseYaw;
