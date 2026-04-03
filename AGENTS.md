@@ -11,6 +11,7 @@ Browser-based flight simulator using Three.js featuring the Hawaiian islands. Ru
 - **Aircraft customization**: Custom name and color selection at spawn
 - **Multiplayer**: WebSocket-based multiplayer at `wss://multiplayer.soaringvibes.com/ws`
 - **Mobile support**: Touch controls with throttle slider and virtual joystick
+- **Physics modes**: Arcade (default) and realistic flight physics with toggle in settings
 
 ## Technology Stack
 - **Rendering**: Three.js (CDN: `https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js`)
@@ -75,6 +76,21 @@ soaringVibes/
 - Stall at low speed; gravity always pulls down
 - Collision detection via terrain heightmap (`getTerrainHeight()`)
 - Spawns at ~2500 feet above Maui airport
+
+### Physics Modes
+
+**Arcade Mode (default):**
+- Direct rotation rates for instant response
+- Simplified lift/drag model
+- Forgiving, no coordination required
+
+**Realistic Mode:**
+- Full aerodynamic model with lift/drag curves
+- Control surface deflections create moments
+- Adverse yaw requires rudder coordination
+- Stall behavior at high angle of attack
+- Propeller effects (torque, P-factor)
+- Control effectiveness varies with speed²
 
 ### Flora System
 - LOD system: 3 detail levels based on distance
