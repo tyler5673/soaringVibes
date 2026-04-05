@@ -6,7 +6,8 @@ class RealisticPhysics {
         this.I_roll = 800;
         this.I_yaw = 1800;
         
-        this.angularVelocity = { pitch: 0, roll: 0, yaw: 0 };
+        this.angularVelocity = new THREE.Vector3(0, 0, 0);
+        this.quaternion = new THREE.Quaternion();
         
         this.Cl_alpha = 6.0;
         this.Cl_max = 1.6;
@@ -141,35 +142,42 @@ class RealisticPhysics {
         const aileronDeflection = aircraft.controlInput.roll * this.maxAileronDeflection * Math.PI / 180;
         const rudderDeflection = aircraft.controlInput.yaw * this.maxRudderDeflection * Math.PI / 180;
         
-        const cosRoll = Math.cos(aircraft.rotation.z);
-        const rollFactor = Math.max(0.3, Math.abs(cosRoll));
-        
-        const M_pitch = q * aircraft.wingArea * 0.3 * this.Cm_elevator * elevatorDeflection * rollFactor;
-        let M_roll = q * aircraft.wingArea * 2.5 * this.Cl_aileron * aileronDeflection;
-        
-        let M_yaw = q * aircraft.wingArea * 2.5 * this.Cn_rudder * rudderDeflection;
-        
-        const adverseYaw = -aileronDeflection * 0.05 * q * aircraft.wingArea;
-        M_yaw += adverseYaw;
-        
-        const propTorque = aircraft.throttle * 0.02 * aircraft.maxThrust;
-        M_roll += propTorque;
+        const M_pitch = q * aircraft.wingArea * 0.3 * this.Cm_elevator * elevatorDeflection;
+        const M_roll = q * aircraft.wingArea * 2.5 * this.Cl_aileron * aileronDeflection;
+        const M_yaw = q * aircraft.wingArea * 2.5 * this.Cn_rudder * rudderDeflection;
         
         const alpha_pitch = M_pitch / this.I_pitch;
         const alpha_roll = M_roll / this.I_roll;
         const alpha_yaw = M_yaw / this.I_yaw;
         
-        this.angularVelocity.pitch += alpha_pitch * delta;
-        this.angularVelocity.roll += alpha_roll * delta;
-        this.angularVelocity.yaw += alpha_yaw * delta;
+        const euler = new THREE.Euler();
+        euler.set(aircraft.rotation.x, aircraft.rotation.y, aircraft.rotation.z, 'YXZ');
+        this.quaternion.setFromEuler(euler);
         
-        this.angularVelocity.pitch *= (1 - this.pitchDamping * delta);
-        this.angularVelocity.roll *= (1 - this.rollDamping * delta);
-        this.angularVelocity.yaw *= (1 - this.yawDamping * delta);
+        const bodyAngularVelocity = new THREE.Vector3(alpha_pitch, alpha_yaw, alpha_roll);
+        bodyAngularVelocity.multiplyScalar(delta);
         
-        aircraft.rotation.x += this.angularVelocity.pitch * delta;
-        aircraft.rotation.z += this.angularVelocity.roll * delta;
-        aircraft.rotation.y += this.angularVelocity.yaw * delta;
+        this.angularVelocity.x += bodyAngularVelocity.x;
+        this.angularVelocity.y += bodyAngularVelocity.y;
+        this.angularVelocity.z += bodyAngularVelocity.z;
+        
+        this.angularVelocity.x *= (1 - this.pitchDamping * delta);
+        this.angularVelocity.y *= (1 - this.yawDamping * delta);
+        this.angularVelocity.z *= (1 - this.rollDamping * delta);
+        
+        const rotationQuaternion = new THREE.Quaternion();
+        const bodyRates = this.angularVelocity.clone().multiplyScalar(delta);
+        const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), bodyRates.x);
+        const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), bodyRates.y);
+        const qRoll = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), bodyRates.z);
+        
+        this.quaternion.multiply(qPitch).multiply(qYaw).multiply(qRoll);
+        this.quaternion.normalize();
+        
+        const newEuler = new THREE.Euler().setFromQuaternion(this.quaternion, 'YXZ');
+        aircraft.rotation.x = newEuler.x;
+        aircraft.rotation.y = newEuler.y;
+        aircraft.rotation.z = newEuler.z;
     }
 }
 
