@@ -8,25 +8,27 @@ class RealisticPhysics {
         
         this.angularVelocity = { pitch: 0, roll: 0, yaw: 0 };
         
-        this.Cl_alpha = 5.7;
-        this.Cl_max = 1.5;
-        this.Cd0 = 0.025;
+        this.Cl_alpha = 6.0;
+        this.Cl_max = 1.6;
+        this.Cd0 = 0.022;
         this.e = 0.8;
         this.aspectRatio = aircraft.wingspan * aircraft.wingspan / aircraft.wingArea;
         
-        this.Cm_elevator = -1.2;
-        this.Cl_aileron = 0.15;
-        this.Cn_rudder = 0.1;
+        this.Cm_elevator = 0.8;
+        this.Cl_aileron = -0.08;
+        this.Cn_rudder = 0.06;
         
         this.maxElevatorDeflection = 25;
         this.maxAileronDeflection = 20;
         this.maxRudderDeflection = 25;
         
-        this.pitchDamping = 0.5;
-        this.rollDamping = 0.8;
-        this.yawDamping = 0.3;
+        this.pitchDamping = 1.2;
+        this.rollDamping = 1.5;
+        this.yawDamping = 2.0;
         
         this.propRadius = 1.0;
+        
+        this.groundEffectHeight = 20;
     }
     
     update(delta) {
@@ -88,7 +90,9 @@ class RealisticPhysics {
         let aoa = 0;
         if (speed > 1) {
             const velocityDir = aircraft.velocity.clone().normalize();
-            aoa = Math.asin(velocityDir.dot(up));
+            aoa = forward.angleTo(velocityDir);
+            const pitchComponent = velocityDir.dot(up);
+            if (pitchComponent > 0) aoa = -aoa;
         }
         
         let Cl;
@@ -104,9 +108,11 @@ class RealisticPhysics {
         const Cd = this.Cd0 + Cl * Cl / (Math.PI * this.e * this.aspectRatio);
         
         const velocityDir = speed > 0.1 ? aircraft.velocity.clone().normalize() : forward.clone();
-        let liftDir = new THREE.Vector3().crossVectors(right, velocityDir).normalize();
-        if (liftDir.length() < 0.1) liftDir = up.clone();
-        const lift = liftDir.multiplyScalar(q * aircraft.wingArea * Cl);
+        
+        const cosRoll = Math.cos(aircraft.rotation.z);
+        const liftFactor = clamp(cosRoll, 0, 1);
+        const liftMagnitude = q * aircraft.wingArea * Cl * liftFactor;
+        const lift = up.clone().multiplyScalar(liftMagnitude);
         
         const drag = velocityDir.clone().multiplyScalar(-q * aircraft.wingArea * Cd);
         
@@ -115,13 +121,13 @@ class RealisticPhysics {
         
         const weight = new THREE.Vector3(0, -aircraft.mass * 9.81, 0);
         
-        if (aircraft.position.y < 20 && aircraft.position.y > 0) {
-            const effect = 1 - (aircraft.position.y / 20);
+        if (aircraft.position.y < this.groundEffectHeight && aircraft.position.y > 0) {
+            const effect = 1 - (aircraft.position.y / this.groundEffectHeight);
             lift.multiplyScalar(1 + effect * 0.5);
             drag.multiplyScalar(1 - effect * 0.3);
         }
         
-        const total = new THREE.Vector3().add(thrust).add(lift).add(drag).add(weight);
+        let total = new THREE.Vector3().add(thrust).add(lift).add(drag).add(weight);
         
         return { lift, drag, thrust, weight, total };
     }
@@ -135,13 +141,15 @@ class RealisticPhysics {
         const aileronDeflection = aircraft.controlInput.roll * this.maxAileronDeflection * Math.PI / 180;
         const rudderDeflection = aircraft.controlInput.yaw * this.maxRudderDeflection * Math.PI / 180;
         
-        const M_pitch = q * aircraft.wingArea * 1.5 * this.Cm_elevator * elevatorDeflection;
-        let M_roll = q * aircraft.wingArea * 11 * this.Cl_aileron * aileronDeflection;
+        const M_pitch = q * aircraft.wingArea * 0.3 * this.Cm_elevator * elevatorDeflection;
+        let M_roll = q * aircraft.wingArea * 2.5 * this.Cl_aileron * aileronDeflection;
         
-        const adverseYaw = -aileronDeflection * 0.1 * q * aircraft.wingArea * 11;
-        const M_yaw = q * aircraft.wingArea * 11 * this.Cn_rudder * rudderDeflection + adverseYaw;
+        let M_yaw = q * aircraft.wingArea * 2.5 * this.Cn_rudder * rudderDeflection;
         
-        const propTorque = aircraft.throttle * 0.05 * aircraft.maxThrust;
+        const adverseYaw = -aileronDeflection * 0.05 * q * aircraft.wingArea;
+        M_yaw += adverseYaw;
+        
+        const propTorque = aircraft.throttle * 0.02 * aircraft.maxThrust;
         M_roll += propTorque;
         
         const alpha_pitch = M_pitch / this.I_pitch;
@@ -159,6 +167,14 @@ class RealisticPhysics {
         aircraft.rotation.x += this.angularVelocity.pitch * delta;
         aircraft.rotation.z += this.angularVelocity.roll * delta;
         aircraft.rotation.y += this.angularVelocity.yaw * delta;
+        
+        if (speed > 20 && Math.abs(aircraft.controlInput.pitch) < 0.1) {
+            aircraft.rotation.x *= 0.98;
+        }
+        
+        if (speed > 20) {
+            aircraft.rotation.z *= 0.99;
+        }
         
         aircraft.rotation.x = clamp(aircraft.rotation.x, degreesToRadians(-45), degreesToRadians(45));
         aircraft.rotation.z = clamp(aircraft.rotation.z, degreesToRadians(-60), degreesToRadians(60));
