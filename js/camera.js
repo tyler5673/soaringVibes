@@ -22,8 +22,7 @@ class OrbitCamera {
         this.currentLookAt = new THREE.Vector3();
         
         this.followHeading = true;
-        this.headingSmoothing = 3;
-        this.lastTargetHeading = 0;
+        this.headingSmoothing = 2;
     }
     
     handleMouseInput(deltaX, deltaY) {
@@ -43,18 +42,16 @@ class OrbitCamera {
         const targetPos = this.target.position.clone();
         
         if (this.followHeading) {
-            let targetHeading = this.target.rotation.y;
+            const targetHeading = this.target.rotation.y;
             
-            let headingDiff = targetHeading - this.lastTargetHeading;
-            while (headingDiff > Math.PI) headingDiff -= Math.PI * 2;
-            while (headingDiff < -Math.PI) headingDiff += Math.PI * 2;
+            let diff = targetHeading - this.azimuth;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
             
-            if (Math.abs(headingDiff) > 0.01) {
-                const headingT = 1 - Math.exp(-this.headingSmoothing * delta);
-                this.azimuth += headingDiff * headingT;
+            if (Math.abs(diff) > 0.001) {
+                const t = 1 - Math.exp(-this.headingSmoothing * delta);
+                this.azimuth += diff * t;
             }
-            
-            this.lastTargetHeading = targetHeading;
         }
         
         const offset = new THREE.Vector3(
