@@ -166,10 +166,12 @@ class RealisticPhysics {
         this.angularVelocity.z *= (1 - this.rollDamping * delta);
         
         const rotationQuaternion = new THREE.Quaternion();
-        const bodyRates = this.angularVelocity.clone().multiplyScalar(delta);
-        const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), bodyRates.x);
-        const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), bodyRates.y);
-        const qRoll = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), bodyRates.z);
+        const bodyRatesX = this.angularVelocity.x * delta;
+        const bodyRatesY = this.angularVelocity.y * delta;
+        const bodyRatesZ = this.angularVelocity.z * delta;
+        const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), bodyRatesX);
+        const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), bodyRatesY);
+        const qRoll = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), bodyRatesZ);
         
         this.quaternion.multiply(qPitch).multiply(qYaw).multiply(qRoll);
         this.quaternion.normalize();
