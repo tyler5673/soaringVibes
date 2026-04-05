@@ -85,9 +85,8 @@ class OrbitCamera {
         offset.y += this.heightOffset;
         
         this.currentPosition.copy(targetPos.clone().add(offset));
-        this.currentLookAt.copy(targetPos);
         
         this.camera.position.copy(this.currentPosition);
-        this.camera.lookAt(this.currentLookAt);
+        this.camera.lookAt(targetPos);
     }
 }
