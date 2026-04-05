@@ -167,14 +167,6 @@ class RealisticPhysics {
         aircraft.rotation.x += this.angularVelocity.pitch * delta;
         aircraft.rotation.z += this.angularVelocity.roll * delta;
         aircraft.rotation.y += this.angularVelocity.yaw * delta;
-        
-        if (speed > 20 && Math.abs(aircraft.controlInput.pitch) < 0.1) {
-            aircraft.rotation.x *= 0.98;
-        }
-        
-        if (speed > 20 && Math.abs(aircraft.controlInput.roll) < 0.1) {
-            aircraft.rotation.z *= 0.99;
-        }
     }
 }
 
