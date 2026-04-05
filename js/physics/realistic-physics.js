@@ -16,7 +16,7 @@ class RealisticPhysics {
         
         this.Cm_elevator = 0.8;
         this.Cl_aileron = -0.08;
-        this.Cn_rudder = 0.06;
+        this.Cn_rudder = 0.12;
         
         this.maxElevatorDeflection = 25;
         this.maxAileronDeflection = 20;
@@ -110,7 +110,7 @@ class RealisticPhysics {
         const velocityDir = speed > 0.1 ? aircraft.velocity.clone().normalize() : forward.clone();
         
         const cosRoll = Math.cos(aircraft.rotation.z);
-        const liftFactor = clamp(cosRoll, 0, 1);
+        const liftFactor = Math.abs(cosRoll);
         const liftMagnitude = q * aircraft.wingArea * Cl * liftFactor;
         const lift = up.clone().multiplyScalar(liftMagnitude);
         
@@ -172,7 +172,7 @@ class RealisticPhysics {
             aircraft.rotation.x *= 0.98;
         }
         
-        if (speed > 20) {
+        if (speed > 20 && Math.abs(aircraft.controlInput.roll) < 0.1) {
             aircraft.rotation.z *= 0.99;
         }
     }
