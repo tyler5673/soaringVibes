@@ -16,10 +16,8 @@ class OrbitCamera {
         this.smoothness = 6;
         
         this.heightOffset = 4;
-        this.lookAheadDistance = 8;
         
         this.currentPosition = new THREE.Vector3();
-        this.currentLookAt = new THREE.Vector3();
         
         this.followHeading = true;
         this.headingSmoothing = 2;
@@ -67,12 +65,8 @@ class OrbitCamera {
         const t = 1 - Math.exp(-this.smoothness * delta);
         this.currentPosition.lerp(desiredPosition, t);
         
-        const lookAhead = new THREE.Vector3(0, 0, -this.lookAheadDistance);
-        lookAhead.applyEuler(this.target.rotation);
-        this.currentLookAt.lerp(targetPos.clone().add(lookAhead), t);
-        
         this.camera.position.copy(this.currentPosition);
-        this.camera.lookAt(this.currentLookAt);
+        this.camera.lookAt(targetPos);
     }
     
     resetBehindTarget() {
