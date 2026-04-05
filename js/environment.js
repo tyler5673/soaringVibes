@@ -116,11 +116,11 @@ class CloudSystem {
                 opacity: opacity,
                 roughness: 0.5,
                 depthWrite: false,
-                depthTest: true,
-                renderOrder: 1000
+                depthTest: true
             });
             
             const puff = new THREE.Mesh(puffGeo, puffMat);
+            puff.renderOrder = 1000;
             
             const theta = Math.random() * Math.PI * 2;
             const r = Math.random() * spread;
