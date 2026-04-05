@@ -1,4 +1,7 @@
 // ========== ENVIRONMENT ==========
+let hemiLight = null;
+let skyMesh = null;
+
 function createSky(scene) {
     const sunGeo = new THREE.SphereGeometry(400, 32, 32);
     const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
@@ -19,8 +22,21 @@ function createSky(scene) {
     sunLight.shadow.camera.bottom = -2000;
     scene.add(sunLight);
     
-    const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x006994, 0.8);
+    hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x006994, 0.8);
     scene.add(hemiLight);
+    
+    // Create sky dome
+    const skyGeo = new THREE.SphereGeometry(40000, 32, 32);
+    const skyMat = new THREE.MeshBasicMaterial({
+        color: 0x87CEEB,
+        side: THREE.BackSide
+    });
+    skyMesh = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(skyMesh);
+    
+    // Expose to window for color picker
+    window.hemiLight = hemiLight;
+    window.skyMesh = skyMesh;
 }
 
 // ========== DYNAMIC OCEAN ==========

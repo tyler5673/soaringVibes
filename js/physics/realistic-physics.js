@@ -187,9 +187,20 @@ class RealisticPhysics {
                 
                 buoyancy.set(0, Math.max(0, buoyancyForce + springForce), 0);
                 
-                // Water drag
+                // Water drag - much stronger than air drag
                 const submersionFactor = Math.min(submersionDepth / 0.4, 1.0);
-                waterDrag = aircraft.velocity.clone().multiplyScalar(-speed * 2.0 * submersionFactor);
+                
+                // Base water drag: proportional to velocity squared
+                // Coefficient of 12.0 for realistic mode (slightly less than arcade)
+                const baseWaterDragCoeff = 12.0 * submersionFactor;
+                waterDrag = aircraft.velocity.clone().multiplyScalar(-speed * baseWaterDragCoeff);
+                
+                // Additional friction when throttle is cut
+                if (aircraft.throttle < 0.05 && speed > 1) {
+                    const frictionCoeff = 6.0 * submersionFactor * (1.0 - Math.min(speed / 10, 1.0));
+                    const frictionDrag = aircraft.velocity.clone().multiplyScalar(-frictionCoeff);
+                    waterDrag.add(frictionDrag);
+                }
                 
                 aircraft.waterPhysics.buoyancyForce = buoyancyForce;
             } else {

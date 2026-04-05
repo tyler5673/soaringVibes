@@ -122,9 +122,21 @@ class ArcadePhysics {
             
             buoyancy.set(0, Math.max(0, buoyancyForce + springForce), 0);
             
-            // Water drag increases with submersion
+            // Water drag - much stronger than air drag
             const submersionFactor = Math.min(submersionDepth / 0.4, 1.0);
-            waterDrag = aircraft.velocity.clone().multiplyScalar(-aircraft.velocity.length() * 2.0 * submersionFactor);
+            
+            // Base water drag: proportional to velocity squared (like real fluid drag)
+            // Coefficient of 15.0 provides strong resistance on water
+            const baseWaterDragCoeff = 15.0 * submersionFactor;
+            waterDrag = aircraft.velocity.clone().multiplyScalar(-speed * baseWaterDragCoeff);
+            
+            // Additional friction when throttle is cut - helps plane come to stop on water
+            if (aircraft.throttle < 0.05 && speed > 1) {
+                // Stronger friction at low speeds to bring plane to full stop
+                const frictionCoeff = 8.0 * submersionFactor * (1.0 - Math.min(speed / 10, 1.0));
+                const frictionDrag = aircraft.velocity.clone().multiplyScalar(-frictionCoeff);
+                waterDrag.add(frictionDrag);
+            }
             
             // Additional damping for angular motion on water
             waterAngularDrag = submersionFactor * 0.9;

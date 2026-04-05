@@ -363,6 +363,16 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="setting-row">
+                    <label>Cloud Color</label>
+                    <div class="setting-control">
+                        <div class="color-swatch-picker" id="cloud-color-picker">
+                            <div class="color-swatch-btn" id="cloud-color-swatch" style="background-color: #ffffff;"></div>
+                            <span class="color-hex-display" id="cloud-color-hex">#FFFFFF</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1157,6 +1167,274 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // ========== ENVIRONMENT COLOR PICKER ==========
+    const envColorModal = document.getElementById('environment-color-modal');
+    const envRedSlider = document.getElementById('env-red-slider');
+    const envGreenSlider = document.getElementById('env-green-slider');
+    const envBlueSlider = document.getElementById('env-blue-slider');
+    const envRedValue = document.getElementById('env-red-value');
+    const envGreenValue = document.getElementById('env-green-value');
+    const envBlueValue = document.getElementById('env-blue-value');
+    const envOpacitySlider = document.getElementById('env-opacity-slider');
+    const envOpacityValue = document.getElementById('env-opacity-value');
+    const envColorPreview = document.getElementById('environment-color-preview');
+    const envColorTitle = document.getElementById('environment-color-title');
+    const envColorHexDisplay = document.getElementById('environment-color-hex-display');
+    const transparencyRow = document.getElementById('transparency-row');
+    const envColorOk = document.getElementById('environment-color-ok');
+    
+    let currentEnvColorType = null; // 'sky', 'water', or 'cloud'
+    
+    const skyColorSwatch = document.getElementById('sky-color-swatch');
+    const skyColorHex = document.getElementById('sky-color-hex');
+    const waterColorSwatch = document.getElementById('water-color-swatch');
+    const waterColorHex = document.getElementById('water-color-hex');
+    const cloudColorSwatch = document.getElementById('cloud-color-swatch');
+    const cloudColorHex = document.getElementById('cloud-color-hex');
+    
+    // Load saved colors or use defaults
+    let skyColor = { r: 135, g: 206, b: 235 }; // #87CEEB
+    let waterColor = { r: 64, g: 196, b: 255 }; // #40C4FF
+    let waterOpacity = 0.75;
+    let cloudColor = { r: 255, g: 255, b: 255 }; // #FFFFFF
+    
+    function loadEnvironmentColors() {
+        const savedSky = localStorage.getItem('skyColor');
+        if (savedSky) {
+            skyColor = JSON.parse(savedSky);
+        }
+        const savedWater = localStorage.getItem('waterColor');
+        if (savedWater) {
+            waterColor = JSON.parse(savedWater);
+        }
+        const savedOpacity = localStorage.getItem('waterOpacity');
+        if (savedOpacity) {
+            waterOpacity = parseFloat(savedOpacity);
+        }
+        const savedCloud = localStorage.getItem('cloudColor');
+        if (savedCloud) {
+            cloudColor = JSON.parse(savedCloud);
+        }
+        updateColorSwatches();
+    }
+    
+    function saveEnvironmentColors() {
+        localStorage.setItem('skyColor', JSON.stringify(skyColor));
+        localStorage.setItem('waterColor', JSON.stringify(waterColor));
+        localStorage.setItem('waterOpacity', waterOpacity.toString());
+        localStorage.setItem('cloudColor', JSON.stringify(cloudColor));
+    }
+    
+    function updateColorSwatches() {
+        const skyHex = rgbToHex(skyColor.r, skyColor.g, skyColor.b);
+        const waterHex = rgbToHex(waterColor.r, waterColor.g, waterColor.b);
+        const cloudHex = rgbToHex(cloudColor.r, cloudColor.g, cloudColor.b);
+        skyColorSwatch.style.backgroundColor = skyHex;
+        skyColorHex.textContent = skyHex;
+        waterColorSwatch.style.backgroundColor = waterHex;
+        waterColorHex.textContent = waterHex;
+        cloudColorSwatch.style.backgroundColor = cloudHex;
+        cloudColorHex.textContent = cloudHex;
+    }
+    
+    function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+    }
+    
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+    
+    function updateEnvColorPreview() {
+        const hex = rgbToHex(
+            parseInt(envRedSlider.value),
+            parseInt(envGreenSlider.value),
+            parseInt(envBlueSlider.value)
+        );
+        envColorPreview.style.backgroundColor = hex;
+        envColorHexDisplay.textContent = hex;
+    }
+    
+    function openEnvColorPicker(type) {
+        currentEnvColorType = type;
+        
+        let color, showOpacity = false;
+        if (type === 'sky') {
+            color = skyColor;
+            envColorTitle.textContent = 'Sky Color';
+            showOpacity = false;
+        } else if (type === 'cloud') {
+            color = cloudColor;
+            envColorTitle.textContent = 'Cloud Color';
+            showOpacity = false;
+        } else {
+            color = waterColor;
+            envColorTitle.textContent = 'Water Color';
+            showOpacity = true;
+        }
+        
+        envRedSlider.value = color.r;
+        envGreenSlider.value = color.g;
+        envBlueSlider.value = color.b;
+        envRedValue.textContent = color.r;
+        envGreenValue.textContent = color.g;
+        envBlueValue.textContent = color.b;
+        
+        if (showOpacity) {
+            transparencyRow.style.display = 'flex';
+            envOpacitySlider.value = waterOpacity * 100;
+            envOpacityValue.textContent = Math.round(waterOpacity * 100) + '%';
+        } else {
+            transparencyRow.style.display = 'none';
+        }
+        
+        updateEnvColorPreview();
+        envColorModal.style.display = 'flex';
+    }
+    
+    function applyEnvironmentColors() {
+        const r = parseInt(envRedSlider.value);
+        const g = parseInt(envGreenSlider.value);
+        const b = parseInt(envBlueSlider.value);
+        
+        if (currentEnvColorType === 'sky') {
+            skyColor.r = r;
+            skyColor.g = g;
+            skyColor.b = b;
+        } else if (currentEnvColorType === 'cloud') {
+            cloudColor.r = r;
+            cloudColor.g = g;
+            cloudColor.b = b;
+        } else {
+            waterColor.r = r;
+            waterColor.g = g;
+            waterColor.b = b;
+            waterOpacity = parseInt(envOpacitySlider.value) / 100;
+        }
+        
+        saveEnvironmentColors();
+        updateColorSwatches();
+        applySkyColor();
+        applyWaterColor();
+        applyCloudColor();
+    }
+    
+    function applySkyColor() {
+        const hex = rgbToHex(skyColor.r, skyColor.g, skyColor.b);
+        const color = new THREE.Color(hex);
+        
+        // Update hemisphere light (sky)
+        if (window.hemiLight) {
+            window.hemiLight.color.set(color);
+        }
+        
+        // Update sky sphere material if exists
+        if (window.skyMesh) {
+            window.skyMesh.material.color.set(color);
+        }
+        
+        // Update fog color
+        if (window.scene) {
+            window.scene.fog.color.set(color);
+        }
+    }
+    
+    function applyWaterColor() {
+        const hex = rgbToHex(waterColor.r, waterColor.g, waterColor.b);
+        const color = new THREE.Color(hex);
+        
+        // Update ocean manager colors
+        if (window.oceanManager && window.oceanManager.rings) {
+            for (const ring of window.oceanManager.rings) {
+                ring.mesh.material.color.set(color);
+                ring.mesh.material.opacity = waterOpacity;
+            }
+        }
+    }
+    
+    function applyCloudColor() {
+        const hex = rgbToHex(cloudColor.r, cloudColor.g, cloudColor.b);
+        const color = new THREE.Color(hex);
+        
+        // Update cloud system colors
+        if (window.cloudSystem && window.cloudSystem.clouds) {
+            for (const cloudGroup of window.cloudSystem.clouds) {
+                // Clouds are groups with puff meshes as children
+                cloudGroup.traverse(function(child) {
+                    if (child.isMesh && child.material) {
+                        child.material.color.set(color);
+                    }
+                });
+            }
+        }
+    }
+    
+    // Slider event listeners
+    envRedSlider.addEventListener('input', function() {
+        envRedValue.textContent = this.value;
+        updateEnvColorPreview();
+    });
+    
+    envGreenSlider.addEventListener('input', function() {
+        envGreenValue.textContent = this.value;
+        updateEnvColorPreview();
+    });
+    
+    envBlueSlider.addEventListener('input', function() {
+        envBlueValue.textContent = this.value;
+        updateEnvColorPreview();
+    });
+    
+    envOpacitySlider.addEventListener('input', function() {
+        envOpacityValue.textContent = this.value + '%';
+    });
+    
+    // Color swatch click handlers
+    skyColorSwatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEnvColorPicker('sky');
+    });
+    
+    waterColorSwatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEnvColorPicker('water');
+    });
+    
+    cloudColorSwatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEnvColorPicker('cloud');
+    });
+    
+    // Ok button
+    envColorOk.addEventListener('click', function() {
+        applyEnvironmentColors();
+        envColorModal.style.display = 'none';
+    });
+    
+    // Close modal on background click
+    envColorModal.addEventListener('click', function(e) {
+        if (e.target === envColorModal) {
+            envColorModal.style.display = 'none';
+        }
+    });
+    
+    // Initialize environment colors
+    loadEnvironmentColors();
+    
+    // Apply initial colors after scene is loaded
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            applySkyColor();
+            applyWaterColor();
+            applyCloudColor();
+        }, 1000);
+    });
+    
     // Physics mode toggle
     const physicsModeToggle = document.getElementById('physics-mode-toggle');
     if (physicsModeToggle) {
@@ -1838,6 +2116,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function init() {
             scene = new THREE.Scene();
+            window.scene = scene; // Make globally accessible for color picker
             // Warm afternoon sky
             scene.background = new THREE.Color(0x87CEEB);
             // FogExp2 with density tuned for 3km ocean ring - smooth fade at outer edge
