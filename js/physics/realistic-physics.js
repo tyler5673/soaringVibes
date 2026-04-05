@@ -175,9 +175,6 @@ class RealisticPhysics {
         if (speed > 20) {
             aircraft.rotation.z *= 0.99;
         }
-        
-        aircraft.rotation.x = clamp(aircraft.rotation.x, degreesToRadians(-45), degreesToRadians(45));
-        aircraft.rotation.z = clamp(aircraft.rotation.z, degreesToRadians(-60), degreesToRadians(60));
     }
 }
 
