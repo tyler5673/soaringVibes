@@ -649,7 +649,8 @@ var spinnerStripeBottom = new THREE.Mesh(
     }
     
     setControlInput(input) {
-        this.controlInput.pitch = input.pitch;
+        const reverseElevator = window.getReverseElevator ? window.getReverseElevator() : false;
+        this.controlInput.pitch = reverseElevator ? -input.pitch : input.pitch;
         this.controlInput.roll = input.roll;
         this.controlInput.yaw = input.yaw;
     }

@@ -105,6 +105,9 @@ function getDeviceDefaultPreset() {
 // Physics mode configuration
 let physicsMode = localStorage.getItem('physicsMode') || 'arcade';
 
+// Elevator reverse for mobile widget and keyboard
+let reverseElevator = localStorage.getItem('reverseElevator') === 'true';
+
 function getPhysicsMode() {
     return physicsMode;
 }
@@ -122,6 +125,15 @@ function setPhysicsMode(mode) {
     updateControlsHint(mode);
 }
 
+function getReverseElevator() {
+    return reverseElevator;
+}
+
+function setReverseElevator(reverse) {
+    reverseElevator = reverse;
+    localStorage.setItem('reverseElevator', reverse);
+}
+
 function updateControlsHint(mode) {
     const hint = document.getElementById('controls-hint');
     if (!hint) return;
@@ -137,3 +149,5 @@ function updateControlsHint(mode) {
 window.getPhysicsMode = getPhysicsMode;
 window.setPhysicsMode = setPhysicsMode;
 window.updateControlsHint = updateControlsHint;
+window.getReverseElevator = getReverseElevator;
+window.setReverseElevator = setReverseElevator;

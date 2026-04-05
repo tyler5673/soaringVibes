@@ -281,6 +281,14 @@
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
+                
+                <div class="setting-row">
+                    <label for="reverse-elevator-toggle">Reverse Elevator</label>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="reverse-elevator-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
             </div>
             
             <div class="settings-section" id="abby-mode-section">
@@ -527,6 +535,7 @@
     <script src="js/animals/honeycreeper.js"></script>
     <script src="js/animals/nene.js"></script>
     <script src="js/fauna-manager.js"></script>
+    <script src="js/music-player.js"></script>
     <script>
 // ========== NAME & COLOR SELECTION ==========
 const planeNames = [
@@ -1090,6 +1099,18 @@ document.addEventListener('DOMContentLoaded', function() {
         physicsModeToggle.addEventListener('change', function() {
             const mode = this.checked ? 'realistic' : 'arcade';
             window.setPhysicsMode(mode);
+        });
+    }
+    
+    // Reverse elevator toggle
+    const reverseElevatorToggle = document.getElementById('reverse-elevator-toggle');
+    if (reverseElevatorToggle) {
+        // Initialize from saved setting
+        const savedReverse = localStorage.getItem('reverseElevator') === 'true';
+        reverseElevatorToggle.checked = savedReverse;
+        
+        reverseElevatorToggle.addEventListener('change', function() {
+            window.setReverseElevator(this.checked);
         });
     }
     
