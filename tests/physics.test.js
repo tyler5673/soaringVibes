@@ -128,6 +128,17 @@ global.THREE = {
         add(child) {
             this.children.push(child);
         }
+        traverse(callback) {
+            // Simple traverse - call on self then on children
+            callback(this);
+            this.children.forEach(child => {
+                if (child.traverse) {
+                    child.traverse(callback);
+                } else {
+                    callback(child);
+                }
+            });
+        }
     },
     Mesh: class Mesh {
         constructor(geometry, material) {

@@ -105,6 +105,9 @@ function getDeviceDefaultPreset() {
 // Physics mode configuration
 let physicsMode = localStorage.getItem('physicsMode') || 'arcade';
 
+// Float plane configuration
+let hasFloats = localStorage.getItem('hasFloats') === 'true';
+
 // Elevator reverse for mobile widget and keyboard
 let reverseElevator = localStorage.getItem('reverseElevator') === 'true';
 
@@ -123,6 +126,20 @@ function setPhysicsMode(mode) {
     
     // Update controls hint
     updateControlsHint(mode);
+}
+
+function getHasFloats() {
+    return hasFloats;
+}
+
+function setHasFloats(enabled) {
+    hasFloats = enabled;
+    localStorage.setItem('hasFloats', enabled);
+    
+    // Update aircraft if exists
+    if (window.aircraft) {
+        window.aircraft.setHasFloats(enabled);
+    }
 }
 
 function getReverseElevator() {
@@ -148,6 +165,8 @@ function updateControlsHint(mode) {
 // Export for global access
 window.getPhysicsMode = getPhysicsMode;
 window.setPhysicsMode = setPhysicsMode;
+window.getHasFloats = getHasFloats;
+window.setHasFloats = setHasFloats;
 window.updateControlsHint = updateControlsHint;
 window.getReverseElevator = getReverseElevator;
 window.setReverseElevator = setReverseElevator;

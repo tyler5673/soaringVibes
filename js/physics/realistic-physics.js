@@ -60,9 +60,37 @@ class RealisticPhysics {
         
         aircraft.position.add(aircraft.velocity.clone().multiplyScalar(delta));
         
-        if (aircraft.position.y < 0) {
+        // Check if on water with floats
+        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
+        let waterLevel = aircraft.waterPhysics.waterLevel;
+        
+        // Get dynamic water height if on water
+        if (isOnWater && window.oceanManager) {
+            waterLevel = (typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2) + 
+                        window.oceanManager.getHeight(aircraft.position.x, aircraft.position.z) * 0.85;
+        }
+        
+        // Water surface constraint - don't go below water level when on floats
+        if (isOnWater && aircraft.position.y < waterLevel - 0.35) {
+            aircraft.position.y = waterLevel - 0.35;
+            if (aircraft.velocity.y < 0) aircraft.velocity.y = 0;
+        }
+        
+        if (aircraft.position.y < 0 && !isOnWater) {
             aircraft.position.y = 0;
             if (aircraft.velocity.y < 0) aircraft.velocity.y = 0;
+        }
+        
+        // Apply water damping to angular velocity when on water
+        if (isOnWater) {
+            this.angularVelocity.pitch *= (1 - 0.3 * delta);
+            this.angularVelocity.roll *= (1 - 0.5 * delta);
+            
+            // Self-righting at low speeds
+            if (speed < 10) {
+                this.angularVelocity.roll += -aircraft.rotation.z * 0.8 * delta;
+                this.angularVelocity.pitch += -aircraft.rotation.x * 0.5 * delta;
+            }
         }
         
         this.updateRotation(delta);
@@ -127,7 +155,55 @@ class RealisticPhysics {
             drag.multiplyScalar(1 - effect * 0.3);
         }
         
-        let total = new THREE.Vector3().add(thrust).add(lift).add(drag).add(weight);
+        // Water physics for floats
+        let buoyancy = new THREE.Vector3(0, 0, 0);
+        let waterDrag = new THREE.Vector3(0, 0, 0);
+        
+        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
+        if (isOnWater) {
+            let waterLevel = aircraft.waterPhysics.waterLevel;
+            if (window.oceanManager) {
+                waterLevel = (typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2) + 
+                            window.oceanManager.getHeight(aircraft.position.x, aircraft.position.z) * 0.85;
+            }
+            
+            // Calculate submersion depth
+            const floatBottom = aircraft.position.y - 0.85;
+            const submersionDepth = Math.max(0, waterLevel - floatBottom);
+            
+            if (submersionDepth > 0) {
+                // Buoyancy force
+                const floatWidth = 0.65;
+                const floatLength = 6.5;
+                const numFloats = 2;
+                const displacedVolume = floatWidth * floatLength * Math.min(submersionDepth, 0.4) * numFloats;
+                const waterDensity = 1000;
+                const buoyancyForce = displacedVolume * waterDensity * 9.81;
+                
+                // Spring force to stabilize at water level
+                const targetHeight = waterLevel + 0.5;
+                const heightDiff = targetHeight - aircraft.position.y;
+                const springForce = heightDiff * 2000;
+                
+                buoyancy.set(0, Math.max(0, buoyancyForce + springForce), 0);
+                
+                // Water drag
+                const submersionFactor = Math.min(submersionDepth / 0.4, 1.0);
+                waterDrag = aircraft.velocity.clone().multiplyScalar(-speed * 2.0 * submersionFactor);
+                
+                aircraft.waterPhysics.buoyancyForce = buoyancyForce;
+            } else {
+                aircraft.waterPhysics.buoyancyForce = 0;
+            }
+        }
+        
+        let total = new THREE.Vector3()
+            .add(thrust)
+            .add(lift)
+            .add(drag)
+            .add(weight)
+            .add(buoyancy)
+            .add(waterDrag);
         
         return { lift, drag, thrust, weight, total };
     }

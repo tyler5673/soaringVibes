@@ -5,6 +5,11 @@ class ArcadePhysics {
         this.rollRate = degreesToRadians(45);
         this.pitchRate = degreesToRadians(30);
         this.yawRate = degreesToRadians(20);
+        
+        // Water physics constants
+        this.waterDrag = 0.92;
+        this.waterAngularDamping = 0.85;
+        this.buoyancyCenterOffset = -0.3; // Center of buoyancy below aircraft center
     }
     
     update(delta) {
@@ -36,6 +41,25 @@ class ArcadePhysics {
         
         const right = new THREE.Vector3(1, 0, 0);
         right.applyEuler(aircraft.rotation);
+        
+        // Check if on water with floats
+        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
+        let waterLevel = aircraft.waterPhysics.waterLevel;
+        
+        // Get dynamic water height if on water
+        if (isOnWater && window.oceanManager) {
+            waterLevel = (typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2) + 
+                        window.oceanManager.getHeight(aircraft.position.x, aircraft.position.z) * 0.85;
+        }
+        
+        // Calculate submersion depth for float physics
+        let submersionDepth = 0;
+        if (isOnWater) {
+            // Floats sit with ~0.35m submerged when at rest
+            const floatBottom = aircraft.position.y - 0.85; // Float bottom relative to aircraft center
+            const waterSurface = waterLevel;
+            submersionDepth = Math.max(0, waterSurface - floatBottom);
+        }
         
         const thrustMagnitude = aircraft.throttle * aircraft.maxThrust;
         const thrust = forward.clone().multiplyScalar(thrustMagnitude);
@@ -76,6 +100,40 @@ class ArcadePhysics {
         
         const weight = new THREE.Vector3(0, -aircraft.mass * 9.81, 0);
         
+        // Buoyancy force when on water with floats
+        let buoyancy = new THREE.Vector3(0, 0, 0);
+        let waterDrag = new THREE.Vector3(0, 0, 0);
+        let waterAngularDrag = 0;
+        
+        if (isOnWater && submersionDepth > 0) {
+            // Buoyancy proportional to submersion (Archimedes principle)
+            // Float displacement: ~0.65m wide * ~6.5m long * submersion depth * 2 floats
+            const floatWidth = 0.65;
+            const floatLength = 6.5;
+            const numFloats = 2;
+            const displacedVolume = floatWidth * floatLength * Math.min(submersionDepth, 0.4) * numFloats;
+            const waterDensity = 1000; // kg/m^3
+            const buoyancyForce = displacedVolume * waterDensity * 9.81;
+            
+            // Apply buoyancy with some smoothing
+            const targetHeight = waterLevel + 0.5; // Floats ride ~0.5m above water surface
+            const heightDiff = targetHeight - aircraft.position.y;
+            const springForce = heightDiff * 2000; // Spring constant to stabilize at water level
+            
+            buoyancy.set(0, Math.max(0, buoyancyForce + springForce), 0);
+            
+            // Water drag increases with submersion
+            const submersionFactor = Math.min(submersionDepth / 0.4, 1.0);
+            waterDrag = aircraft.velocity.clone().multiplyScalar(-aircraft.velocity.length() * 2.0 * submersionFactor);
+            
+            // Additional damping for angular motion on water
+            waterAngularDrag = submersionFactor * 0.9;
+            
+            aircraft.waterPhysics.buoyancyForce = buoyancyForce;
+        } else {
+            aircraft.waterPhysics.buoyancyForce = 0;
+        }
+        
         const groundEffectHeight = 20;
         if (aircraft.position.y < groundEffectHeight && aircraft.position.y > 0) {
             const effect = 1 - (aircraft.position.y / groundEffectHeight);
@@ -83,7 +141,13 @@ class ArcadePhysics {
             drag.multiplyScalar(1 - effect * 0.3);
         }
         
-        const totalForce = new THREE.Vector3().add(thrust).add(lift).add(drag).add(weight);
+        const totalForce = new THREE.Vector3()
+            .add(thrust)
+            .add(lift)
+            .add(drag)
+            .add(weight)
+            .add(buoyancy)
+            .add(waterDrag);
         const acceleration = totalForce.divideScalar(aircraft.mass);
         
         aircraft.velocity.add(acceleration.multiplyScalar(delta));
@@ -94,40 +158,58 @@ class ArcadePhysics {
         
         aircraft.position.add(aircraft.velocity.clone().multiplyScalar(delta));
         
-        if (aircraft.position.y < 0) {
+        // Water surface constraint - don't go below water level when on floats
+        if (isOnWater && aircraft.position.y < waterLevel - 0.35) {
+            aircraft.position.y = waterLevel - 0.35;
+            if (aircraft.velocity.y < 0) aircraft.velocity.y = 0;
+        }
+        
+        if (aircraft.position.y < 0 && !isOnWater) {
             aircraft.position.y = 0;
             if (aircraft.velocity.y < 0) aircraft.velocity.y = 0;
         }
         
-        this.updateRotation(delta, speed);
+        this.updateRotation(delta, speed, waterAngularDrag);
         
         aircraft.altitude = aircraft.position.y;
         aircraft.groundSpeed = speed;
         aircraft.ias = speed * 1.944;
     }
     
-    updateRotation(delta, speed) {
+    updateRotation(delta, speed, waterAngularDrag = 0) {
         const aircraft = this.aircraft;
         const controlEffectiveness = Math.min(1, speed / 30);
         
-        aircraft.rotation.x += aircraft.controlInput.pitch * this.pitchRate * delta * controlEffectiveness;
+        // Water damping affects rotation when on water
+        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
+        const waterDamping = isOnWater ? (1 - waterAngularDrag * delta) : 1;
+        
+        aircraft.rotation.x += aircraft.controlInput.pitch * this.pitchRate * delta * controlEffectiveness * waterDamping;
         aircraft.rotation.x = clamp(aircraft.rotation.x, degreesToRadians(-45), degreesToRadians(45));
         
-        aircraft.rotation.z -= aircraft.controlInput.roll * this.rollRate * delta * controlEffectiveness;
+        aircraft.rotation.z -= aircraft.controlInput.roll * this.rollRate * delta * controlEffectiveness * waterDamping;
         aircraft.rotation.z = clamp(aircraft.rotation.z, degreesToRadians(-60), degreesToRadians(60));
         
         aircraft.rotation.y += aircraft.controlInput.yaw * this.yawRate * delta * controlEffectiveness;
         
         if (speed > 20) {
-            aircraft.rotation.z *= 0.99;
+            aircraft.rotation.z *= 0.99 * waterDamping;
         }
         
         if (speed > 20 && Math.abs(aircraft.controlInput.pitch) < 0.1) {
-            aircraft.rotation.x *= 0.98;
+            aircraft.rotation.x *= 0.98 * waterDamping;
         }
         
         if (speed > 20) {
             aircraft.rotation.y += Math.sin(aircraft.rotation.z) * 0.3 * delta;
+        }
+        
+        // Self-righting moment when on water (floats want to stay level)
+        if (isOnWater && speed < 10) {
+            const rollCorrection = -aircraft.rotation.z * 0.5 * delta;
+            const pitchCorrection = -aircraft.rotation.x * 0.3 * delta;
+            aircraft.rotation.z += rollCorrection;
+            aircraft.rotation.x += pitchCorrection;
         }
     }
 }

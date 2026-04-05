@@ -283,6 +283,14 @@
                 </div>
                 
                 <div class="setting-row">
+                    <label for="float-plane-toggle">Float Plane (Amphibious)</label>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="float-plane-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
                     <label for="reverse-elevator-toggle">Reverse Elevator</label>
                     <label class="settings-toggle">
                         <input type="checkbox" id="reverse-elevator-toggle">
@@ -330,6 +338,66 @@
                     </div>
                 </div>
             </div>
+
+            <div class="settings-section" id="colors-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Colors</h3>
+                </div>
+                
+                <div class="setting-row">
+                    <label>Sky Color</label>
+                    <div class="setting-control">
+                        <div class="color-swatch-picker" id="sky-color-picker">
+                            <div class="color-swatch-btn" id="sky-color-swatch" style="background-color: #87CEEB;"></div>
+                            <span class="color-hex-display" id="sky-color-hex">#87CEEB</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label>Water Color</label>
+                    <div class="setting-control">
+                        <div class="color-swatch-picker" id="water-color-picker">
+                            <div class="color-swatch-btn" id="water-color-swatch" style="background-color: #40c4ff;"></div>
+                            <span class="color-hex-display" id="water-color-hex">#40c4ff</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sky/Water Color Picker Modal -->
+    <div id="environment-color-modal" class="modal">
+        <div class="modal-content environment-color-picker-container">
+            <div class="environment-color-header">
+                <span id="environment-color-title">Color</span>
+                <span id="environment-color-hex-display" class="color-hex-display">#000000</span>
+            </div>
+            <div class="environment-color-preview" id="environment-color-preview"></div>
+            <div class="rgb-color-picker">
+                <div class="slider-row">
+                    <label style="color: #ff6b6b;">R</label>
+                    <input type="range" id="env-red-slider" min="0" max="255" value="64">
+                    <span id="env-red-value" style="color: #ff6b6b;">64</span>
+                </div>
+                <div class="slider-row">
+                    <label style="color: #4ecdc4;">G</label>
+                    <input type="range" id="env-green-slider" min="0" max="255" value="196">
+                    <span id="env-green-value" style="color: #4ecdc4;">196</span>
+                </div>
+                <div class="slider-row">
+                    <label style="color: #45b7d1;">B</label>
+                    <input type="range" id="env-blue-slider" min="0" max="255" value="255">
+                    <span id="env-blue-value" style="color: #45b7d1;">255</span>
+                </div>
+            </div>
+            <div class="transparency-row" id="transparency-row" style="display: none;">
+                <label style="color: #9b59b6;">Opacity</label>
+                <input type="range" id="env-opacity-slider" min="0" max="100" value="75">
+                <span id="env-opacity-value" style="color: #9b59b6;">75%</span>
+            </div>
+            <button id="environment-color-ok" class="color-picker-ok-btn">Ok!</button>
         </div>
     </div>
     
@@ -1114,6 +1182,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Float plane toggle
+    const floatPlaneToggle = document.getElementById('float-plane-toggle');
+    if (floatPlaneToggle) {
+        // Initialize from saved setting
+        const savedFloats = localStorage.getItem('hasFloats') === 'true';
+        floatPlaneToggle.checked = savedFloats;
+        
+        floatPlaneToggle.addEventListener('change', function() {
+            window.setHasFloats(this.checked);
+        });
+    }
+    
     // ========== SETTINGS MODAL ==========
     const settingsModal = document.getElementById('settings-modal');
     const settingsBtn = document.getElementById('desktop-settings-btn');
@@ -1797,6 +1877,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.aircraft.setPhysicsMode(savedPhysicsMode);
                 }
                 window.updateControlsHint(savedPhysicsMode);
+                
+                // Apply saved float plane setting
+                const savedHasFloats = localStorage.getItem('hasFloats') === 'true';
+                if (window.aircraft) {
+                    window.aircraft.setHasFloats(savedHasFloats);
+                }
             scene.add(aircraft.mesh);
             
             orbitCamera = new OrbitCamera(camera, aircraft);
