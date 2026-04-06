@@ -364,44 +364,6 @@
                     </div>
                 </div>
                 
-                <div class="settings-section-header" style="margin-top: 10px;">
-                    <label class="settings-toggle">
-                        <input type="checkbox" id="stars-toggle">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <h3 class="settings-section-title">Stars</h3>
-                </div>
-                
-                <div class="setting-row">
-                    <label style="padding-left: 0;">Star 1</label>
-                    <div class="setting-control">
-                        <div class="color-swatch-picker" id="star-color-1-picker">
-                            <div class="color-swatch-btn" id="star-color-1-swatch" style="background-color: #E8F4FF;"></div>
-                            <span class="color-hex-display" id="star-color-1-hex">#E8F4FF</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="setting-row">
-                    <label style="padding-left: 0;">Star 2</label>
-                    <div class="setting-control">
-                        <div class="color-swatch-picker" id="star-color-2-picker">
-                            <div class="color-swatch-btn" id="star-color-2-swatch" style="background-color: #FFF8E8;"></div>
-                            <span class="color-hex-display" id="star-color-2-hex">#FFF8E8</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="setting-row">
-                    <label style="padding-left: 0;">Star 3</label>
-                    <div class="setting-control">
-                        <div class="color-swatch-picker" id="star-color-3-picker">
-                            <div class="color-swatch-btn" id="star-color-3-swatch" style="background-color: #F0F8FF;"></div>
-                            <span class="color-hex-display" id="star-color-3-hex">#F0F8FF</span>
-                        </div>
-                    </div>
-                </div>
-                
                 <div class="setting-row">
                     <label>Ocean</label>
                     <div class="setting-control">
@@ -418,6 +380,46 @@
                         <div class="color-swatch-picker" id="ocean-floor-color-picker">
                             <div class="color-swatch-btn" id="ocean-floor-color-swatch" style="background-color: #8B7355;"></div>
                             <span class="color-hex-display" id="ocean-floor-color-hex">#8B7355</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section-header stars-header">
+                    <h3 class="settings-section-title">Stars</h3>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="stars-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div id="star-colors-panel" class="star-colors-panel">
+                    <div class="setting-row">
+                        <label>Star 1</label>
+                        <div class="setting-control">
+                            <div class="color-swatch-picker" id="star-color-1-picker">
+                                <div class="color-swatch-btn" id="star-color-1-swatch" style="background-color: #E8F4FF;"></div>
+                                <span class="color-hex-display" id="star-color-1-hex">#E8F4FF</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <label>Star 2</label>
+                        <div class="setting-control">
+                            <div class="color-swatch-picker" id="star-color-2-picker">
+                                <div class="color-swatch-btn" id="star-color-2-swatch" style="background-color: #FFF8E8;"></div>
+                                <span class="color-hex-display" id="star-color-2-hex">#FFF8E8</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <label>Star 3</label>
+                        <div class="setting-control">
+                            <div class="color-swatch-picker" id="star-color-3-picker">
+                                <div class="color-swatch-btn" id="star-color-3-swatch" style="background-color: #F0F8FF;"></div>
+                                <span class="color-hex-display" id="star-color-3-hex">#F0F8FF</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1580,14 +1582,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Stars toggle
     const starsToggle = document.getElementById('stars-toggle');
+    const starColorsPanel = document.getElementById('star-colors-panel');
     if (starsToggle) {
         const savedStarsEnabled = localStorage.getItem('starsEnabled') === 'true';
         starsToggle.checked = savedStarsEnabled;
+        if (savedStarsEnabled && starColorsPanel) {
+            starColorsPanel.classList.add('visible');
+        }
         
         starsToggle.addEventListener('change', function() {
             localStorage.setItem('starsEnabled', this.checked.toString());
             if (window.starSystem) {
                 window.starSystem.setVisible(this.checked);
+            }
+            if (starColorsPanel) {
+                starColorsPanel.classList.toggle('visible', this.checked);
             }
         });
     }

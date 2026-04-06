@@ -1558,6 +1558,18 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     color: var(--color-primary-glow-subtle);
 }
 
+.stars-header {
+    margin-top: 16px;
+}
+
+.star-colors-panel {
+    display: none;
+}
+
+.star-colors-panel.visible {
+    display: block;
+}
+
 .settings-toggle {
     position: relative;
     display: inline-block;

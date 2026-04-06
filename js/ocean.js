@@ -378,3 +378,249 @@ class OceanManager {
     return this.waveSystem.getHeight(x, z);
   }
 }
+
+// ========== WATER SPLASH EFFECTS ==========
+class WaterSplashSystem {
+  constructor(scene) {
+    this.scene = scene;
+    this.splashes = [];
+    this.maxSplashes = 200; // Max concurrent splash particles
+    
+    // Create a simple circular particle texture using canvas
+    this.particleTexture = this.createParticleTexture();
+    
+    // Pre-create a pool of splash sprites
+    this.splashPool = [];
+    this.createSplashPool();
+  }
+  
+  createParticleTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    
+    // Draw a soft white circle with radial gradient
+    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.4, 'rgba(220, 240, 255, 0.8)');
+    gradient.addColorStop(0.7, 'rgba(180, 220, 255, 0.4)');
+    gradient.addColorStop(1, 'rgba(150, 200, 255, 0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 32, 32);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }
+  
+  createSplashPool() {
+    const material = new THREE.SpriteMaterial({
+      map: this.particleTexture,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    
+    for (let i = 0; i < this.maxSplashes; i++) {
+      const sprite = new THREE.Sprite(material.clone());
+      sprite.visible = false;
+      sprite.scale.set(1, 1, 1);
+      this.scene.add(sprite);
+      this.splashPool.push({
+        sprite: sprite,
+        active: false,
+        life: 0,
+        maxLife: 0,
+        velocity: new THREE.Vector3(),
+        startScale: 1
+      });
+    }
+  }
+  
+  spawnSplash(position, intensity, type = 'landing') {
+    // Find inactive splash from pool
+    const splash = this.splashPool.find(s => !s.active);
+    if (!splash) return; // Pool exhausted
+    
+    const { sprite } = splash;
+    
+    // Configure based on splash type
+    let particleCount, size, life, spread;
+    
+    if (type === 'landing') {
+      // Hard landing - big splash
+      particleCount = Math.floor(intensity * 8) + 3;
+      size = 1.5 + intensity * 2;
+      life = 1.0 + intensity * 0.5;
+      spread = 2 + intensity * 3;
+    } else if (type === 'wake') {
+      // Moving on water - wake spray
+      particleCount = Math.floor(intensity * 4) + 1;
+      size = 0.8 + intensity * 0.5;
+      life = 0.6 + intensity * 0.3;
+      spread = 1 + intensity * 1.5;
+    } else {
+      // Light contact
+      particleCount = 2;
+      size = 0.6;
+      life = 0.4;
+      spread = 0.8;
+    }
+    
+    // Activate main splash particle
+    splash.active = true;
+    splash.life = life;
+    splash.maxLife = life;
+    splash.startScale = size;
+    
+    sprite.visible = true;
+    sprite.position.copy(position);
+    sprite.position.y += 0.3; // Slightly above water
+    sprite.scale.set(size, size, 1);
+    sprite.material.opacity = 0.7;
+    
+    // Spawn additional particles for bigger splashes
+    const spawnedParticles = [splash];
+    for (let i = 1; i < particleCount && i < 5; i++) {
+      const extraSplash = this.splashPool.find(s => !s.active && !spawnedParticles.includes(s));
+      if (!extraSplash) break;
+      
+      extraSplash.active = true;
+      extraSplash.life = life * (0.7 + Math.random() * 0.4);
+      extraSplash.maxLife = extraSplash.life;
+      extraSplash.startScale = size * (0.5 + Math.random() * 0.5);
+      
+      extraSplash.sprite.visible = true;
+      extraSplash.sprite.position.copy(position);
+      // Random offset in splash area
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * spread * 0.5;
+      extraSplash.sprite.position.x += Math.cos(angle) * radius;
+      extraSplash.sprite.position.z += Math.sin(angle) * radius;
+      extraSplash.sprite.position.y += Math.random() * 0.5;
+      
+      extraSplash.sprite.scale.set(extraSplash.startScale, extraSplash.startScale, 1);
+      extraSplash.sprite.material.opacity = 0.5 + Math.random() * 0.3;
+      
+      // Upward velocity for spray effect
+      extraSplash.velocity.set(
+        (Math.random() - 0.5) * spread * 0.3,
+        1 + Math.random() * 2,
+        (Math.random() - 0.5) * spread * 0.3
+      );
+      
+      spawnedParticles.push(extraSplash);
+    }
+    
+    this.splashes.push(...spawnedParticles);
+  }
+  
+  update(deltaTime) {
+    // Update all active splashes
+    for (let i = this.splashes.length - 1; i >= 0; i--) {
+      const splash = this.splashes[i];
+      if (!splash.active) continue;
+      
+      splash.life -= deltaTime;
+      
+      if (splash.life <= 0) {
+        // Deactivate
+        splash.active = false;
+        splash.sprite.visible = false;
+        splash.sprite.material.opacity = 0;
+        this.splashes.splice(i, 1);
+        continue;
+      }
+      
+      const lifeRatio = splash.life / splash.maxLife;
+      
+      // Apply velocity to additional particles
+      if (splash.velocity && splash.velocity.lengthSq() > 0) {
+        splash.sprite.position.addScaledVector(splash.velocity, deltaTime);
+        // Gravity
+        splash.velocity.y -= 4.0 * deltaTime;
+      }
+      
+      // Scale down and fade out
+      const currentScale = splash.startScale * (0.3 + lifeRatio * 0.7);
+      splash.sprite.scale.set(currentScale, currentScale, 1);
+      splash.sprite.material.opacity = lifeRatio * 0.7;
+    }
+  }
+  
+  // Helper method called from physics to create splash at float positions
+  createFloatSplashes(aircraft) {
+    if (!aircraft.hasFloats || !aircraft.waterPhysics.isOnWater) return;
+    
+    const speed = aircraft.velocity.length();
+    const verticalSpeed = Math.abs(aircraft.velocity.y);
+    const waterLevel = aircraft.waterPhysics.waterLevel || 2;
+    
+    // Calculate float contact positions
+    const floatSpread = 1.4;
+    const floatZOffset = 0.2;
+    const floatY = -0.9;
+    
+    // Check each float
+    [-1, 1].forEach(side => {
+      const floatWorldPos = new THREE.Vector3(
+        aircraft.position.x + side * floatSpread,
+        aircraft.position.y + floatY,
+        aircraft.position.z + floatZOffset
+      );
+      
+      // Check if float is touching/submerged in water
+      const waterHeightAtPos = this.getWaterHeightAt(floatWorldPos.x, floatWorldPos.z);
+      const submersion = waterHeightAtPos - floatWorldPos.y;
+      
+      if (submersion > 0.1) {
+        // Determine splash intensity based on conditions
+        let intensity = 0;
+        let type = 'contact';
+        
+        // Hard landing detection (high vertical speed)
+        if (verticalSpeed > 3) {
+          intensity = Math.min(verticalSpeed / 8, 1.5);
+          type = 'landing';
+        }
+        // Wake from speed
+        else if (speed > 10) {
+          intensity = Math.min((speed - 10) / 20, 0.8);
+          type = 'wake';
+        }
+        // Light contact
+        else if (submersion > 0.2) {
+          intensity = 0.3;
+          type = 'contact';
+        }
+        
+        // Spawn splash if intensity is sufficient
+        if (intensity > 0.1) {
+          // Add some randomness to splash position along the float
+          const randomOffset = (Math.random() - 0.5) * 2.0;
+          const splashPos = new THREE.Vector3(
+            floatWorldPos.x,
+            waterHeightAtPos,
+            floatWorldPos.z + randomOffset
+          );
+          
+          this.spawnSplash(splashPos, intensity, type);
+        }
+      }
+    });
+  }
+  
+  getWaterHeightAt(x, z) {
+    // Get base water level plus wave height
+    const baseLevel = typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2;
+    if (window.oceanManager) {
+      return baseLevel + window.oceanManager.getHeight(x, z) * 0.85;
+    }
+    return baseLevel;
+  }
+}
+
+window.WaterSplashSystem = WaterSplashSystem;

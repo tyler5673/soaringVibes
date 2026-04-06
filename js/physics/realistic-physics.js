@@ -95,6 +95,11 @@ class RealisticPhysics {
         
         this.updateRotation(delta);
         
+        // Update splash effects if on water
+        if (isOnWater && window.splashSystem) {
+            window.splashSystem.createFloatSplashes(aircraft);
+        }
+        
         aircraft.altitude = aircraft.position.y;
         aircraft.groundSpeed = speed;
         aircraft.ias = speed * 1.944;
@@ -224,13 +229,32 @@ class RealisticPhysics {
         const speed = aircraft.velocity.length();
         const q = 0.5 * aircraft.airDensity * speed * speed;
         
+        // Check if on water at low speed - controls need airflow to work
+        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
+        let controlScaling = 1.0;
+        
+        if (isOnWater && speed < 25) {
+            // On water at low speed, ailerons and elevator are much less effective
+            // Below 8 m/s they have minimal effect (just 5%)
+            const minEffectiveness = speed < 8 ? 0.05 : 0.15;
+            const speedFactor = Math.min(1, speed / 20);
+            controlScaling = Math.max(minEffectiveness, speedFactor);
+        }
+        
         const elevatorDeflection = aircraft.controlInput.pitch * this.maxElevatorDeflection * Math.PI / 180;
         const aileronDeflection = aircraft.controlInput.roll * this.maxAileronDeflection * Math.PI / 180;
         const rudderDeflection = aircraft.controlInput.yaw * this.maxRudderDeflection * Math.PI / 180;
         
-        const M_pitch = q * aircraft.wingArea * 0.3 * this.Cm_elevator * elevatorDeflection;
-        const M_roll = q * aircraft.wingArea * 2.5 * this.Cl_aileron * aileronDeflection;
-        const M_yaw = q * aircraft.wingArea * 2.5 * this.Cn_rudder * rudderDeflection;
+        // Apply control scaling to moments (not to yaw - rudder has some authority as water rudder)
+        const M_pitch = q * aircraft.wingArea * 0.3 * this.Cm_elevator * elevatorDeflection * controlScaling;
+        const M_roll = q * aircraft.wingArea * 2.5 * this.Cl_aileron * aileronDeflection * controlScaling;
+        
+        // Rudder keeps more authority (can act as water rudder)
+        let yawScaling = controlScaling;
+        if (isOnWater && speed < 25) {
+            yawScaling = Math.max(0.4, controlScaling * 2.0); // Better low-speed authority
+        }
+        const M_yaw = q * aircraft.wingArea * 2.5 * this.Cn_rudder * rudderDeflection * yawScaling;
         
         const alpha_pitch = M_pitch / this.I_pitch;
         const alpha_roll = M_roll / this.I_roll;
@@ -243,6 +267,12 @@ class RealisticPhysics {
         this.angularVelocity.pitch *= (1 - this.pitchDamping * delta);
         this.angularVelocity.roll *= (1 - this.rollDamping * delta);
         this.angularVelocity.yaw *= (1 - this.yawDamping * delta);
+        
+        // Additional damping when on water
+        if (isOnWater) {
+            this.angularVelocity.pitch *= (1 - 0.3 * delta);
+            this.angularVelocity.roll *= (1 - 0.5 * delta);
+        }
         
         const currentQ = new THREE.Quaternion().setFromEuler(
             new THREE.Euler(aircraft.rotation.x, aircraft.rotation.y, aircraft.rotation.z, 'YXZ')

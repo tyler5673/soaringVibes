@@ -183,6 +183,11 @@ class ArcadePhysics {
         
         this.updateRotation(delta, speed, waterAngularDrag);
         
+        // Update splash effects if on water
+        if (isOnWater && window.splashSystem) {
+            window.splashSystem.createFloatSplashes(aircraft);
+        }
+        
         aircraft.altitude = aircraft.position.y;
         aircraft.groundSpeed = speed;
         aircraft.ias = speed * 1.944;
@@ -190,10 +195,24 @@ class ArcadePhysics {
     
     updateRotation(delta, speed, waterAngularDrag = 0) {
         const aircraft = this.aircraft;
-        const controlEffectiveness = Math.min(1, speed / 30);
+        
+        // Check if on water
+        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
+        
+        // Base control effectiveness based on airspeed
+        let controlEffectiveness = Math.min(1, speed / 30);
+        
+        // On water, controls require even more speed to be effective
+        // Ailerons and elevator need airflow over wings - at very low speeds they do almost nothing
+        if (isOnWater) {
+            // Much reduced control authority on water - need at least 15 m/s for noticeable effect
+            const waterSpeedFactor = Math.min(1, speed / 25);
+            // Below 8 m/s on water, controls have minimal effect (just 5%)
+            const minEffectiveness = speed < 8 ? 0.05 : 0.15;
+            controlEffectiveness = Math.max(minEffectiveness, waterSpeedFactor * controlEffectiveness);
+        }
         
         // Water damping affects rotation when on water
-        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
         const waterDamping = isOnWater ? (1 - waterAngularDrag * delta) : 1;
         
         aircraft.rotation.x += aircraft.controlInput.pitch * this.pitchRate * delta * controlEffectiveness * waterDamping;
@@ -202,7 +221,13 @@ class ArcadePhysics {
         aircraft.rotation.z -= aircraft.controlInput.roll * this.rollRate * delta * controlEffectiveness * waterDamping;
         aircraft.rotation.z = clamp(aircraft.rotation.z, degreesToRadians(-60), degreesToRadians(60));
         
-        aircraft.rotation.y += aircraft.controlInput.yaw * this.yawRate * delta * controlEffectiveness;
+        // Yaw (rudder) works a bit better on water since it can act like a water rudder
+        let yawEffectiveness = controlEffectiveness;
+        if (isOnWater) {
+            // Rudder has some authority even at low speeds on water (water rudder effect)
+            yawEffectiveness = Math.max(0.3, controlEffectiveness * 1.5);
+        }
+        aircraft.rotation.y += aircraft.controlInput.yaw * this.yawRate * delta * yawEffectiveness;
         
         if (speed > 20) {
             aircraft.rotation.z *= 0.99 * waterDamping;

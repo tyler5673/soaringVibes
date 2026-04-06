@@ -294,11 +294,10 @@ class StarSystem {
     createStars() {
         const positions = new Float32Array(this.starCount * 3);
         const colors = new Float32Array(this.starCount * 3);
-        const sizes = new Float32Array(this.starCount);
         
-        const radius = 50000;
-        const minAltitude = 10000;
-        const maxAltitude = 30000;
+        const radius = 40000;
+        const minAltitude = 8000;
+        const maxAltitude = 25000;
         
         for (let i = 0; i < this.starCount; i++) {
             const theta = Math.random() * Math.PI * 2;
@@ -318,28 +317,27 @@ class StarSystem {
             colors[i * 3] = color.r;
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
-            
-            sizes[i] = 2 + Math.random() * 3;
         }
         
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
         
         const material = new THREE.PointsMaterial({
-            size: 3,
+            size: 4,
             vertexColors: true,
             transparent: true,
-            opacity: 0.9,
-            sizeAttenuation: false,
-            depthWrite: false
+            opacity: 1.0,
+            sizeAttenuation: true,
+            depthWrite: false,
+            fog: false
         });
         
         this.stars = new THREE.Points(geometry, material);
         this.stars.visible = false;
         this.stars.renderOrder = -100;
         this.scene.add(this.stars);
+        console.log('[Stars] Created', this.starCount, 'stars');
     }
     
     setVisible(visible) {
