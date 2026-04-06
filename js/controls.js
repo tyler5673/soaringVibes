@@ -1,6 +1,6 @@
 // ========== CONTROLS ==========
 const keys = {};
-const mouse = { x: 0, y: 0, deltaX: 0, deltaY: 0 };
+const mouse = { x: 0, y: 0, deltaX: 0, deltaY: 0, buttonDown: false };
 let scrollDelta = 0;
 
 // Touch input state
@@ -360,10 +360,30 @@ function initControls() {
     });
     
     window.addEventListener('mousemove', (e) => {
-        mouse.deltaX = e.movementX || 0;
-        mouse.deltaY = e.movementY || 0;
+        // Only track mouse movement when button is pressed
+        if (mouse.buttonDown) {
+            mouse.deltaX = e.movementX || 0;
+            mouse.deltaY = e.movementY || 0;
+        }
         mouse.x = e.clientX;
         mouse.y = e.clientY;
+    });
+    
+    window.addEventListener('mousedown', (e) => {
+        if (e.button === 0) { // Left button
+            mouse.buttonDown = true;
+        }
+    });
+    
+    window.addEventListener('mouseup', (e) => {
+        if (e.button === 0) { // Left button
+            mouse.buttonDown = false;
+        }
+    });
+    
+    // Handle mouse leaving window while pressed
+    window.addEventListener('mouseleave', () => {
+        mouse.buttonDown = false;
     });
     
     window.addEventListener('wheel', (e) => {
