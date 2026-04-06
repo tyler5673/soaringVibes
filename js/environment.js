@@ -1,16 +1,20 @@
 // ========== ENVIRONMENT ==========
 let hemiLight = null;
 let skyMesh = null;
+let sunMesh = null;
+let sunLight = null;
 
 function createSky(scene) {
+    // Create sun mesh (visual representation)
     const sunGeo = new THREE.SphereGeometry(400, 32, 32);
     const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
-    const sun = new THREE.Mesh(sunGeo, sunMat);
-    sun.position.set(8000, 6000, -10000);
-    scene.add(sun);
+    sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sunMesh.position.set(8000, 6000, -10000);
+    scene.add(sunMesh);
     
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    sunLight.position.copy(sun.position);
+    // Create sun light (main directional light)
+    sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    sunLight.position.copy(sunMesh.position);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
@@ -34,10 +38,117 @@ function createSky(scene) {
     skyMesh = new THREE.Mesh(skyGeo, skyMat);
     scene.add(skyMesh);
     
-    // Expose to window for color picker
+    // Expose to window for external control
     window.hemiLight = hemiLight;
     window.skyMesh = skyMesh;
+    window.sunMesh = sunMesh;
+    window.sunLight = sunLight;
+    
+    // Initialize lighting configuration
+    initLightingConfig();
 }
+
+// Lighting configuration
+const DEFAULT_LIGHT_CONFIG = {
+    intensity: 1.5,
+    color: '#ffffff',
+    sunElevation: 45, // degrees above horizon (0 = sunrise/sunset, 90 = noon)
+    sunAzimuth: 135   // degrees from north (0 = north, 90 = east, 180 = south, 270 = west)
+};
+
+function initLightingConfig() {
+    // Load saved config or use defaults
+    const savedIntensity = localStorage.getItem('sunIntensity');
+    const savedColor = localStorage.getItem('sunColor');
+    const savedElevation = localStorage.getItem('sunElevation');
+    const savedAzimuth = localStorage.getItem('sunAzimuth');
+    
+    const config = {
+        intensity: savedIntensity ? parseFloat(savedIntensity) : DEFAULT_LIGHT_CONFIG.intensity,
+        color: savedColor || DEFAULT_LIGHT_CONFIG.color,
+        sunElevation: savedElevation ? parseFloat(savedElevation) : DEFAULT_LIGHT_CONFIG.sunElevation,
+        sunAzimuth: savedAzimuth ? parseFloat(savedAzimuth) : DEFAULT_LIGHT_CONFIG.sunAzimuth
+    };
+    
+    applyLightingConfig(config);
+}
+
+function applyLightingConfig(config) {
+    if (!sunLight || !sunMesh) return;
+    
+    // Apply intensity
+    sunLight.intensity = config.intensity;
+    
+    // Apply color
+    sunLight.color.set(config.color);
+    sunMesh.material.color.set(config.color);
+    
+    // Calculate sun position from elevation and azimuth
+    // Distance from origin - fixed far distance
+    const distance = 12000;
+    
+    // Convert to radians
+    const elevationRad = (config.sunElevation * Math.PI) / 180;
+    const azimuthRad = (config.sunAzimuth * Math.PI) / 180;
+    
+    // Calculate position
+    // Azimuth: 0 = north (negative Z), 90 = east (positive X), etc.
+    // Elevation: 0 = horizon, 90 = directly overhead
+    const x = distance * Math.cos(elevationRad) * Math.sin(azimuthRad);
+    const y = distance * Math.sin(elevationRad);
+    const z = -distance * Math.cos(elevationRad) * Math.cos(azimuthRad);
+    
+    sunMesh.position.set(x, y, z);
+    sunLight.position.copy(sunMesh.position);
+    
+    // Update hemisphere light based on sun elevation (darker ground at low sun)
+    if (hemiLight) {
+        const groundIntensity = Math.max(0.2, config.intensity * 0.5 * Math.sin(elevationRad));
+        hemiLight.intensity = Math.max(0.3, config.intensity * 0.5);
+        hemiLight.groundColor.setHSL(0.6, 0.5, Math.max(0.1, 0.2 + groundIntensity * 0.2));
+    }
+}
+
+function setSunIntensity(intensity) {
+    localStorage.setItem('sunIntensity', intensity);
+    if (sunLight) sunLight.intensity = intensity;
+}
+
+function setSunColor(color) {
+    localStorage.setItem('sunColor', color);
+    if (sunLight) sunLight.color.set(color);
+    if (sunMesh) sunMesh.material.color.set(color);
+}
+
+function setSunPosition(elevation, azimuth) {
+    localStorage.setItem('sunElevation', elevation);
+    localStorage.setItem('sunAzimuth', azimuth);
+    
+    if (!sunMesh || !sunLight) return;
+    
+    const distance = 12000;
+    const elevationRad = (elevation * Math.PI) / 180;
+    const azimuthRad = (azimuth * Math.PI) / 180;
+    
+    const x = distance * Math.cos(elevationRad) * Math.sin(azimuthRad);
+    const y = distance * Math.sin(elevationRad);
+    const z = -distance * Math.cos(elevationRad) * Math.cos(azimuthRad);
+    
+    sunMesh.position.set(x, y, z);
+    sunLight.position.copy(sunMesh.position);
+    
+    // Update hemisphere light based on elevation
+    if (hemiLight && sunLight) {
+        const groundIntensity = Math.max(0.2, sunLight.intensity * 0.5 * Math.sin(elevationRad));
+        hemiLight.intensity = Math.max(0.3, sunLight.intensity * 0.5);
+        hemiLight.groundColor.setHSL(0.6, 0.5, Math.max(0.1, 0.2 + groundIntensity * 0.2));
+    }
+}
+
+// Export for global access
+window.setSunIntensity = setSunIntensity;
+window.setSunColor = setSunColor;
+window.setSunPosition = setSunPosition;
 
 // ========== DYNAMIC OCEAN ==========
 // Dynamic ocean imported from ocean.js - exposed globally for boat integration
@@ -288,12 +399,32 @@ class StarSystem {
             new THREE.Color(0xF0F8FF)
         ];
         
+        this.createStarTexture();
         this.createStars();
+    }
+    
+    createStarTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        
+        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.8)');
+        gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.3)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 64, 64);
+        
+        this.starTexture = new THREE.CanvasTexture(canvas);
     }
     
     createStars() {
         const positions = new Float32Array(this.starCount * 3);
         const colors = new Float32Array(this.starCount * 3);
+        const sizes = new Float32Array(this.starCount);
         
         const radius = 40000;
         const minAltitude = 8000;
@@ -317,18 +448,22 @@ class StarSystem {
             colors[i * 3] = color.r;
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
+            
+            sizes[i] = 20 + Math.random() * 30;
         }
         
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
         
         const material = new THREE.PointsMaterial({
-            size: 8,
+            size: 40,
+            map: this.starTexture,
             vertexColors: true,
             transparent: true,
             opacity: 1.0,
-            sizeAttenuation: false,
+            sizeAttenuation: true,
             depthWrite: false,
             fog: false
         });
@@ -351,7 +486,6 @@ class StarSystem {
         }
         
         const colorAttr = this.stars.geometry.getAttribute('color');
-        const positions = this.stars.geometry.getAttribute('position');
         
         for (let i = 0; i < this.starCount; i++) {
             const colorIndex = Math.floor(Math.random() * 3);
@@ -367,6 +501,7 @@ class StarSystem {
     dispose() {
         this.stars.geometry.dispose();
         this.stars.material.dispose();
+        this.starTexture.dispose();
         this.scene.remove(this.stars);
     }
 }

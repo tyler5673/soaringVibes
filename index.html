@@ -299,6 +299,54 @@
                 </div>
             </div>
             
+            <div class="settings-section" id="lighting-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Lighting</h3>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="light-intensity-slider">Sun Intensity</label>
+                    <div class="slider-container">
+                        <input type="range" id="light-intensity-slider" min="0.1" max="3.0" step="0.1" value="1.5">
+                        <span class="slider-value" id="light-intensity-value">1.5</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label>Sun Color</label>
+                    <div class="color-swatches" id="sun-color-swatches">
+                        <div class="color-swatch" data-color="#ffffff" style="background: #ffffff;" title="Pure White"></div>
+                        <div class="color-swatch" data-color="#fff5e6" style="background: #fff5e6;" title="Warm White"></div>
+                        <div class="color-swatch" data-color="#ffffcc" style="background: #ffffcc;" title="Daylight (default)"></div>
+                        <div class="color-swatch" data-color="#ffe4b5" style="background: #ffe4b5;" title="Golden Hour"></div>
+                        <div class="color-swatch" data-color="#ffa500" style="background: #ffa500;" title="Orange Sunset"></div>
+                        <div class="color-swatch" data-color="#ff6b4a" style="background: #ff6b4a;" title="Red Sunset"></div>
+                        <div class="color-swatch" data-color="#87ceeb" style="background: #87ceeb;" title="Cool Blue"></div>
+                        <div class="color-swatch" data-color="#b0c4de" style="background: #b0c4de;" title="Overcast"></div>
+                    </div>
+                </div>
+                
+                <div class="setting-row sun-position-row">
+                    <label>Sun Position</label>
+                    <div class="sun-position-widget">
+                        <div class="sun-position-container">
+                            <div class="horizon-circle"></div>
+                            <div class="zenith-marker">Z</div>
+                            <div class="compass-label north">N</div>
+                            <div class="compass-label east">E</div>
+                            <div class="compass-label south">S</div>
+                            <div class="compass-label west">W</div>
+                            <div class="sun-handle" id="sun-handle"></div>
+                        </div>
+                        <div class="sun-position-info">
+                            <div>Elevation: <span id="sun-elevation-value">45°</span></div>
+                            <div>Azimuth: <span id="sun-azimuth-value">135°</span></div>
+                            <div class="sun-time-hint" id="sun-time-hint">Afternoon</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="settings-section" id="abby-mode-section">
                 <div class="settings-section-header">
                     <h3 class="settings-section-title">Abby Mode (No Crash)</h3>
@@ -1662,6 +1710,210 @@ document.addEventListener('DOMContentLoaded', function() {
         
         floatPlaneToggle.addEventListener('change', function() {
             window.setHasFloats(this.checked);
+        });
+    }
+    
+    // ========== LIGHTING CONTROLS ==========
+    // Light intensity slider
+    const lightIntensitySlider = document.getElementById('light-intensity-slider');
+    const lightIntensityValue = document.getElementById('light-intensity-value');
+    if (lightIntensitySlider && lightIntensityValue) {
+        // Initialize from saved setting
+        const savedIntensity = localStorage.getItem('sunIntensity');
+        if (savedIntensity) {
+            lightIntensitySlider.value = savedIntensity;
+            lightIntensityValue.textContent = parseFloat(savedIntensity).toFixed(1);
+        }
+        
+        lightIntensitySlider.addEventListener('input', function() {
+            const intensity = parseFloat(this.value);
+            lightIntensityValue.textContent = intensity.toFixed(1);
+            window.setSunIntensity(intensity);
+        });
+    }
+    
+    // Sun color swatches
+    const sunColorSwatches = document.querySelectorAll('#sun-color-swatches .color-swatch');
+    const savedSunColor = localStorage.getItem('sunColor') || '#ffffcc';
+    sunColorSwatches.forEach(swatch => {
+        // Set active state for saved color
+        if (swatch.dataset.color === savedSunColor) {
+            swatch.classList.add('active');
+        }
+        
+        swatch.addEventListener('click', function() {
+            const color = this.dataset.color;
+            
+            // Update active state
+            sunColorSwatches.forEach(s => s.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Apply color
+            window.setSunColor(color);
+        });
+    });
+    
+    // Sun position widget
+    const sunHandle = document.getElementById('sun-handle');
+    const sunPositionContainer = document.querySelector('.sun-position-container');
+    const sunElevationValue = document.getElementById('sun-elevation-value');
+    const sunAzimuthValue = document.getElementById('sun-azimuth-value');
+    const sunTimeHint = document.getElementById('sun-time-hint');
+    
+    let isDraggingSun = false;
+    
+    function getTimeOfDayHint(elevation, azimuth) {
+        if (elevation < 5) {
+            if (azimuth < 90) return 'Sunrise';
+            if (azimuth > 270) return 'Sunrise';
+            return 'Sunset';
+        }
+        if (elevation < 20) {
+            if (azimuth < 180) return 'Early Morning';
+            return 'Late Afternoon';
+        }
+        if (elevation < 45) {
+            if (azimuth < 180) return 'Morning';
+            return 'Afternoon';
+        }
+        if (elevation < 70) return 'Mid-day';
+        return 'High Noon';
+    }
+    
+    function updateSunWidgetFromPosition(elevation, azimuth) {
+        // Convert to widget coordinates (0-1 range, where center is zenith)
+        // Elevation: 90° = center (zenith), 0° = edge (horizon)
+        // Azimuth: 0° = north (left), 90° = east (top), 180° = south (right), 270° = west (bottom)
+        
+        const elevationRad = (elevation * Math.PI) / 180;
+        const azimuthRad = (azimuth * Math.PI) / 180;
+        
+        // Distance from center (0 at zenith, 1 at horizon)
+        const normalizedDistance = 1 - (elevation / 90);
+        
+        // Widget uses: x increases right, y increases down
+        // Azimuth mapping: 0° (N) = left/negative x, 90° (E) = up/negative y, etc.
+        // Adjusting to match compass: N=left, E=top, S=right, W=bottom
+        const centerX = 50; // percentage
+        const centerY = 50; // percentage
+        
+        // For the widget: 0° = west (bottom), 90° = north (left), 180° = east (top), 270° = south (right)
+        // But we want compass: 0° = north, 90° = east, 180° = south, 270° = west
+        // Transform: widgetAngle = (compassAzimuth + 270) % 360
+        const widgetAngle = (azimuth + 270) % 360;
+        const widgetRad = (widgetAngle * Math.PI) / 180;
+        
+        const radius = 45; // max radius in percentage (leave padding)
+        const distance = normalizedDistance * radius;
+        
+        const x = centerX + Math.cos(widgetRad) * distance;
+        const y = centerY + Math.sin(widgetRad) * distance;
+        
+        sunHandle.style.left = x + '%';
+        sunHandle.style.top = y + '%';
+        
+        // Update text displays
+        sunElevationValue.textContent = Math.round(elevation) + '°';
+        sunAzimuthValue.textContent = Math.round(azimuth) + '°';
+        sunTimeHint.textContent = getTimeOfDayHint(elevation, azimuth);
+    }
+    
+    function updateSunPositionFromWidget(clientX, clientY) {
+        if (!sunPositionContainer) return;
+        
+        const rect = sunPositionContainer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Calculate position relative to center
+        const dx = clientX - centerX;
+        const dy = clientY - centerY;
+        
+        // Calculate distance and angle
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxRadius = rect.width / 2;
+        
+        // Clamp to circle
+        const clampedDistance = Math.min(distance, maxRadius);
+        
+        // Elevation: 90° at center, 0° at edge
+        const normalizedDistance = clampedDistance / maxRadius;
+        const elevation = 90 * (1 - normalizedDistance);
+        
+        // Azimuth calculation
+        // Widget: 0° (E) = right/positive x, 90° (S) = down/positive y
+        // But we want: 0° = north, 90° = east, 180° = south, 270° = west
+        let angle = Math.atan2(dy, dx) * (180 / Math.PI); // -180 to 180, 0 = right (E)
+        // Transform: widget angle to compass azimuth
+        // Widget 0° (right/E) → Compass 90° (E)
+        // Widget 90° (bottom/S) → Compass 180° (S)
+        // Widget 180° (left/W) → Compass 270° (W)
+        // Widget -90°/270° (top/N) → Compass 0° (N)
+        let azimuth = (angle + 90) % 360;
+        if (azimuth < 0) azimuth += 360;
+        
+        // Update display
+        updateSunWidgetFromPosition(elevation, azimuth);
+        
+        // Apply to actual sun
+        window.setSunPosition(elevation, azimuth);
+    }
+    
+    // Initialize from saved position
+    const savedElevation = localStorage.getItem('sunElevation');
+    const savedAzimuth = localStorage.getItem('sunAzimuth');
+    if (savedElevation && savedAzimuth) {
+        updateSunWidgetFromPosition(parseFloat(savedElevation), parseFloat(savedAzimuth));
+    } else {
+        // Default position
+        updateSunWidgetFromPosition(45, 135);
+    }
+    
+    // Mouse/touch events for sun position widget
+    if (sunPositionContainer && sunHandle) {
+        sunPositionContainer.addEventListener('mousedown', function(e) {
+            isDraggingSun = true;
+            updateSunPositionFromWidget(e.clientX, e.clientY);
+        });
+        
+        sunHandle.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+            isDraggingSun = true;
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (isDraggingSun) {
+                e.preventDefault();
+                updateSunPositionFromWidget(e.clientX, e.clientY);
+            }
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isDraggingSun = false;
+        });
+        
+        // Touch support
+        sunPositionContainer.addEventListener('touchstart', function(e) {
+            isDraggingSun = true;
+            const touch = e.touches[0];
+            updateSunPositionFromWidget(touch.clientX, touch.clientY);
+        }, { passive: false });
+        
+        sunHandle.addEventListener('touchstart', function(e) {
+            e.stopPropagation();
+            isDraggingSun = true;
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', function(e) {
+            if (isDraggingSun) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                updateSunPositionFromWidget(touch.clientX, touch.clientY);
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchend', function() {
+            isDraggingSun = false;
         });
     }
     
