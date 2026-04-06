@@ -426,9 +426,9 @@ class StarSystem {
         const colors = new Float32Array(this.starCount * 3);
         const sizes = new Float32Array(this.starCount);
         
-        const radius = 40000;
-        const minAltitude = 8000;
-        const maxAltitude = 25000;
+        const radius = 30000;
+        const minAltitude = 5000;
+        const maxAltitude = 15000;
         
         for (let i = 0; i < this.starCount; i++) {
             const theta = Math.random() * Math.PI * 2;
@@ -449,7 +449,7 @@ class StarSystem {
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
             
-            sizes[i] = 20 + Math.random() * 30;
+            sizes[i] = 30 + Math.random() * 50;
         }
         
         const geometry = new THREE.BufferGeometry();
@@ -458,7 +458,7 @@ class StarSystem {
         geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
         
         const material = new THREE.PointsMaterial({
-            size: 40,
+            size: 80,
             map: this.starTexture,
             vertexColors: true,
             transparent: true,

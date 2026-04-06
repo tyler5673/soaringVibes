@@ -314,16 +314,7 @@
                 
                 <div class="setting-row">
                     <label>Sun Color</label>
-                    <div class="color-swatches" id="sun-color-swatches">
-                        <div class="color-swatch" data-color="#ffffff" style="background: #ffffff;" title="Pure White"></div>
-                        <div class="color-swatch" data-color="#fff5e6" style="background: #fff5e6;" title="Warm White"></div>
-                        <div class="color-swatch" data-color="#ffffcc" style="background: #ffffcc;" title="Daylight (default)"></div>
-                        <div class="color-swatch" data-color="#ffe4b5" style="background: #ffe4b5;" title="Golden Hour"></div>
-                        <div class="color-swatch" data-color="#ffa500" style="background: #ffa500;" title="Orange Sunset"></div>
-                        <div class="color-swatch" data-color="#ff6b4a" style="background: #ff6b4a;" title="Red Sunset"></div>
-                        <div class="color-swatch" data-color="#87ceeb" style="background: #87ceeb;" title="Cool Blue"></div>
-                        <div class="color-swatch" data-color="#b0c4de" style="background: #b0c4de;" title="Overcast"></div>
-                    </div>
+                    <div class="selected-color-display" id="sun-color-display" style="margin-top: 8px;"></div>
                 </div>
                 
                 <div class="setting-row sun-position-row">
@@ -1732,25 +1723,116 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Sun color swatches
-    const sunColorSwatches = document.querySelectorAll('#sun-color-swatches .color-swatch');
-    const savedSunColor = localStorage.getItem('sunColor') || '#ffffcc';
-    sunColorSwatches.forEach(swatch => {
-        // Set active state for saved color
-        if (swatch.dataset.color === savedSunColor) {
-            swatch.classList.add('active');
-        }
+    // Sun color picker using the same widget as aircraft colors
+    const sunColorDisplay = document.getElementById('sun-color-display');
+    let editingSunColor = false;
+    let lastSunColor = localStorage.getItem('sunColor') || '#ffffcc';
+    
+    if (sunColorDisplay) {
+        // Initialize display with saved color
+        sunColorDisplay.style.backgroundColor = lastSunColor;
         
-        swatch.addEventListener('click', function() {
-            const color = this.dataset.color;
+        // Open color picker on click
+        sunColorDisplay.addEventListener('click', function(e) {
+            e.stopPropagation();
+            editingSunColor = true;
             
-            // Update active state
-            sunColorSwatches.forEach(s => s.classList.remove('active'));
-            this.classList.add('active');
+            // Convert saved color to RGB
+            const initialColor = hexToRgb(lastSunColor) || { r: 255, g: 255, b: 204 };
             
-            // Apply color
-            window.setSunColor(color);
+            // Set sliders
+            redSlider.value = initialColor.r;
+            greenSlider.value = initialColor.g;
+            blueSlider.value = initialColor.b;
+            
+            updateColorFromSliders();
+            
+            // Show modal
+            colorPickerModal.style.display = 'flex';
+            redSlider.focus();
         });
+    }
+    
+    // Modify the color picker OK button to handle sun color
+    if (colorPickerOk) {
+        colorPickerOk.addEventListener('click', function() {
+            if (editingSunColor) {
+                // Get final color from sliders
+                const r = parseInt(redSlider.value);
+                const g = parseInt(greenSlider.value);
+                const b = parseInt(blueSlider.value);
+                const hex = rgbToHex(r, g, b);
+                
+                // Save and apply
+                lastSunColor = hex;
+                localStorage.setItem('sunColor', hex);
+                
+                if (sunColorDisplay) {
+                    sunColorDisplay.style.backgroundColor = hex;
+                }
+                
+                window.setSunColor(hex);
+                
+                // Reset state
+                editingSunColor = false;
+            }
+        });
+    }
+    
+    // Modify RGB slider input to handle sun color in real-time
+    // We need to hook into the existing slider input handlers
+    redSlider.addEventListener('input', function() {
+        if (editingSunColor) {
+            const r = parseInt(this.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(blueSlider.value);
+            const hex = rgbToHex(r, g, b);
+            
+            colorPickerPreview.style.backgroundColor = hex;
+            lastSunColor = hex;
+            
+            if (sunColorDisplay) {
+                sunColorDisplay.style.backgroundColor = hex;
+            }
+            
+            window.setSunColor(hex);
+        }
+    });
+    
+    greenSlider.addEventListener('input', function() {
+        if (editingSunColor) {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(this.value);
+            const b = parseInt(blueSlider.value);
+            const hex = rgbToHex(r, g, b);
+            
+            colorPickerPreview.style.backgroundColor = hex;
+            lastSunColor = hex;
+            
+            if (sunColorDisplay) {
+                sunColorDisplay.style.backgroundColor = hex;
+            }
+            
+            window.setSunColor(hex);
+        }
+    });
+    
+    blueSlider.addEventListener('input', function() {
+        if (editingSunColor) {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(this.value);
+            const hex = rgbToHex(r, g, b);
+            
+            colorPickerPreview.style.backgroundColor = hex;
+            lastSunColor = hex;
+            
+            if (sunColorDisplay) {
+                sunColorDisplay.style.backgroundColor = hex;
+            }
+            
+            window.setSunColor(hex);
+        }
     });
     
     // Sun position widget

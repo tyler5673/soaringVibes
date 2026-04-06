@@ -1844,12 +1844,11 @@ body { overflow: hidden; background: var(--color-bg-dark); }
     font-style: italic;
 }
 
-/* Sun color swatches */
-#sun-color-swatches {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
+/* Sun Position Widget */
+.sun-position-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
 }
 
 #sun-color-swatches .color-swatch {
