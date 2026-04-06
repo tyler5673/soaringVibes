@@ -373,6 +373,16 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="setting-row">
+                    <label>Ocean Floor</label>
+                    <div class="setting-control">
+                        <div class="color-swatch-picker" id="ocean-floor-color-picker">
+                            <div class="color-swatch-btn" id="ocean-floor-color-swatch" style="background-color: #8B7355;"></div>
+                            <span class="color-hex-display" id="ocean-floor-color-hex">#8B7355</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1191,12 +1201,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const waterColorHex = document.getElementById('water-color-hex');
     const cloudColorSwatch = document.getElementById('cloud-color-swatch');
     const cloudColorHex = document.getElementById('cloud-color-hex');
+    const oceanFloorColorSwatch = document.getElementById('ocean-floor-color-swatch');
+    const oceanFloorColorHex = document.getElementById('ocean-floor-color-hex');
     
     // Load saved colors or use defaults
     let skyColor = { r: 135, g: 206, b: 235 }; // #87CEEB
     let waterColor = { r: 64, g: 196, b: 255 }; // #40C4FF
     let waterOpacity = 0.75;
     let cloudColor = { r: 255, g: 255, b: 255 }; // #FFFFFF
+    let oceanFloorColor = { r: 139, g: 115, b: 85 }; // #8B7355 (sandy brown)
     
     function loadEnvironmentColors() {
         const savedSky = localStorage.getItem('skyColor');
@@ -1215,6 +1228,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedCloud) {
             cloudColor = JSON.parse(savedCloud);
         }
+        const savedOceanFloor = localStorage.getItem('oceanFloorColor');
+        if (savedOceanFloor) {
+            oceanFloorColor = JSON.parse(savedOceanFloor);
+        }
         updateColorSwatches();
     }
     
@@ -1223,18 +1240,22 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('waterColor', JSON.stringify(waterColor));
         localStorage.setItem('waterOpacity', waterOpacity.toString());
         localStorage.setItem('cloudColor', JSON.stringify(cloudColor));
+        localStorage.setItem('oceanFloorColor', JSON.stringify(oceanFloorColor));
     }
     
     function updateColorSwatches() {
         const skyHex = rgbToHex(skyColor.r, skyColor.g, skyColor.b);
         const waterHex = rgbToHex(waterColor.r, waterColor.g, waterColor.b);
         const cloudHex = rgbToHex(cloudColor.r, cloudColor.g, cloudColor.b);
+        const oceanFloorHex = rgbToHex(oceanFloorColor.r, oceanFloorColor.g, oceanFloorColor.b);
         skyColorSwatch.style.backgroundColor = skyHex;
         skyColorHex.textContent = skyHex;
         waterColorSwatch.style.backgroundColor = waterHex;
         waterColorHex.textContent = waterHex;
         cloudColorSwatch.style.backgroundColor = cloudHex;
         cloudColorHex.textContent = cloudHex;
+        oceanFloorColorSwatch.style.backgroundColor = oceanFloorHex;
+        oceanFloorColorHex.textContent = oceanFloorHex;
     }
     
     function rgbToHex(r, g, b) {
@@ -1271,6 +1292,10 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (type === 'cloud') {
             color = cloudColor;
             envColorTitle.textContent = 'Cloud Color';
+            showOpacity = false;
+        } else if (type === 'oceanFloor') {
+            color = oceanFloorColor;
+            envColorTitle.textContent = 'Ocean Floor Color';
             showOpacity = false;
         } else {
             color = waterColor;
@@ -1310,6 +1335,10 @@ document.addEventListener('DOMContentLoaded', function() {
             cloudColor.r = r;
             cloudColor.g = g;
             cloudColor.b = b;
+        } else if (currentEnvColorType === 'oceanFloor') {
+            oceanFloorColor.r = r;
+            oceanFloorColor.g = g;
+            oceanFloorColor.b = b;
         } else {
             waterColor.r = r;
             waterColor.g = g;
@@ -1322,6 +1351,7 @@ document.addEventListener('DOMContentLoaded', function() {
         applySkyColor();
         applyWaterColor();
         applyCloudColor();
+        applyOceanFloorColor();
     }
     
     function applySkyColor() {
@@ -1374,6 +1404,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function applyOceanFloorColor() {
+        const hex = rgbToHex(oceanFloorColor.r, oceanFloorColor.g, oceanFloorColor.b);
+        const color = new THREE.Color(hex);
+        
+        // Update ocean floor tiles
+        if (window.oceanManager && window.oceanManager.oceanFloorTiles) {
+            for (const tile of window.oceanManager.oceanFloorTiles) {
+                tile.material.color.set(color);
+            }
+        }
+    }
+    
     // Slider event listeners
     envRedSlider.addEventListener('input', function() {
         envRedValue.textContent = this.value;
@@ -1410,6 +1452,11 @@ document.addEventListener('DOMContentLoaded', function() {
         openEnvColorPicker('cloud');
     });
     
+    oceanFloorColorSwatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEnvColorPicker('oceanFloor');
+    });
+    
     // Ok button
     envColorOk.addEventListener('click', function() {
         applyEnvironmentColors();
@@ -1432,6 +1479,7 @@ document.addEventListener('DOMContentLoaded', function() {
             applySkyColor();
             applyWaterColor();
             applyCloudColor();
+            applyOceanFloorColor();
         }, 1000);
     });
     
