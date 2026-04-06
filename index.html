@@ -345,7 +345,7 @@
                 </div>
                 
                 <div class="setting-row">
-                    <label>Sky Color</label>
+                    <label>Sky</label>
                     <div class="setting-control">
                         <div class="color-swatch-picker" id="sky-color-picker">
                             <div class="color-swatch-btn" id="sky-color-swatch" style="background-color: #87CEEB;"></div>
@@ -355,21 +355,21 @@
                 </div>
                 
                 <div class="setting-row">
-                    <label>Water Color</label>
+                    <label>Cloud</label>
                     <div class="setting-control">
-                        <div class="color-swatch-picker" id="water-color-picker">
-                            <div class="color-swatch-btn" id="water-color-swatch" style="background-color: #40c4ff;"></div>
-                            <span class="color-hex-display" id="water-color-hex">#40c4ff</span>
+                        <div class="color-swatch-picker" id="cloud-color-picker">
+                            <div class="color-swatch-btn" id="cloud-color-swatch" style="background-color: #ffffff;"></div>
+                            <span class="color-hex-display" id="cloud-color-hex">#FFFFFF</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="setting-row">
-                    <label>Cloud Color</label>
+                    <label>Ocean</label>
                     <div class="setting-control">
-                        <div class="color-swatch-picker" id="cloud-color-picker">
-                            <div class="color-swatch-btn" id="cloud-color-swatch" style="background-color: #ffffff;"></div>
-                            <span class="color-hex-display" id="cloud-color-hex">#FFFFFF</span>
+                        <div class="color-swatch-picker" id="water-color-picker">
+                            <div class="color-swatch-btn" id="water-color-swatch" style="background-color: #40c4ff;"></div>
+                            <span class="color-hex-display" id="water-color-hex">#40c4ff</span>
                         </div>
                     </div>
                 </div>
@@ -1299,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showOpacity = false;
         } else {
             color = waterColor;
-            envColorTitle.textContent = 'Water Color';
+            envColorTitle.textContent = 'Ocean Color';
             showOpacity = true;
         }
         
