@@ -3,33 +3,81 @@ class WaveSystem {
   constructor() {
     this.time = 0;
     
+    // Multipliers for external control (0-1 range, default 0.5)
+    this.heightMultiplier = 0.5;
+    this.speedMultiplier = 0.5;
+    this.steepnessMultiplier = 0.5;
+    
+    // Base amplitudes, speeds, steepness, and wavelengths for reference (200ft max swell = ~61m)
+    this.baseAmplitudes = [30.5, 12.2, 3.0];
+    this.baseSpeeds = [2, 4, 6.67];
+    this.baseSteepness = [0.5, 0.4, 0.2];
+    this.baseLengths = [100, 30, 8];
+    
     // Gerstner wave configuration (3 systems for hybrid realism)
     this.waves = [
       // Swell: Long wavelength base waves
       {
         direction: new THREE.Vector2(1, 0.3).normalize(),
-        amplitude: 1.0,
+        amplitude: 30.5,
         length: 100,
-        steepness: 0.7,
+        steepness: 0.5,
         speed: 2
       },
       // Chop: Medium wind-driven waves
       {
         direction: new THREE.Vector2(0.5, -1).normalize(),
-        amplitude: 0.4,
+        amplitude: 12.2,
         length: 30,
-        steepness: 0.5,
+        steepness: 0.4,
         speed: 4
       },
       // Ripple: Short surface detail
       {
         direction: new THREE.Vector2(-0.7, 0.9).normalize(),
-        amplitude: 0.1,
+        amplitude: 3.0,
         length: 8,
-        steepness: 0.3,
+        steepness: 0.2,
         speed: 6.67
       }
     ];
+    
+    this.updateWaveParameters();
+  }
+  
+  setHeightMultiplier(multiplier) {
+    this.heightMultiplier = Math.max(0, Math.min(1, multiplier));
+    this.updateWaveParameters();
+  }
+  
+  setSpeedMultiplier(multiplier) {
+    this.speedMultiplier = Math.max(0, Math.min(1, multiplier));
+    this.updateWaveParameters();
+  }
+  
+  setSteepnessMultiplier(multiplier) {
+    this.steepnessMultiplier = Math.max(0, Math.min(1, multiplier));
+    this.updateWaveParameters();
+  }
+  
+  updateWaveParameters() {
+    for (let i = 0; i < this.waves.length; i++) {
+      const wave = this.waves[i];
+      const baseAmp = this.baseAmplitudes[i];
+      const baseSpeed = this.baseSpeeds[i];
+      const baseSteep = this.baseSteepness[i];
+      const baseLen = this.baseLengths[i];
+      
+      // Height affects amplitude (at 0, waves are flat; at 1, full amplitude)
+      wave.amplitude = baseAmp * this.heightMultiplier * 2;
+      // Speed affects wave movement (at 0, static; at 1, full speed)
+      wave.speed = baseSpeed * (0.1 + this.speedMultiplier * 0.9);
+      // Steepness controlled by user slider (0 = flat/wide, 1 = peaked/steep)
+      wave.steepness = baseSteep * this.steepnessMultiplier * 2;
+      // Width: lower steepness = longer wavelength = flatter/wider waves
+      // Range from 0.5x to 4x base wavelength
+      wave.length = baseLen * (0.5 + (1 - this.steepnessMultiplier) * 3);
+    }
   }
   
   update(deltaTime) {

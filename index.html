@@ -463,6 +463,36 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="settings-section" id="ocean-section">
+                <div class="settings-section-header">
+                    <h3 class="settings-section-title">Ocean</h3>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="wave-height-slider">Wave Height</label>
+                    <div class="setting-control">
+                        <input type="range" id="wave-height-slider" min="0" max="100" value="50" step="5">
+                        <span id="wave-height-value" class="setting-value">50%</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="wave-intensity-slider">Wave Intensity</label>
+                    <div class="setting-control">
+                        <input type="range" id="wave-intensity-slider" min="0" max="100" value="50" step="5">
+                        <span id="wave-intensity-value" class="setting-value">50%</span>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label for="wave-width-slider">Wave Width</label>
+                    <div class="setting-control">
+                        <input type="range" id="wave-width-slider" min="0" max="100" value="50" step="5">
+                        <span id="wave-width-value" class="setting-value">50%</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -2146,6 +2176,22 @@ document.addEventListener('DOMContentLoaded', function() {
             balloonsDensitySlider.value = Math.round(balloonSys.densityMultiplier * 100);
             balloonsDensityValue.textContent = Math.round(balloonSys.densityMultiplier * 100) + '%';
         }
+        
+        const waveHeightSlider = document.getElementById('wave-height-slider');
+        const waveHeightValue = document.getElementById('wave-height-value');
+        const waveIntensitySlider = document.getElementById('wave-intensity-slider');
+        const waveIntensityValue = document.getElementById('wave-intensity-value');
+        const waveWidthSlider = document.getElementById('wave-width-slider');
+        const waveWidthValue = document.getElementById('wave-width-value');
+        if (window.oceanManager && window.oceanManager.waveSystem) {
+            const waveSys = window.oceanManager.waveSystem;
+            waveHeightSlider.value = Math.round(waveSys.heightMultiplier * 100);
+            waveHeightValue.textContent = Math.round(waveSys.heightMultiplier * 100) + '%';
+            waveIntensitySlider.value = Math.round(waveSys.speedMultiplier * 100);
+            waveIntensityValue.textContent = Math.round(waveSys.speedMultiplier * 100) + '%';
+            waveWidthSlider.value = Math.round(waveSys.steepnessMultiplier * 100);
+            waveWidthValue.textContent = Math.round(waveSys.steepnessMultiplier * 100) + '%';
+        }
     }
     
     function openSettings() {
@@ -2337,6 +2383,42 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.balloonSystem) {
             window.balloonSystem.densityMultiplier = val / 100;
         }
+    });
+    
+    // Wave height slider
+    const waveHeightSlider = document.getElementById('wave-height-slider');
+    const waveHeightValue = document.getElementById('wave-height-value');
+    waveHeightSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        waveHeightValue.textContent = val + '%';
+        if (window.oceanManager && window.oceanManager.waveSystem) {
+            window.oceanManager.waveSystem.setHeightMultiplier(val / 100);
+        }
+        localStorage.setItem('waveHeight', val);
+    });
+    
+    // Wave intensity slider
+    const waveIntensitySlider = document.getElementById('wave-intensity-slider');
+    const waveIntensityValue = document.getElementById('wave-intensity-value');
+    waveIntensitySlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        waveIntensityValue.textContent = val + '%';
+        if (window.oceanManager && window.oceanManager.waveSystem) {
+            window.oceanManager.waveSystem.setSpeedMultiplier(val / 100);
+        }
+        localStorage.setItem('waveIntensity', val);
+    });
+    
+    // Wave width slider
+    const waveWidthSlider = document.getElementById('wave-width-slider');
+    const waveWidthValue = document.getElementById('wave-width-value');
+    waveWidthSlider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        waveWidthValue.textContent = val + '%';
+        if (window.oceanManager && window.oceanManager.waveSystem) {
+            window.oceanManager.waveSystem.setSteepnessMultiplier(val / 100);
+        }
+        localStorage.setItem('waveWidth', val);
     });
     
     // Boats density
@@ -2741,6 +2823,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create dynamic ocean (function is global from environment.js)
             if (typeof createDynamicOcean === 'function') {
               createDynamicOcean(scene, camera);
+              
+              // Apply saved wave settings
+              const savedWaveHeight = localStorage.getItem('waveHeight');
+              const savedWaveIntensity = localStorage.getItem('waveIntensity');
+              const savedWaveWidth = localStorage.getItem('waveWidth');
+              if (savedWaveHeight !== null && window.oceanManager && window.oceanManager.waveSystem) {
+                const heightVal = parseInt(savedWaveHeight);
+                window.oceanManager.waveSystem.setHeightMultiplier(heightVal / 100);
+              }
+              if (savedWaveIntensity !== null && window.oceanManager && window.oceanManager.waveSystem) {
+                const intensityVal = parseInt(savedWaveIntensity);
+                window.oceanManager.waveSystem.setSpeedMultiplier(intensityVal / 100);
+              }
+              if (savedWaveWidth !== null && window.oceanManager && window.oceanManager.waveSystem) {
+                const widthVal = parseInt(savedWaveWidth);
+                window.oceanManager.waveSystem.setSteepnessMultiplier(widthVal / 100);
+              }
             }
             
             // Create water splash system for float planes
