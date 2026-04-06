@@ -364,6 +364,44 @@
                     </div>
                 </div>
                 
+                <div class="settings-section-header" style="margin-top: 10px;">
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="stars-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <h3 class="settings-section-title">Stars</h3>
+                </div>
+                
+                <div class="setting-row">
+                    <label style="padding-left: 0;">Star 1</label>
+                    <div class="setting-control">
+                        <div class="color-swatch-picker" id="star-color-1-picker">
+                            <div class="color-swatch-btn" id="star-color-1-swatch" style="background-color: #E8F4FF;"></div>
+                            <span class="color-hex-display" id="star-color-1-hex">#E8F4FF</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label style="padding-left: 0;">Star 2</label>
+                    <div class="setting-control">
+                        <div class="color-swatch-picker" id="star-color-2-picker">
+                            <div class="color-swatch-btn" id="star-color-2-swatch" style="background-color: #FFF8E8;"></div>
+                            <span class="color-hex-display" id="star-color-2-hex">#FFF8E8</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label style="padding-left: 0;">Star 3</label>
+                    <div class="setting-control">
+                        <div class="color-swatch-picker" id="star-color-3-picker">
+                            <div class="color-swatch-btn" id="star-color-3-swatch" style="background-color: #F0F8FF;"></div>
+                            <span class="color-hex-display" id="star-color-3-hex">#F0F8FF</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="setting-row">
                     <label>Ocean</label>
                     <div class="setting-control">
@@ -1203,6 +1241,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const cloudColorHex = document.getElementById('cloud-color-hex');
     const oceanFloorColorSwatch = document.getElementById('ocean-floor-color-swatch');
     const oceanFloorColorHex = document.getElementById('ocean-floor-color-hex');
+    const starColor1Swatch = document.getElementById('star-color-1-swatch');
+    const starColor1Hex = document.getElementById('star-color-1-hex');
+    const starColor2Swatch = document.getElementById('star-color-2-swatch');
+    const starColor2Hex = document.getElementById('star-color-2-hex');
+    const starColor3Swatch = document.getElementById('star-color-3-swatch');
+    const starColor3Hex = document.getElementById('star-color-3-hex');
     
     // Load saved colors or use defaults
     let skyColor = { r: 135, g: 206, b: 235 }; // #87CEEB
@@ -1210,6 +1254,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let waterOpacity = 0.75;
     let cloudColor = { r: 255, g: 255, b: 255 }; // #FFFFFF
     let oceanFloorColor = { r: 139, g: 115, b: 85 }; // #8B7355 (sandy brown)
+    let starColor1 = { r: 232, g: 244, b: 255 }; // #E8F4FF (cool white)
+    let starColor2 = { r: 255, g: 248, b: 232 }; // #FFF8E8 (warm white)
+    let starColor3 = { r: 240, g: 248, b: 255 }; // #F0F8FF (alice blue)
     
     function loadEnvironmentColors() {
         const savedSky = localStorage.getItem('skyColor');
@@ -1232,6 +1279,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedOceanFloor) {
             oceanFloorColor = JSON.parse(savedOceanFloor);
         }
+        const savedStar1 = localStorage.getItem('starColor1');
+        if (savedStar1) {
+            starColor1 = JSON.parse(savedStar1);
+        }
+        const savedStar2 = localStorage.getItem('starColor2');
+        if (savedStar2) {
+            starColor2 = JSON.parse(savedStar2);
+        }
+        const savedStar3 = localStorage.getItem('starColor3');
+        if (savedStar3) {
+            starColor3 = JSON.parse(savedStar3);
+        }
         updateColorSwatches();
     }
     
@@ -1241,6 +1300,9 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('waterOpacity', waterOpacity.toString());
         localStorage.setItem('cloudColor', JSON.stringify(cloudColor));
         localStorage.setItem('oceanFloorColor', JSON.stringify(oceanFloorColor));
+        localStorage.setItem('starColor1', JSON.stringify(starColor1));
+        localStorage.setItem('starColor2', JSON.stringify(starColor2));
+        localStorage.setItem('starColor3', JSON.stringify(starColor3));
     }
     
     function updateColorSwatches() {
@@ -1248,6 +1310,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const waterHex = rgbToHex(waterColor.r, waterColor.g, waterColor.b);
         const cloudHex = rgbToHex(cloudColor.r, cloudColor.g, cloudColor.b);
         const oceanFloorHex = rgbToHex(oceanFloorColor.r, oceanFloorColor.g, oceanFloorColor.b);
+        const star1Hex = rgbToHex(starColor1.r, starColor1.g, starColor1.b);
+        const star2Hex = rgbToHex(starColor2.r, starColor2.g, starColor2.b);
+        const star3Hex = rgbToHex(starColor3.r, starColor3.g, starColor3.b);
         skyColorSwatch.style.backgroundColor = skyHex;
         skyColorHex.textContent = skyHex;
         waterColorSwatch.style.backgroundColor = waterHex;
@@ -1256,6 +1321,12 @@ document.addEventListener('DOMContentLoaded', function() {
         cloudColorHex.textContent = cloudHex;
         oceanFloorColorSwatch.style.backgroundColor = oceanFloorHex;
         oceanFloorColorHex.textContent = oceanFloorHex;
+        starColor1Swatch.style.backgroundColor = star1Hex;
+        starColor1Hex.textContent = star1Hex;
+        starColor2Swatch.style.backgroundColor = star2Hex;
+        starColor2Hex.textContent = star2Hex;
+        starColor3Swatch.style.backgroundColor = star3Hex;
+        starColor3Hex.textContent = star3Hex;
     }
     
     function rgbToHex(r, g, b) {
@@ -1296,6 +1367,18 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (type === 'oceanFloor') {
             color = oceanFloorColor;
             envColorTitle.textContent = 'Ocean Floor Color';
+            showOpacity = false;
+        } else if (type === 'starColor1') {
+            color = starColor1;
+            envColorTitle.textContent = 'Star Color 1';
+            showOpacity = false;
+        } else if (type === 'starColor2') {
+            color = starColor2;
+            envColorTitle.textContent = 'Star Color 2';
+            showOpacity = false;
+        } else if (type === 'starColor3') {
+            color = starColor3;
+            envColorTitle.textContent = 'Star Color 3';
             showOpacity = false;
         } else {
             color = waterColor;
@@ -1339,6 +1422,18 @@ document.addEventListener('DOMContentLoaded', function() {
             oceanFloorColor.r = r;
             oceanFloorColor.g = g;
             oceanFloorColor.b = b;
+        } else if (currentEnvColorType === 'starColor1') {
+            starColor1.r = r;
+            starColor1.g = g;
+            starColor1.b = b;
+        } else if (currentEnvColorType === 'starColor2') {
+            starColor2.r = r;
+            starColor2.g = g;
+            starColor2.b = b;
+        } else if (currentEnvColorType === 'starColor3') {
+            starColor3.r = r;
+            starColor3.g = g;
+            starColor3.b = b;
         } else {
             waterColor.r = r;
             waterColor.g = g;
@@ -1352,6 +1447,7 @@ document.addEventListener('DOMContentLoaded', function() {
         applyWaterColor();
         applyCloudColor();
         applyOceanFloorColor();
+        applyStarColors();
     }
     
     function applySkyColor() {
@@ -1416,6 +1512,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function applyStarColors() {
+        if (window.starSystem) {
+            window.starSystem.updateColors([
+                new THREE.Color().setRGB(starColor1.r / 255, starColor1.g / 255, starColor1.b / 255),
+                new THREE.Color().setRGB(starColor2.r / 255, starColor2.g / 255, starColor2.b / 255),
+                new THREE.Color().setRGB(starColor3.r / 255, starColor3.g / 255, starColor3.b / 255)
+            ]);
+        }
+    }
+    
     // Slider event listeners
     envRedSlider.addEventListener('input', function() {
         envRedValue.textContent = this.value;
@@ -1457,6 +1563,35 @@ document.addEventListener('DOMContentLoaded', function() {
         openEnvColorPicker('oceanFloor');
     });
     
+    starColor1Swatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEnvColorPicker('starColor1');
+    });
+    
+    starColor2Swatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEnvColorPicker('starColor2');
+    });
+    
+    starColor3Swatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEnvColorPicker('starColor3');
+    });
+    
+    // Stars toggle
+    const starsToggle = document.getElementById('stars-toggle');
+    if (starsToggle) {
+        const savedStarsEnabled = localStorage.getItem('starsEnabled') === 'true';
+        starsToggle.checked = savedStarsEnabled;
+        
+        starsToggle.addEventListener('change', function() {
+            localStorage.setItem('starsEnabled', this.checked.toString());
+            if (window.starSystem) {
+                window.starSystem.setVisible(this.checked);
+            }
+        });
+    }
+    
     // Ok button
     envColorOk.addEventListener('click', function() {
         applyEnvironmentColors();
@@ -1480,6 +1615,7 @@ document.addEventListener('DOMContentLoaded', function() {
             applyWaterColor();
             applyCloudColor();
             applyOceanFloorColor();
+            applyStarColors();
         }, 1000);
     });
     
@@ -2234,7 +2370,25 @@ document.addEventListener('DOMContentLoaded', function() {
               createDynamicOcean(scene, camera);
             }
             
+            // Create water splash system for float planes
+            if (typeof WaterSplashSystem !== 'undefined') {
+                splashSystem = new WaterSplashSystem(scene);
+                window.splashSystem = splashSystem;
+            }
+            
             cloudSystem = new CloudSystem(scene);
+            window.cloudSystem = cloudSystem;
+            
+            // Create star system
+            if (typeof createStarSystem === 'function') {
+                createStarSystem(scene);
+            }
+            
+            // Apply saved stars toggle
+            const starsEnabled = localStorage.getItem('starsEnabled') === 'true';
+            if (window.starSystem) {
+                window.starSystem.setVisible(starsEnabled);
+            }
             
             updateLoading(10);
             createAllIslands(scene, (progress) => {
@@ -2321,6 +2475,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update ocean waves (function is global from environment.js)
             if (typeof updateOcean === 'function') {
               updateOcean(delta);
+            }
+            
+            // Update water splash effects
+            if (window.splashSystem) {
+                window.splashSystem.update(delta);
             }
             
             const keyboardInput = getKeyboardInput();

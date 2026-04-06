@@ -71,6 +71,26 @@ function updateOcean(deltaTime) {
 window.createDynamicOcean = createDynamicOcean;
 window.updateOcean = updateOcean;
 
+// ========== STAR SYSTEM ==========
+let starSystemInstance = null;
+
+/**
+ * Create star system
+ */
+function createStarSystem(scene) {
+    if (starSystemInstance) {
+        starSystemInstance.dispose();
+    }
+    starSystemInstance = new StarSystem(scene, 2000);
+    window.starSystem = starSystemInstance;
+    console.log('[Stars] Star system initialized');
+}
+
+/**
+ * Expose to window
+ */
+window.createStarSystem = createStarSystem;
+
 /**
  * Get wave height at world coordinates (for boats, collision)
  */
@@ -253,5 +273,102 @@ class CloudSystem {
                 island.z + Math.sin(angle) * radius
             );
         }
+    }
+}
+
+// ========== STAR SYSTEM ==========
+class StarSystem {
+    constructor(scene, count = 2000) {
+        this.scene = scene;
+        this.starCount = count;
+        this.visible = false;
+        this.starColors = [
+            new THREE.Color(0xE8F4FF),
+            new THREE.Color(0xFFF8E8),
+            new THREE.Color(0xF0F8FF)
+        ];
+        
+        this.createStars();
+    }
+    
+    createStars() {
+        const positions = new Float32Array(this.starCount * 3);
+        const colors = new Float32Array(this.starCount * 3);
+        const sizes = new Float32Array(this.starCount);
+        
+        const radius = 50000;
+        const minAltitude = 10000;
+        const maxAltitude = 30000;
+        
+        for (let i = 0; i < this.starCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            
+            const r = radius;
+            const x = r * Math.sin(phi) * Math.cos(theta);
+            const y = minAltitude + Math.random() * (maxAltitude - minAltitude);
+            const z = r * Math.sin(phi) * Math.sin(theta);
+            
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+            
+            const colorIndex = Math.floor(Math.random() * 3);
+            const color = this.starColors[colorIndex];
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
+            
+            sizes[i] = 2 + Math.random() * 3;
+        }
+        
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        
+        const material = new THREE.PointsMaterial({
+            size: 3,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9,
+            sizeAttenuation: false,
+            depthWrite: false
+        });
+        
+        this.stars = new THREE.Points(geometry, material);
+        this.stars.visible = false;
+        this.stars.renderOrder = -100;
+        this.scene.add(this.stars);
+    }
+    
+    setVisible(visible) {
+        this.visible = visible;
+        this.stars.visible = visible;
+    }
+    
+    updateColors(colors) {
+        if (colors && colors.length === 3) {
+            this.starColors = colors;
+        }
+        
+        const colorAttr = this.stars.geometry.getAttribute('color');
+        const positions = this.stars.geometry.getAttribute('position');
+        
+        for (let i = 0; i < this.starCount; i++) {
+            const colorIndex = Math.floor(Math.random() * 3);
+            const color = this.starColors[colorIndex];
+            colorAttr.array[i * 3] = color.r;
+            colorAttr.array[i * 3 + 1] = color.g;
+            colorAttr.array[i * 3 + 2] = color.b;
+        }
+        
+        colorAttr.needsUpdate = true;
+    }
+    
+    dispose() {
+        this.stars.geometry.dispose();
+        this.stars.material.dispose();
+        this.scene.remove(this.stars);
     }
 }
