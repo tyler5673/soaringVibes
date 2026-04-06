@@ -500,6 +500,35 @@
         </div>
     </div>
     
+    <!-- Sun Color Picker Modal -->
+    <div id="sun-color-modal" class="modal">
+        <div class="modal-content environment-color-picker-container">
+            <div class="environment-color-header">
+                <span id="sun-color-title">Sun Color</span>
+                <span id="sun-color-hex-display" class="color-hex-display">#FFFFCC</span>
+            </div>
+            <div class="environment-color-preview" id="sun-color-preview"></div>
+            <div class="rgb-color-picker">
+                <div class="slider-row">
+                    <label style="color: #ff6b6b;">R</label>
+                    <input type="range" id="sun-red-slider" min="0" max="255" value="255">
+                    <span id="sun-red-value" style="color: #ff6b6b;">255</span>
+                </div>
+                <div class="slider-row">
+                    <label style="color: #4ecdc4;">G</label>
+                    <input type="range" id="sun-green-slider" min="0" max="255" value="255">
+                    <span id="sun-green-value" style="color: #4ecdc4;">255</span>
+                </div>
+                <div class="slider-row">
+                    <label style="color: #45b7d1;">B</label>
+                    <input type="range" id="sun-blue-slider" min="0" max="255" value="204">
+                    <span id="sun-blue-value" style="color: #45b7d1;">204</span>
+                </div>
+            </div>
+            <button id="sun-color-ok" class="color-picker-ok-btn">Ok!</button>
+        </div>
+    </div>
+    
     <!-- Desktop buttons - outside loading so they show during gameplay -->
     <div id="desktop-menu-btn" class="desktop-menu-button" title="Change name or colors">
         <img src="assets/images/icon.png" alt="Menu">
@@ -1723,117 +1752,118 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Sun color picker using the same widget as aircraft colors
+    // ========== SUN COLOR PICKER ==========
+    const sunColorModal = document.getElementById('sun-color-modal');
+    const sunColorPreview = document.getElementById('sun-color-preview');
+    const sunColorHexDisplay = document.getElementById('sun-color-hex-display');
+    const sunRedSlider = document.getElementById('sun-red-slider');
+    const sunGreenSlider = document.getElementById('sun-green-slider');
+    const sunBlueSlider = document.getElementById('sun-blue-slider');
+    const sunRedValue = document.getElementById('sun-red-value');
+    const sunGreenValue = document.getElementById('sun-green-value');
+    const sunBlueValue = document.getElementById('sun-blue-value');
+    const sunColorOk = document.getElementById('sun-color-ok');
     const sunColorDisplay = document.getElementById('sun-color-display');
-    let editingSunColor = false;
-    let lastSunColor = localStorage.getItem('sunColor') || '#ffffcc';
     
+    let currentSunColor = { r: 255, g: 255, b: 204 }; // Default daylight yellow
+    
+    // Load saved sun color
+    const savedSunColorHex = localStorage.getItem('sunColor');
+    if (savedSunColorHex) {
+        const rgb = hexToRgb(savedSunColorHex);
+        if (rgb) {
+            currentSunColor = rgb;
+        }
+    }
+    
+    // Initialize display
     if (sunColorDisplay) {
-        // Initialize display with saved color
-        sunColorDisplay.style.backgroundColor = lastSunColor;
+        sunColorDisplay.style.backgroundColor = rgbToHex(currentSunColor.r, currentSunColor.g, currentSunColor.b);
+    }
+    
+    function updateSunColorFromSliders() {
+        const r = parseInt(sunRedSlider.value);
+        const g = parseInt(sunGreenSlider.value);
+        const b = parseInt(sunBlueSlider.value);
+        const hex = rgbToHex(r, g, b);
         
-        // Open color picker on click
+        sunColorPreview.style.backgroundColor = hex;
+        sunColorHexDisplay.textContent = hex.toUpperCase();
+        sunRedValue.textContent = r;
+        sunGreenValue.textContent = g;
+        sunBlueValue.textContent = b;
+        
+        return { r, g, b, hex };
+    }
+    
+    function openSunColorPicker() {
+        // Set sliders to current color
+        sunRedSlider.value = currentSunColor.r;
+        sunGreenSlider.value = currentSunColor.g;
+        sunBlueSlider.value = currentSunColor.b;
+        
+        updateSunColorFromSliders();
+        
+        sunColorModal.style.display = 'flex';
+        sunRedSlider.focus();
+    }
+    
+    function applySunColor() {
+        const color = updateSunColorFromSliders();
+        currentSunColor = { r: color.r, g: color.g, b: color.b };
+        
+        // Save to localStorage
+        localStorage.setItem('sunColor', color.hex);
+        
+        // Update display in settings
+        if (sunColorDisplay) {
+            sunColorDisplay.style.backgroundColor = color.hex;
+        }
+        
+        // Apply to actual sun
+        window.setSunColor(color.hex);
+    }
+    
+    // Event listeners for sun color picker
+    if (sunColorDisplay) {
         sunColorDisplay.addEventListener('click', function(e) {
             e.stopPropagation();
-            editingSunColor = true;
-            
-            // Convert saved color to RGB
-            const initialColor = hexToRgb(lastSunColor) || { r: 255, g: 255, b: 204 };
-            
-            // Set sliders
-            redSlider.value = initialColor.r;
-            greenSlider.value = initialColor.g;
-            blueSlider.value = initialColor.b;
-            
-            updateColorFromSliders();
-            
-            // Show modal
-            colorPickerModal.style.display = 'flex';
-            redSlider.focus();
+            openSunColorPicker();
         });
     }
     
-    // Modify the color picker OK button to handle sun color
-    if (colorPickerOk) {
-        colorPickerOk.addEventListener('click', function() {
-            if (editingSunColor) {
-                // Get final color from sliders
-                const r = parseInt(redSlider.value);
-                const g = parseInt(greenSlider.value);
-                const b = parseInt(blueSlider.value);
-                const hex = rgbToHex(r, g, b);
-                
-                // Save and apply
-                lastSunColor = hex;
-                localStorage.setItem('sunColor', hex);
-                
-                if (sunColorDisplay) {
-                    sunColorDisplay.style.backgroundColor = hex;
-                }
-                
-                window.setSunColor(hex);
-                
-                // Reset state
-                editingSunColor = false;
-            }
+    if (sunRedSlider) {
+        sunRedSlider.addEventListener('input', function() {
+            applySunColor();
         });
     }
     
-    // Modify RGB slider input to handle sun color in real-time
-    // We need to hook into the existing slider input handlers
-    redSlider.addEventListener('input', function() {
-        if (editingSunColor) {
-            const r = parseInt(this.value);
-            const g = parseInt(greenSlider.value);
-            const b = parseInt(blueSlider.value);
-            const hex = rgbToHex(r, g, b);
-            
-            colorPickerPreview.style.backgroundColor = hex;
-            lastSunColor = hex;
-            
-            if (sunColorDisplay) {
-                sunColorDisplay.style.backgroundColor = hex;
-            }
-            
-            window.setSunColor(hex);
-        }
-    });
+    if (sunGreenSlider) {
+        sunGreenSlider.addEventListener('input', function() {
+            applySunColor();
+        });
+    }
     
-    greenSlider.addEventListener('input', function() {
-        if (editingSunColor) {
-            const r = parseInt(redSlider.value);
-            const g = parseInt(this.value);
-            const b = parseInt(blueSlider.value);
-            const hex = rgbToHex(r, g, b);
-            
-            colorPickerPreview.style.backgroundColor = hex;
-            lastSunColor = hex;
-            
-            if (sunColorDisplay) {
-                sunColorDisplay.style.backgroundColor = hex;
-            }
-            
-            window.setSunColor(hex);
-        }
-    });
+    if (sunBlueSlider) {
+        sunBlueSlider.addEventListener('input', function() {
+            applySunColor();
+        });
+    }
     
-    blueSlider.addEventListener('input', function() {
-        if (editingSunColor) {
-            const r = parseInt(redSlider.value);
-            const g = parseInt(greenSlider.value);
-            const b = parseInt(this.value);
-            const hex = rgbToHex(r, g, b);
-            
-            colorPickerPreview.style.backgroundColor = hex;
-            lastSunColor = hex;
-            
-            if (sunColorDisplay) {
-                sunColorDisplay.style.backgroundColor = hex;
+    if (sunColorOk) {
+        sunColorOk.addEventListener('click', function() {
+            sunColorModal.style.display = 'none';
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (sunColorModal) {
+        sunColorModal.addEventListener('click', function(e) {
+            if (e.target === sunColorModal) {
+                sunColorModal.style.display = 'none';
             }
-            
-            window.setSunColor(hex);
-        }
-    });
+        });
+    }
     
     // Sun position widget
     const sunHandle = document.getElementById('sun-handle');
