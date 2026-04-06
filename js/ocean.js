@@ -262,13 +262,13 @@ class OceanManager {
   createRings(waterY) {
     // Create concentric rings (edge to edge, no overlap)
     const configs = this.mobileMode ? [
-      { inner: 0, outer: 2000, segments: 64, intensity: 1.0, color: 0x40c4ff },   // Center disk
-      { inner: 2000, outer: 7000, segments: 32, intensity: 0.5, color: 0x5ecfff }, // Middle ring
-      { inner: 7000, outer: 14000, segments: 16, intensity: 0.2, color: 0x7dd8ff } // Outer ring (fog hides edge)
+      { inner: 0, outer: 500, segments: 48, intensity: 1.0, color: 0x40c4ff },   // Center disk
+      { inner: 500, outer: 2000, segments: 24, intensity: 1.0, color: 0x40c4ff }, // Middle ring
+      { inner: 2000, outer: 5000, segments: 12, intensity: 1.0, color: 0x40c4ff } // Outer ring (fog hides edge)
     ] : [
       { inner: 0, outer: 3000, segments: 96, intensity: 1.0, color: 0x40c4ff },   // Center disk
-      { inner: 3000, outer: 9000, segments: 48, intensity: 0.5, color: 0x5ecfff }, // Middle ring
-      { inner: 9000, outer: 18000, segments: 24, intensity: 0.2, color: 0x7dd8ff } // Outer ring (fog hides edge)
+      { inner: 3000, outer: 4000, segments: 48, intensity: 1.0, color: 0x40c4ff }, // Middle ring
+      { inner: 4000, outer: 10000, segments: 24, intensity: 1.0, color: 0x40c4ff } // Outer ring (fog hides edge)
     ];
     
     const baseMaterial = new THREE.MeshStandardMaterial({
@@ -341,43 +341,31 @@ class OceanManager {
     // Update wave time
     this.waveSystem.update(deltaTime);
     
-    // Reposition rings if camera moved significantly
+    // Center rings on camera every frame for seamless coverage
     if (this.camera && this.camera.position) {
       const camX = this.camera.position.x;
       const camZ = this.camera.position.z;
       
-      const dist = Math.sqrt(
-        Math.pow(camX - this.lastCameraPos.x, 2) + 
-        Math.pow(camZ - this.lastCameraPos.z, 2)
-      );
+      for (const ring of this.rings) {
+        ring.mesh.position.x = camX;
+        ring.mesh.position.z = camZ;
+      }
       
-      if (dist > 50) { // Reposition threshold
-        const snapX = Math.floor(camX / this.gridSize) * this.gridSize;
-        const snapZ = Math.floor(camZ / this.gridSize) * this.gridSize;
+      // Move ocean floor tiles to follow camera
+      if (this.oceanFloorTiles && this.oceanFloorTiles.length > 0) {
+        const halfGrid = Math.floor(this.oceanFloorGridSize / 2);
+        const tileSize = this.oceanFloorTileSize;
+        let tileIndex = 0;
         
-        for (const ring of this.rings) {
-          ring.mesh.position.x = snapX;
-          ring.mesh.position.z = snapZ;
-        }
-        
-        // Move ocean floor tiles to follow camera
-        if (this.oceanFloorTiles && this.oceanFloorTiles.length > 0) {
-          const halfGrid = Math.floor(this.oceanFloorGridSize / 2);
-          const tileSize = this.oceanFloorTileSize;
-          let tileIndex = 0;
-          
-          for (let gx = -halfGrid; gx < halfGrid; gx++) {
-            for (let gz = -halfGrid; gz < halfGrid; gz++) {
-              if (tileIndex < this.oceanFloorTiles.length) {
-                this.oceanFloorTiles[tileIndex].position.x = snapX + gx * tileSize;
-                this.oceanFloorTiles[tileIndex].position.z = snapZ + gz * tileSize;
-                tileIndex++;
-              }
+        for (let gx = -halfGrid; gx < halfGrid; gx++) {
+          for (let gz = -halfGrid; gz < halfGrid; gz++) {
+            if (tileIndex < this.oceanFloorTiles.length) {
+              this.oceanFloorTiles[tileIndex].position.x = camX + gx * tileSize;
+              this.oceanFloorTiles[tileIndex].position.z = camZ + gz * tileSize;
+              tileIndex++;
             }
           }
         }
-        
-        this.lastCameraPos.set(camX, this.camera.position.y, camZ);
       }
     }
     
@@ -390,26 +378,21 @@ class OceanManager {
   updateRingWaves(ring) {
     const positions = ring.geometry.attributes.position;
     const intensity = ring.mesh.userData.waveIntensity;
-    const oceanPos = ring.mesh.position;
     
     let changed = false;
     
     for (let i = 0; i < positions.count; i++) {
-      // Ring geometry has vertices in XY plane with Z=0 initially
+      // Sample wave in local space so pattern moves with camera seamlessly
       const localX = positions.getX(i);
       const localY = positions.getY(i);
       
-      // After -90° X rotation: local (x, y, z) → world (x, z, -y) + mesh position
-      const worldX = oceanPos.x + localX;
-      const worldZ = oceanPos.z - localY; // Local Y becomes negative Z after rotation
-      
-      // Sample wave height at this world X,Z position
-      let waveHeight = this.waveSystem.getHeight(worldX, worldZ);
+      // After -90° X rotation: local Y maps to -Z in world
+      let waveHeight = this.waveSystem.getHeight(localX, -localY);
       
       // Apply intensity dampening for LOD
       waveHeight *= intensity;
       
-      // Set local Z to wave height (becomes -Y in world space after rotation)
+      // Set local Z to wave height
       if (Math.abs(waveHeight - positions.getZ(i)) > 0.01) {
         positions.setZ(i, waveHeight);
         changed = true;
