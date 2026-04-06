@@ -324,11 +324,11 @@ class StarSystem {
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         
         const material = new THREE.PointsMaterial({
-            size: 4,
+            size: 8,
             vertexColors: true,
             transparent: true,
             opacity: 1.0,
-            sizeAttenuation: true,
+            sizeAttenuation: false,
             depthWrite: false,
             fog: false
         });
