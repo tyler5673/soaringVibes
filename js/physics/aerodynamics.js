@@ -3,7 +3,7 @@
  * Used by the cannon-es physics system
  */
 
-export const AERODYNAMICS = {
+const AERODYNAMICS = {
     rho: 1.225,  // sea level air density (kg/m³)
     
     /**
@@ -71,3 +71,5 @@ export const AERODYNAMICS = {
 function clamp(v, min, max) {
     return Math.max(min, Math.min(max, v));
 }
+
+window.AERODYNAMICS = AERODYNAMICS;

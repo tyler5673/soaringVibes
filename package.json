@@ -10,10 +10,16 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "keywords": ["flight-simulator", "threejs", "hawaii"],
+  "keywords": [
+    "flight-simulator",
+    "threejs",
+    "hawaii"
+  ],
   "author": "",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "cannon-es": "^0.20.0"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.3.0",

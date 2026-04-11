@@ -930,7 +930,7 @@ var spinnerStripeBottom = new THREE.Mesh(
         if (this.physicsMode === 'arcade') {
             this.physics = new ArcadePhysics(this);
         } else {
-            this.physics = new RealisticPhysics(this);
+            this.physics = new window.RealisticPhysics(this);
         }
     }
     

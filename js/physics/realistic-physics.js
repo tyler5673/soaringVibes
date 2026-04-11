@@ -1,12 +1,13 @@
 // ========== REALISTIC PHYSICS ==========
 // Uses cannon-es for rigid body physics
-import * as CANNON from 'cannon-es';
-import PhysicsBridge from './physics-bridge.js';
-import { AERODYNAMICS } from './aerodynamics.js';
+
+const CANNON = window.CANNON;
+const PhysicsBridge = window.PhysicsBridge;
+const AERODYNAMICS = window.AERODYNAMICS;
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-export default class RealisticPhysics {
+class RealisticPhysics {
     constructor(aircraft) {
         this.aircraft = aircraft;
         this.bridge = new PhysicsBridge(aircraft);
@@ -213,3 +214,5 @@ export default class RealisticPhysics {
         aircraft.groundSpeed = speed;
     }
 }
+
+window.RealisticPhysics = RealisticPhysics;
