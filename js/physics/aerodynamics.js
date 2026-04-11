@@ -67,9 +67,4 @@ const AERODYNAMICS = {
     }
 };
 
-// Utility for clamping values
-function clamp(v, min, max) {
-    return Math.max(min, Math.min(max, v));
-}
-
 window.AERODYNAMICS = AERODYNAMICS;
