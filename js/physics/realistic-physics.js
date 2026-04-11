@@ -1,294 +1,215 @@
-class RealisticPhysics {
+// ========== REALISTIC PHYSICS ==========
+// Uses cannon-es for rigid body physics
+import * as CANNON from 'cannon-es';
+import PhysicsBridge from './physics-bridge.js';
+import { AERODYNAMICS } from './aerodynamics.js';
+
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+export default class RealisticPhysics {
     constructor(aircraft) {
         this.aircraft = aircraft;
+        this.bridge = new PhysicsBridge(aircraft);
         
-        this.I_pitch = 1200;
-        this.I_roll = 800;
-        this.I_yaw = 1800;
+        // Aircraft properties
+        this.wingArea = aircraft.wingArea || 16;
+        this.wingspan = aircraft.wingspan || 11;
+        this.mass = 1100;
         
-        this.angularVelocity = { pitch: 0, roll: 0, yaw: 0 };
+        // Control limits
+        this.maxElevatorDeflection = 25 * Math.PI / 180;
+        this.maxAileronDeflection = 20 * Math.PI / 180;
+        this.maxRudderDeflection = 25 * Math.PI / 180;
         
+        // Aerodynamic coefficients
         this.Cl_alpha = 6.0;
-        this.Cl_max = 1.6;
-        this.Cd0 = 0.022;
-        this.e = 0.8;
-        this.aspectRatio = aircraft.wingspan * aircraft.wingspan / aircraft.wingArea;
-        
-        this.Cm_elevator = 0.8;
-        this.Cl_aileron = -0.08;
-        this.Cn_rudder = 0.12;
-        
-        this.maxElevatorDeflection = 25;
-        this.maxAileronDeflection = 20;
-        this.maxRudderDeflection = 25;
-        
-        this.pitchDamping = 1.2;
-        this.rollDamping = 1.5;
-        this.yawDamping = 2.0;
-        
-        this.propRadius = 1.0;
-        
-        this.groundEffectHeight = 20;
+        this.CLmax = 1.6;
+        this.CD0 = 0.022;
+        this.maxThrust = 3500;
+    }
+    
+    get aspectRatio() {
+        return this.wingspan ** 2 / this.wingArea;
     }
     
     update(delta) {
         const aircraft = this.aircraft;
+        const body = this.bridge.body;
+        const { controlInput, throttle, hasFloats } = aircraft;
         
+        // Animate propeller
         if (aircraft.propeller) {
-            aircraft.propeller.rotation.z += aircraft.throttle * 25 * delta;
+            aircraft.propeller.rotation.z += throttle * 25 * delta;
         }
         
-        const aileronAngle = aircraft.controlInput.roll * this.maxAileronDeflection * Math.PI / 180;
+        // Animate control surfaces
+        const aileronAngle = controlInput.roll * this.maxAileronDeflection;
         if (aircraft.aileronL) aircraft.aileronL.rotation.x = -aileronAngle;
         if (aircraft.aileronR) aircraft.aileronR.rotation.x = aileronAngle;
         
-        const elevatorAngle = aircraft.controlInput.pitch * this.maxElevatorDeflection * Math.PI / 180;
+        const elevatorAngle = controlInput.pitch * this.maxElevatorDeflection;
         if (aircraft.elevator) aircraft.elevator.rotation.x = -elevatorAngle;
         
-        const rudderAngle = aircraft.controlInput.yaw * this.maxRudderDeflection * Math.PI / 180;
+        const rudderAngle = controlInput.yaw * this.maxRudderDeflection;
         if (aircraft.rudder) aircraft.rudder.rotation.y = rudderAngle;
         
-        const forces = this.calculateForces(delta);
+        // Get state from physics bridge
+        const speed = this.bridge.getVelocity();
+        const angVel = this.bridge.getAngularVelocity();
         
-        const acceleration = forces.total.divideScalar(aircraft.mass);
-        aircraft.velocity.add(acceleration.multiplyScalar(delta));
+        // Body vectors in world space
+        const forward = new CANNON.Vec3(0, 0, -1);
+        body.vectorToWorldFrame(forward, forward);
+        forward.normalize();
         
-        const speed = aircraft.velocity.length();
-        if (speed > aircraft.maxSpeed) {
-            aircraft.velocity.multiplyScalar(aircraft.maxSpeed / speed);
-        }
+        const up = new CANNON.Vec3(0, 1, 0);
+        body.vectorToWorldFrame(up, up);
+        up.normalize();
         
-        aircraft.position.add(aircraft.velocity.clone().multiplyScalar(delta));
+        const right = new CANNON.Vec3(1, 0, 0);
+        body.vectorToWorldFrame(right, right);
+        right.normalize();
         
-        // Check if on water with floats
-        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
-        let waterLevel = aircraft.waterPhysics.waterLevel;
+        // Velocity direction
+        const velocity = body.velocity.clone();
+        velocity.normalize();
         
-        // Get dynamic water height if on water
-        if (isOnWater && window.oceanManager) {
-            waterLevel = (typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2) + 
-                        window.oceanManager.getHeight(aircraft.position.x, aircraft.position.z) * 0.85;
-        }
+        // Calculate angles
+        const alpha = clamp(forward.dot(up), -1, 1);
+        const beta = clamp(forward.dot(right), -1, 1);
         
-        // Water surface constraint - don't go below water level when on floats
-        if (isOnWater && aircraft.position.y < waterLevel - 0.35) {
-            aircraft.position.y = waterLevel - 0.35;
-            if (aircraft.velocity.y < 0) aircraft.velocity.y = 0;
-        }
+        // Dynamic pressure
+        const q = 0.5 * AERODYNAMICS.rho * speed * speed;
         
-        if (aircraft.position.y < 0 && !isOnWater) {
-            aircraft.position.y = 0;
-            if (aircraft.velocity.y < 0) aircraft.velocity.y = 0;
-        }
+        // Control deflections
+        const elevator = controlInput.pitch * this.maxElevatorDeflection;
+        const aileron = controlInput.roll * this.maxAileronDeflection;
+        const rudder = controlInput.yaw * this.maxRudderDeflection;
         
-        // Apply water damping to angular velocity when on water
-        if (isOnWater) {
-            this.angularVelocity.pitch *= (1 - 0.3 * delta);
-            this.angularVelocity.roll *= (1 - 0.5 * delta);
+        // === FORCES ===
+        const force = new CANNON.Vec3(0, 0, 0);
+        const torque = new CANNON.Vec3(0, 0, 0);
+        
+        // 1. Thrust
+        if (throttle > 0 && speed < 80) {
+            const thrustMag = AERODYNAMICS.thrust(throttle, this.maxThrust);
+            const thrustForce = forward.clone();
+            thrustForce.scale(thrustMag, thrustForce);
+            force.vadd(thrustForce, force);
             
-            // Self-righting at low speeds
-            if (speed < 10) {
-                this.angularVelocity.roll += -aircraft.rotation.z * 0.8 * delta;
-                this.angularVelocity.pitch += -aircraft.rotation.x * 0.5 * delta;
-            }
+            // Prop torque
+            torque.z += throttle * 50;
         }
         
-        this.updateRotation(delta);
+        // 2. Lift
+        const CL = AERODYNAMICS.liftCoefficient(alpha, {
+            Cl_alpha: this.Cl_alpha,
+            CLmax: this.CLmax
+        });
         
-        // Update splash effects if on water
-        if (isOnWater && window.splashSystem) {
-            window.splashSystem.createFloatSplashes(aircraft);
-        }
-        
-        aircraft.altitude = aircraft.position.y;
-        aircraft.groundSpeed = speed;
-        aircraft.ias = speed * 1.944;
-    }
-    
-    calculateForces(delta) {
-        const aircraft = this.aircraft;
-        const speed = aircraft.velocity.length();
-        
-        const forward = new THREE.Vector3(0, 0, -1);
-        forward.applyEuler(aircraft.rotation);
-        
-        const up = new THREE.Vector3(0, 1, 0);
-        up.applyEuler(aircraft.rotation);
-        
-        const right = new THREE.Vector3(1, 0, 0);
-        right.applyEuler(aircraft.rotation);
-        
-        const q = 0.5 * aircraft.airDensity * speed * speed;
-        
-        let aoa = 0;
         if (speed > 1) {
-            const velocityDir = aircraft.velocity.clone().normalize();
-            aoa = forward.angleTo(velocityDir);
-            const pitchComponent = velocityDir.dot(up);
-            if (pitchComponent > 0) aoa = -aoa;
+            const liftMag = q * this.wingArea * CL;
+            const liftForce = up.clone();
+            liftForce.scale(liftMag, liftForce);
+            force.vadd(liftForce, force);
         }
         
-        let Cl;
-        const stallAngle = degreesToRadians(15);
-        if (Math.abs(aoa) < stallAngle) {
-            Cl = this.Cl_alpha * aoa;
-        } else {
-            const sign = Math.sign(aoa);
-            Cl = sign * this.Cl_max * (1 - (Math.abs(aoa) - stallAngle) / stallAngle * 0.5);
+        // 3. Drag
+        const CD = AERODYNAMICS.dragCoefficient(CL, {
+            CD0: this.CD0,
+            AR: this.aspectRatio
+        });
+        
+        if (speed > 1) {
+            const dragMag = q * this.wingArea * CD;
+            const dragForce = velocity.clone();
+            dragForce.scale(-dragMag, dragForce);
+            force.vadd(dragForce, force);
         }
-        Cl = clamp(Cl, -this.Cl_max, this.Cl_max);
         
-        const Cd = this.Cd0 + Cl * Cl / (Math.PI * this.e * this.aspectRatio);
+        // 4. Control Forces (torques)
+        const Cm = 2.5;
+        const M_pitch = q * this.wingArea * 0.3 * Cm * elevator;
+        torque.x += M_pitch;
         
-        const velocityDir = speed > 0.1 ? aircraft.velocity.clone().normalize() : forward.clone();
+        const Cl_ail = -0.25;
+        const M_roll = q * this.wingArea * this.wingspan * 0.5 * Cl_ail * aileron;
+        torque.z -= M_roll;
         
-        const cosRoll = Math.cos(aircraft.rotation.z);
-        const liftFactor = Math.abs(cosRoll);
-        const liftMagnitude = q * aircraft.wingArea * Cl * liftFactor;
-        const lift = up.clone().multiplyScalar(liftMagnitude);
+        const Cn = 0.50;
+        const M_yaw = q * this.wingArea * this.wingspan * 0.5 * Cn * rudder;
+        torque.y += M_yaw;
         
-        const drag = velocityDir.clone().multiplyScalar(-q * aircraft.wingArea * Cd);
+        // 5. Bank turn (horizontal force from bank angle)
+        const roll = aircraft.rotation.z;
+        const bankForce = Math.sin(roll) * speed * 50;
+        const bankVec = right.clone();
+        bankVec.scale(bankForce, bankVec);
+        force.vadd(bankVec, force);
         
-        const thrustMagnitude = aircraft.throttle * aircraft.maxThrust;
-        const thrust = forward.clone().multiplyScalar(thrustMagnitude);
-        
-        const weight = new THREE.Vector3(0, -aircraft.mass * 9.81, 0);
-        
-        if (aircraft.position.y < this.groundEffectHeight && aircraft.position.y > 0) {
-            const effect = 1 - (aircraft.position.y / this.groundEffectHeight);
-            lift.multiplyScalar(1 + effect * 0.5);
-            drag.multiplyScalar(1 - effect * 0.3);
+        // 6. Adverse yaw from roll
+        if (Math.abs(angVel.roll) > 0.01) {
+            torque.y -= angVel.roll * 100;
         }
+        
+        // 7. Gravity
+        force.y -= this.mass * 9.81;
+        
+        // Apply forces
+        body.applyForce(force);
+        body.applyTorque(torque);
+        
+        // === LANDING HANDLING ===
+        const altitude = body.position.y;
+        const terrainHeight = typeof getTerrainHeight === 'function' 
+            ? getTerrainHeight(body.position.x, body.position.z) 
+            : 0;
         
         // Water physics for floats
-        let buoyancy = new THREE.Vector3(0, 0, 0);
-        let waterDrag = new THREE.Vector3(0, 0, 0);
-        
-        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
-        if (isOnWater) {
-            let waterLevel = aircraft.waterPhysics.waterLevel;
-            if (window.oceanManager) {
-                waterLevel = (typeof WATER_LEVEL !== 'undefined' ? WATER_LEVEL : 2) + 
-                            window.oceanManager.getHeight(aircraft.position.x, aircraft.position.z) * 0.85;
-            }
+        if (hasFloats) {
+            const waterLevel = 2;  // Base water level
+            const floatBottom = altitude - 0.85;
             
-            // Calculate submersion depth
-            const floatBottom = aircraft.position.y - 0.85;
-            const submersionDepth = Math.max(0, waterLevel - floatBottom);
-            
-            if (submersionDepth > 0) {
-                // Buoyancy force
-                const floatWidth = 0.65;
-                const floatLength = 6.5;
-                const numFloats = 2;
-                const displacedVolume = floatWidth * floatLength * Math.min(submersionDepth, 0.4) * numFloats;
-                const waterDensity = 1000;
-                const buoyancyForce = displacedVolume * waterDensity * 9.81;
+            if (floatBottom <= waterLevel) {
+                // Water landing - buoyancy
+                const submerged = Math.min(1, (waterLevel - floatBottom) / 2);
+                const buoyancy = submerged * this.mass * 9.81 * 2;
+                body.applyForce(new CANNON.Vec3(0, buoyancy, 0));
                 
-                // Spring force to stabilize at water level
-                const targetHeight = waterLevel + 0.5;
-                const heightDiff = targetHeight - aircraft.position.y;
-                const springForce = heightDiff * 2000;
+                // Water drag
+                body.velocity.scale(1 - 2.0 * delta, body.velocity);
+                body.angularVelocity.scale(1 - 3.0 * delta, body.angularVelocity);
                 
-                buoyancy.set(0, Math.max(0, buoyancyForce + springForce), 0);
-                
-                // Water drag - much stronger than air drag
-                const submersionFactor = Math.min(submersionDepth / 0.4, 1.0);
-                
-                // Base water drag: proportional to velocity squared
-                // Coefficient of 12.0 for realistic mode (slightly less than arcade)
-                const baseWaterDragCoeff = 12.0 * submersionFactor;
-                waterDrag = aircraft.velocity.clone().multiplyScalar(-speed * baseWaterDragCoeff);
-                
-                // Additional friction when throttle is cut
-                if (aircraft.throttle < 0.05 && speed > 1) {
-                    const frictionCoeff = 6.0 * submersionFactor * (1.0 - Math.min(speed / 10, 1.0));
-                    const frictionDrag = aircraft.velocity.clone().multiplyScalar(-frictionCoeff);
-                    waterDrag.add(frictionDrag);
+                // Self-righting at low speeds
+                if (speed < 10) {
+                    const rollCorrection = -aircraft.rotation.z * 0.8 * delta;
+                    const pitchCorrection = -aircraft.rotation.x * 0.5 * delta;
+                    body.angularVelocity.x += pitchCorrection;
+                    body.angularVelocity.z += rollCorrection;
                 }
-                
-                aircraft.waterPhysics.buoyancyForce = buoyancyForce;
-            } else {
-                aircraft.waterPhysics.buoyancyForce = 0;
             }
         }
         
-        let total = new THREE.Vector3()
-            .add(thrust)
-            .add(lift)
-            .add(drag)
-            .add(weight)
-            .add(buoyancy)
-            .add(waterDrag);
-        
-        return { lift, drag, thrust, weight, total };
-    }
-    
-    updateRotation(delta) {
-        const aircraft = this.aircraft;
-        const speed = aircraft.velocity.length();
-        const q = 0.5 * aircraft.airDensity * speed * speed;
-        
-        // Check if on water at low speed - controls need airflow to work
-        const isOnWater = aircraft.hasFloats && aircraft.waterPhysics.isOnWater;
-        let controlScaling = 1.0;
-        
-        if (isOnWater && speed < 25) {
-            // On water at low speed, ailerons and elevator are much less effective
-            // Below 8 m/s they have minimal effect (just 5%)
-            const minEffectiveness = speed < 8 ? 0.05 : 0.15;
-            const speedFactor = Math.min(1, speed / 20);
-            controlScaling = Math.max(minEffectiveness, speedFactor);
+        // Land collision
+        if (altitude <= terrainHeight) {
+            const penetration = terrainHeight - body.position.y;
+            const normalForce = penetration * 50000;
+            body.applyForce(new CANNON.Vec3(0, normalForce, 0));
+            
+            // Ground friction
+            body.velocity.scale(1 - 5.0 * delta, body.velocity);
+            body.angularVelocity.scale(1 - 5.0 * delta, body.angularVelocity);
         }
         
-        const elevatorDeflection = aircraft.controlInput.pitch * this.maxElevatorDeflection * Math.PI / 180;
-        const aileronDeflection = aircraft.controlInput.roll * this.maxAileronDeflection * Math.PI / 180;
-        const rudderDeflection = aircraft.controlInput.yaw * this.maxRudderDeflection * Math.PI / 180;
+        // === PHYSICS STEP ===
+        this.bridge.update(delta);
         
-        // Apply control scaling to moments (not to yaw - rudder has some authority as water rudder)
-        const M_pitch = q * aircraft.wingArea * 0.3 * this.Cm_elevator * elevatorDeflection * controlScaling;
-        const M_roll = q * aircraft.wingArea * 2.5 * this.Cl_aileron * aileronDeflection * controlScaling;
+        // === SYNC BACK ===
+        this.bridge.syncToThree(aircraft);
         
-        // Rudder keeps more authority (can act as water rudder)
-        let yawScaling = controlScaling;
-        if (isOnWater && speed < 25) {
-            yawScaling = Math.max(0.4, controlScaling * 2.0); // Better low-speed authority
-        }
-        const M_yaw = q * aircraft.wingArea * 2.5 * this.Cn_rudder * rudderDeflection * yawScaling;
-        
-        const alpha_pitch = M_pitch / this.I_pitch;
-        const alpha_roll = M_roll / this.I_roll;
-        const alpha_yaw = M_yaw / this.I_yaw;
-        
-        this.angularVelocity.pitch += alpha_pitch * delta;
-        this.angularVelocity.roll += alpha_roll * delta;
-        this.angularVelocity.yaw += alpha_yaw * delta;
-        
-        this.angularVelocity.pitch *= (1 - this.pitchDamping * delta);
-        this.angularVelocity.roll *= (1 - this.rollDamping * delta);
-        this.angularVelocity.yaw *= (1 - this.yawDamping * delta);
-        
-        // Additional damping when on water
-        if (isOnWater) {
-            this.angularVelocity.pitch *= (1 - 0.3 * delta);
-            this.angularVelocity.roll *= (1 - 0.5 * delta);
-        }
-        
-        const currentQ = new THREE.Quaternion().setFromEuler(
-            new THREE.Euler(aircraft.rotation.x, aircraft.rotation.y, aircraft.rotation.z, 'YXZ')
-        );
-        
-        const pitchDelta = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.angularVelocity.pitch * delta);
-        const yawDelta = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.angularVelocity.yaw * delta);
-        const rollDelta = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), this.angularVelocity.roll * delta);
-        
-        currentQ.multiply(pitchDelta).multiply(yawDelta).multiply(rollDelta);
-        
-        const newEuler = new THREE.Euler().setFromQuaternion(currentQ, 'YXZ');
-        aircraft.rotation.x = newEuler.x;
-        aircraft.rotation.y = newEuler.y;
-        aircraft.rotation.z = newEuler.z;
+        // Update gauges
+        aircraft.ias = speed;
+        aircraft.altitude = body.position.y;
+        aircraft.groundSpeed = speed;
     }
 }
-
-window.RealisticPhysics = RealisticPhysics;
