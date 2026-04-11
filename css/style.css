@@ -415,41 +415,41 @@ body { overflow: hidden; background: var(--color-bg-dark); }
         font-size: 16px;
     }
     #selection-area {
-        width: 90%;
-        max-width: 340px;
+        width: 95%;
+        max-width: none;
         padding: 12px 14px;
     }
     .selection-row {
-        flex-wrap: wrap;
-        gap: 6px;
+        flex-wrap: nowrap;
+        gap: 8px;
     }
     .selection-row label {
         font-size: 13px;
-        min-width: 80px;
-        margin-right: 8px;
+        min-width: 70px;
+        flex-shrink: 0;
     }
     .selection-row input[type="text"] {
         flex: 1;
-        min-width: 120px;
-        padding: 8px 12px;
+        min-width: 80px;
+        padding: 8px 10px;
         font-size: 14px;
     }
     .dice-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 18px;
+        width: 26px;
+        height: 26px;
+        font-size: 16px;
     }
     .color-selector-with-arrows {
-        gap: 6px;
+        gap: 4px;
     }
     .color-arrow-btn {
-        width: 24px;
-        height: 28px;
-        font-size: 14px;
+        width: 22px;
+        height: 26px;
+        font-size: 12px;
     }
     .selected-color-display {
-        width: 40px;
-        height: 30px;
+        width: 36px;
+        height: 26px;
     }
     #loading-bar {
         width: 70%;
@@ -1868,4 +1868,26 @@ body { overflow: hidden; background: var(--color-bg-dark); }
 #sun-color-swatches .color-swatch.active {
     border-color: #4fc3f7;
     box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.3);
+}
+
+/* Mobile web: add top padding to push UI widgets down */
+@media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    #hud {
+        top: 40px;
+    }
+    .desktop-menu-button {
+        top: 40px;
+    }
+    .desktop-reset-button {
+        top: 40px;
+    }
+    .settings-button-touch {
+        top: 40px;
+    }
+    .menu-button {
+        top: 40px;
+    }
+    #reset-btn-touch {
+        top: 40px;
+    }
 }

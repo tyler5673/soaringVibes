@@ -105,8 +105,8 @@ function getDeviceDefaultPreset() {
 // Physics mode configuration
 let physicsMode = localStorage.getItem('physicsMode') || 'arcade';
 
-// Float plane configuration
-let hasFloats = localStorage.getItem('hasFloats') === 'true';
+// Float plane configuration (default enabled)
+let hasFloats = localStorage.getItem('hasFloats') !== 'false';
 
 // Elevator reverse for mobile widget and keyboard
 let reverseElevator = localStorage.getItem('reverseElevator') === 'true';

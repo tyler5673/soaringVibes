@@ -3,8 +3,8 @@ class WaveSystem {
   constructor() {
     this.time = 0;
     
-    // Multipliers for external control (0-1 range, default 0.5)
-    this.heightMultiplier = 0.5;
+    // Multipliers for external control (0-1 range, default 0.15 = what 15% was before)
+    this.heightMultiplier = 0.10;
     this.speedMultiplier = 0.5;
     this.steepnessMultiplier = 0.5;
     
@@ -263,12 +263,12 @@ class OceanManager {
     // Create concentric rings (edge to edge, no overlap)
     const configs = this.mobileMode ? [
       { inner: 0, outer: 500, segments: 48, intensity: 1.0, color: 0x40c4ff },   // Center disk
-      { inner: 500, outer: 2000, segments: 24, intensity: 1.0, color: 0x40c4ff }, // Middle ring
-      { inner: 2000, outer: 5000, segments: 12, intensity: 1.0, color: 0x40c4ff } // Outer ring (fog hides edge)
+      { inner: 500, outer: 2000, segments: 48, intensity: 1.0, color: 0x40c4ff }, // Middle ring
+      { inner: 2000, outer: 5000, segments: 48, intensity: 1.0, color: 0x40c4ff } // Outer ring (fog hides edge)
     ] : [
-      { inner: 0, outer: 3000, segments: 96, intensity: 1.0, color: 0x40c4ff },   // Center disk
-      { inner: 3000, outer: 4000, segments: 48, intensity: 1.0, color: 0x40c4ff }, // Middle ring
-      { inner: 4000, outer: 10000, segments: 24, intensity: 1.0, color: 0x40c4ff } // Outer ring (fog hides edge)
+      { inner: 0, outer: 5000, segments: 96, intensity: 1.0, color: 0x40c4ff },   // Center disk
+      { inner: 5000, outer: 12000, segments: 96, intensity: 1.0, color: 0x40c4ff }, // Middle ring
+      { inner: 12000, outer: 25000, segments: 96, intensity: 1.0, color: 0x40c4ff } // Outer ring (fog hides edge)
     ];
     
     const baseMaterial = new THREE.MeshStandardMaterial({
@@ -330,6 +330,7 @@ class OceanManager {
         const tile = new THREE.Mesh(geometry, material.clone());
         tile.rotation.x = -Math.PI / 2;
         tile.position.y = floorY;
+        tile.renderOrder = -1;  // Render behind water surface
         tile.renderOrder = -1;
         this.scene.add(tile);
         this.oceanFloorTiles.push(tile);
