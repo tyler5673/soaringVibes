@@ -33,8 +33,8 @@
                 mass: 1100,
                 shape: new CANNON.Box(new CANNON.Vec3(2, 1, 5)),
                 material: material,
-                linearDamping: 0.1,
-                angularDamping: 0.3,
+                linearDamping: 0.5,
+                angularDamping: 0.7,
                 position: new CANNON.Vec3(
                     aircraft.position.x,
                     aircraft.position.y,
@@ -152,6 +152,7 @@
             this.maxRudderDeflection = 25 * Math.PI / 180;
             
             this.Cl_alpha = 6.0;
+            this.frameCount = 0;
             this.CLmax = 1.6;
             this.CD0 = 0.022;
             this.maxThrust = 3500;
@@ -252,8 +253,8 @@
                 force.vadd(dragForce, force);
             }
             
-            // Control torques - direct input response
-            const controlPower = 8000;
+            // Control torques - direct input response (very high power for testing)
+            const controlPower = 50000;
             torque.x += controlPower * controlInput.pitch;
             torque.z += controlPower * controlInput.roll;
             torque.y += controlPower * controlInput.yaw;
@@ -269,6 +270,9 @@
             if (Math.abs(angVel.roll) > 0.01) {
                 torque.y -= angVel.roll * 100;
             }
+            
+            // Gravity (cannon-es world applies it, but ensure it's there)
+            force.y -= this.mass * 9.81;
             
             body.applyForce(force);
             body.applyTorque(torque);
