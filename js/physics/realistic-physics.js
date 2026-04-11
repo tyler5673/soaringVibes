@@ -1,216 +1,301 @@
 // ========== REALISTIC PHYSICS ==========
-// Uses cannon-es for rigid body physics
+// Uses cannon-es for rigid body physics - self-contained
 
-const CANNON = window.CANNON;
-const PhysicsBridge = window.PhysicsBridge;
-const AERODYNAMICS = window.AERODYNAMICS;
-
-class RealisticPhysics {
-    constructor(aircraft) {
-        this.aircraft = aircraft;
-        this.bridge = new PhysicsBridge(aircraft);
-        
-        // Aircraft properties
-        this.wingArea = aircraft.wingArea || 16;
-        this.wingspan = aircraft.wingspan || 11;
-        this.mass = 1100;
-        
-        // Control limits
-        this.maxElevatorDeflection = 25 * Math.PI / 180;
-        this.maxAileronDeflection = 20 * Math.PI / 180;
-        this.maxRudderDeflection = 25 * Math.PI / 180;
-        
-        // Aerodynamic coefficients
-        this.Cl_alpha = 6.0;
-        this.CLmax = 1.6;
-        this.CD0 = 0.022;
-        this.maxThrust = 3500;
+(function() {
+    'use strict';
+    
+    const CANNON = window.CANNON;
+    const AERODYNAMICS = window.AERODYNAMICS;
+    
+    if (!CANNON || !AERODYNAMICS) {
+        console.error('Missing physics deps:', { CANNON: !!CANNON, AERODYNAMICS: !!AERODYNAMICS });
+        return;
     }
     
-    get aspectRatio() {
-        return this.wingspan ** 2 / this.wingArea;
-    }
-    
-    update(delta) {
-        const aircraft = this.aircraft;
-        const body = this.bridge.body;
-        const { controlInput, throttle, hasFloats } = aircraft;
-        
-        // Animate propeller
-        if (aircraft.propeller) {
-            aircraft.propeller.rotation.z += throttle * 25 * delta;
-        }
-        
-        // Animate control surfaces
-        const aileronAngle = controlInput.roll * this.maxAileronDeflection;
-        if (aircraft.aileronL) aircraft.aileronL.rotation.x = -aileronAngle;
-        if (aircraft.aileronR) aircraft.aileronR.rotation.x = aileronAngle;
-        
-        const elevatorAngle = controlInput.pitch * this.maxElevatorDeflection;
-        if (aircraft.elevator) aircraft.elevator.rotation.x = -elevatorAngle;
-        
-        const rudderAngle = controlInput.yaw * this.maxRudderDeflection;
-        if (aircraft.rudder) aircraft.rudder.rotation.y = rudderAngle;
-        
-        // Get state from physics bridge
-        const speed = this.bridge.getVelocity();
-        const angVel = this.bridge.getAngularVelocity();
-        
-        // Body vectors in world space
-        const forward = new CANNON.Vec3(0, 0, -1);
-        body.vectorToWorldFrame(forward, forward);
-        forward.normalize();
-        
-        const up = new CANNON.Vec3(0, 1, 0);
-        body.vectorToWorldFrame(up, up);
-        up.normalize();
-        
-        const right = new CANNON.Vec3(1, 0, 0);
-        body.vectorToWorldFrame(right, right);
-        right.normalize();
-        
-        // Velocity direction
-        const velocity = body.velocity.clone();
-        velocity.normalize();
-        
-        // Calculate angles
-        const alpha = clamp(forward.dot(up), -1, 1);
-        const beta = clamp(forward.dot(right), -1, 1);
-        
-        // Dynamic pressure
-        const q = 0.5 * AERODYNAMICS.rho * speed * speed;
-        
-        // Control deflections
-        const elevator = controlInput.pitch * this.maxElevatorDeflection;
-        const aileron = controlInput.roll * this.maxAileronDeflection;
-        const rudder = controlInput.yaw * this.maxRudderDeflection;
-        
-        // === FORCES ===
-        const force = new CANNON.Vec3(0, 0, 0);
-        const torque = new CANNON.Vec3(0, 0, 0);
-        
-        // 1. Thrust
-        if (throttle > 0 && speed < 80) {
-            const thrustMag = AERODYNAMICS.thrust(throttle, this.maxThrust);
-            const thrustForce = forward.clone();
-            thrustForce.scale(thrustMag, thrustForce);
-            force.vadd(thrustForce, force);
+    // ========== PHYSICS BRIDGE ==========
+    class PhysicsBridge {
+        constructor(aircraft) {
+            this.aircraft = aircraft;
             
-            // Prop torque
-            torque.z += throttle * 50;
-        }
-        
-        // 2. Lift
-        const CL = AERODYNAMICS.liftCoefficient(alpha, {
-            Cl_alpha: this.Cl_alpha,
-            CLmax: this.CLmax
-        });
-        
-        if (speed > 1) {
-            const liftMag = q * this.wingArea * CL;
-            const liftForce = up.clone();
-            liftForce.scale(liftMag, liftForce);
-            force.vadd(liftForce, force);
-        }
-        
-        // 3. Drag
-        const CD = AERODYNAMICS.dragCoefficient(CL, {
-            CD0: this.CD0,
-            AR: this.aspectRatio
-        });
-        
-        if (speed > 1) {
-            const dragMag = q * this.wingArea * CD;
-            const dragForce = velocity.clone();
-            dragForce.scale(-dragMag, dragForce);
-            force.vadd(dragForce, force);
-        }
-        
-        // 4. Control Forces (torques)
-        const Cm = 2.5;
-        const M_pitch = q * this.wingArea * 0.3 * Cm * elevator;
-        torque.x += M_pitch;
-        
-        const Cl_ail = -0.25;
-        const M_roll = q * this.wingArea * this.wingspan * 0.5 * Cl_ail * aileron;
-        torque.z -= M_roll;
-        
-        const Cn = 0.50;
-        const M_yaw = q * this.wingArea * this.wingspan * 0.5 * Cn * rudder;
-        torque.y += M_yaw;
-        
-        // 5. Bank turn (horizontal force from bank angle)
-        const roll = aircraft.rotation.z;
-        const bankForce = Math.sin(roll) * speed * 50;
-        const bankVec = right.clone();
-        bankVec.scale(bankForce, bankVec);
-        force.vadd(bankVec, force);
-        
-        // 6. Adverse yaw from roll
-        if (Math.abs(angVel.roll) > 0.01) {
-            torque.y -= angVel.roll * 100;
-        }
-        
-        // 7. Gravity
-        force.y -= this.mass * 9.81;
-        
-        // Apply forces
-        body.applyForce(force);
-        body.applyTorque(torque);
-        
-        // === LANDING HANDLING ===
-        const altitude = body.position.y;
-        const terrainHeight = typeof getTerrainHeight === 'function' 
-            ? getTerrainHeight(body.position.x, body.position.z) 
-            : 0;
-        
-        // Water physics for floats
-        if (hasFloats) {
-            const waterLevel = 2;  // Base water level
-            const floatBottom = altitude - 0.85;
+            this.world = new CANNON.World();
+            this.world.gravity.set(0, -9.81, 0);
+            this.world.broadphase = new CANNON.NaiveBroadphase();
             
-            if (floatBottom <= waterLevel) {
-                // Water landing - buoyancy
-                const submerged = Math.min(1, (waterLevel - floatBottom) / 2);
-                const buoyancy = submerged * this.mass * 9.81 * 2;
-                body.applyForce(new CANNON.Vec3(0, buoyancy, 0));
-                
-                // Water drag
-                body.velocity.scale(1 - 2.0 * delta, body.velocity);
-                body.angularVelocity.scale(1 - 3.0 * delta, body.angularVelocity);
-                
-                // Self-righting at low speeds
-                if (speed < 10) {
-                    const rollCorrection = -aircraft.rotation.z * 0.8 * delta;
-                    const pitchCorrection = -aircraft.rotation.x * 0.5 * delta;
-                    body.angularVelocity.x += pitchCorrection;
-                    body.angularVelocity.z += rollCorrection;
-                }
+            const material = new CANNON.Material('aircraft');
+            const contactMaterial = new CANNON.ContactMaterial(material, material, {
+                friction: 0.3,
+                restitution: 0.1
+            });
+            this.world.addContactMaterial(contactMaterial);
+            this.material = material;
+            
+            this.body = new CANNON.Body({
+                mass: 1100,
+                shape: new CANNON.Box(new CANNON.Vec3(2, 1, 5)),
+                material: material,
+                linearDamping: 0.01,
+                angularDamping: 0.05,
+                position: new CANNON.Vec3(
+                    aircraft.position.x,
+                    aircraft.position.y,
+                    aircraft.position.z
+                )
+            });
+            
+            this.body.quaternion.setFromEuler(
+                aircraft.rotation.x,
+                aircraft.rotation.y,
+                aircraft.rotation.z,
+                'YXZ'
+            );
+            
+            this.world.addBody(this.body);
+        }
+        
+        syncFromThree(aircraft) {
+            this.body.position.set(
+                aircraft.position.x,
+                aircraft.position.y,
+                aircraft.position.z
+            );
+            this.body.quaternion.setFromEuler(
+                aircraft.rotation.x,
+                aircraft.rotation.y,
+                aircraft.rotation.z,
+                'YXZ'
+            );
+        }
+        
+        syncToThree(aircraft) {
+            const euler = new CANNON.Vec3();
+            this.body.quaternion.toEuler(euler);
+            
+            aircraft.position.x = this.body.position.x;
+            aircraft.position.y = this.body.position.y;
+            aircraft.position.z = this.body.position.z;
+            
+            aircraft.rotation.x = euler.x;
+            aircraft.rotation.y = euler.y;
+            aircraft.rotation.z = euler.z;
+        }
+        
+        getVelocity() {
+            return Math.sqrt(
+                this.body.velocity.x ** 2 +
+                this.body.velocity.y ** 2 +
+                this.body.velocity.z ** 2
+            );
+        }
+        
+        getAngularVelocity() {
+            return {
+                pitch: this.body.angularVelocity.x,
+                roll: this.body.angularVelocity.z,
+                yaw: this.body.angularVelocity.y
+            };
+        }
+        
+        update(delta, substeps) {
+            substeps = substeps || 3;
+            const dt = delta / substeps;
+            for (let i = 0; i < substeps; i++) {
+                this.world.step(dt);
             }
         }
-        
-        // Land collision
-        if (altitude <= terrainHeight) {
-            const penetration = terrainHeight - body.position.y;
-            const normalForce = penetration * 50000;
-            body.applyForce(new CANNON.Vec3(0, normalForce, 0));
+    }
+    
+    // Using clamp from utils.js
+    const clamp = window.clamp || function(v, min, max) { return Math.max(min, Math.min(max, v)); };
+    
+    // ========== REALISTIC PHYSICS ==========
+    class RealisticPhysics {
+        constructor(aircraft) {
+            this.aircraft = aircraft;
+            this.bridge = new PhysicsBridge(aircraft);
             
-            // Ground friction
-            body.velocity.scale(1 - 5.0 * delta, body.velocity);
-            body.angularVelocity.scale(1 - 5.0 * delta, body.angularVelocity);
+            this.wingArea = aircraft.wingArea || 16;
+            this.wingspan = aircraft.wingspan || 11;
+            this.mass = 1100;
+            
+            this.maxElevatorDeflection = 25 * Math.PI / 180;
+            this.maxAileronDeflection = 20 * Math.PI / 180;
+            this.maxRudderDeflection = 25 * Math.PI / 180;
+            
+            this.Cl_alpha = 6.0;
+            this.CLmax = 1.6;
+            this.CD0 = 0.022;
+            this.maxThrust = 3500;
         }
         
-        // === PHYSICS STEP ===
-        this.bridge.update(delta);
+        get aspectRatio() {
+            return this.wingspan ** 2 / this.wingArea;
+        }
         
-        // === SYNC BACK ===
-        this.bridge.syncToThree(aircraft);
-        
-        // Update gauges
-        aircraft.ias = speed;
-        aircraft.altitude = body.position.y;
-        aircraft.groundSpeed = speed;
+        update(delta) {
+            const aircraft = this.aircraft;
+            const body = this.bridge.body;
+            const controlInput = aircraft.controlInput;
+            const throttle = aircraft.throttle;
+            const hasFloats = aircraft.hasFloats;
+            
+            if (aircraft.propeller) {
+                aircraft.propeller.rotation.z += throttle * 25 * delta;
+            }
+            
+            const aileronAngle = controlInput.roll * this.maxAileronDeflection;
+            if (aircraft.aileronL) aircraft.aileronL.rotation.x = -aileronAngle;
+            if (aircraft.aileronR) aircraft.aileronR.rotation.x = aileronAngle;
+            
+            const elevatorAngle = controlInput.pitch * this.maxElevatorDeflection;
+            if (aircraft.elevator) aircraft.elevator.rotation.x = -elevatorAngle;
+            
+            const rudderAngle = controlInput.yaw * this.maxRudderDeflection;
+            if (aircraft.rudder) aircraft.rudder.rotation.y = rudderAngle;
+            
+            const speed = this.bridge.getVelocity();
+            const angVel = this.bridge.getAngularVelocity();
+            
+            const forward = new CANNON.Vec3(0, 0, -1);
+            body.vectorToWorldFrame(forward, forward);
+            forward.normalize();
+            
+            const up = new CANNON.Vec3(0, 1, 0);
+            body.vectorToWorldFrame(up, up);
+            up.normalize();
+            
+            const right = new CANNON.Vec3(1, 0, 0);
+            body.vectorToWorldFrame(right, right);
+            right.normalize();
+            
+            const velocity = body.velocity.clone();
+            velocity.normalize();
+            
+            const alpha = clamp(forward.dot(up), -1, 1);
+            const beta = clamp(forward.dot(right), -1, 1);
+            
+            const q = 0.5 * AERODYNAMICS.rho * speed * speed;
+            
+            const elevator = controlInput.pitch * this.maxElevatorDeflection;
+            const aileron = controlInput.roll * this.maxAileronDeflection;
+            const rudder = controlInput.yaw * this.maxRudderDeflection;
+            
+            const force = new CANNON.Vec3(0, 0, 0);
+            const torque = new CANNON.Vec3(0, 0, 0);
+            
+            // Thrust
+            if (throttle > 0 && speed < 80) {
+                const thrustMag = AERODYNAMICS.thrust(throttle, this.maxThrust);
+                const thrustForce = forward.clone();
+                thrustForce.scale(thrustMag, thrustForce);
+                force.vadd(thrustForce, force);
+                torque.z += throttle * 50;
+            }
+            
+            // Lift
+            const CL = AERODYNAMICS.liftCoefficient(alpha, {
+                Cl_alpha: this.Cl_alpha,
+                CLmax: this.CLmax
+            });
+            
+            if (speed > 1) {
+                const liftMag = q * this.wingArea * CL;
+                const liftForce = up.clone();
+                liftForce.scale(liftMag, liftForce);
+                force.vadd(liftForce, force);
+            }
+            
+            // Drag
+            const CD = AERODYNAMICS.dragCoefficient(CL, {
+                CD0: this.CD0,
+                AR: this.aspectRatio
+            });
+            
+            if (speed > 1) {
+                const dragMag = q * this.wingArea * CD;
+                const dragForce = velocity.clone();
+                dragForce.scale(-dragMag, dragForce);
+                force.vadd(dragForce, force);
+            }
+            
+            // Control Forces
+            const Cm = 2.5;
+            const M_pitch = q * this.wingArea * 0.3 * Cm * elevator;
+            torque.x += M_pitch;
+            
+            const Cl_ail = -0.25;
+            const M_roll = q * this.wingArea * this.wingspan * 0.5 * Cl_ail * aileron;
+            torque.z -= M_roll;
+            
+            const Cn = 0.50;
+            const M_yaw = q * this.wingArea * this.wingspan * 0.5 * Cn * rudder;
+            torque.y += M_yaw;
+            
+            // Bank turn
+            const roll = aircraft.rotation.z;
+            const bankForce = Math.sin(roll) * speed * 50;
+            const bankVec = right.clone();
+            bankVec.scale(bankForce, bankVec);
+            force.vadd(bankVec, force);
+            
+            // Adverse yaw
+            if (Math.abs(angVel.roll) > 0.01) {
+                torque.y -= angVel.roll * 100;
+            }
+            
+            // Gravity
+            force.y -= this.mass * 9.81;
+            
+            body.applyForce(force);
+            body.applyTorque(torque);
+            
+            // Landing handling
+            const altitude = body.position.y;
+            const terrainHeight = typeof getTerrainHeight === 'function' 
+                ? getTerrainHeight(body.position.x, body.position.z) 
+                : 0;
+            
+            if (hasFloats) {
+                const waterLevel = 2;
+                const floatBottom = altitude - 0.85;
+                
+                if (floatBottom <= waterLevel) {
+                    const submerged = Math.min(1, (waterLevel - floatBottom) / 2);
+                    const buoyancy = submerged * this.mass * 9.81 * 2;
+                    body.applyForce(new CANNON.Vec3(0, buoyancy, 0));
+                    
+                    body.velocity.scale(1 - 2.0 * delta, body.velocity);
+                    body.angularVelocity.scale(1 - 3.0 * delta, body.angularVelocity);
+                    
+                    if (speed < 10) {
+                        const rollCorrection = -aircraft.rotation.z * 0.8 * delta;
+                        const pitchCorrection = -aircraft.rotation.x * 0.5 * delta;
+                        body.angularVelocity.x += pitchCorrection;
+                        body.angularVelocity.z += rollCorrection;
+                    }
+                }
+            }
+            
+            if (altitude <= terrainHeight) {
+                const penetration = terrainHeight - body.position.y;
+                const normalForce = penetration * 50000;
+                body.applyForce(new CANNON.Vec3(0, normalForce, 0));
+                
+                body.velocity.scale(1 - 5.0 * delta, body.velocity);
+                body.angularVelocity.scale(1 - 5.0 * delta, body.angularVelocity);
+            }
+            
+            // Step
+            this.bridge.update(delta);
+            
+            // Sync back
+            this.bridge.syncToThree(aircraft);
+            
+            aircraft.ias = speed;
+            aircraft.altitude = body.position.y;
+            aircraft.groundSpeed = speed;
+        }
     }
-}
-
-window.RealisticPhysics = RealisticPhysics;
+    
+    window.RealisticPhysics = RealisticPhysics;
+    console.log('RealisticPhysics loaded');
+})();
