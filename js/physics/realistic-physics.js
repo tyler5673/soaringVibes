@@ -5,8 +5,6 @@ const CANNON = window.CANNON;
 const PhysicsBridge = window.PhysicsBridge;
 const AERODYNAMICS = window.AERODYNAMICS;
 
-const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-
 class RealisticPhysics {
     constructor(aircraft) {
         this.aircraft = aircraft;
