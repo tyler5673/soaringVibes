@@ -33,8 +33,8 @@
                 mass: 1100,
                 shape: new CANNON.Box(new CANNON.Vec3(2, 1, 5)),
                 material: material,
-                linearDamping: 0.3,
-                angularDamping: 0.8,
+                linearDamping: 0.1,
+                angularDamping: 0.3,
                 position: new CANNON.Vec3(
                     aircraft.position.x,
                     aircraft.position.y,
@@ -231,15 +231,11 @@
                 force.vadd(dragForce, force);
             }
             
-            // Control torques (signs fixed for correct response)
-            const Cm = 3.0;
-            torque.x += q * this.wingArea * 0.3 * Cm * elevator;
-            
-            const Cl_ail = 0.35;
-            torque.z += q * this.wingArea * this.wingspan * 0.5 * Cl_ail * aileron;
-            
-            const Cn = 0.60;
-            torque.y += q * this.wingArea * this.wingspan * 0.5 * Cn * rudder;
+            // Control torques - direct input response
+            const controlPower = 8000;
+            torque.x += controlPower * controlInput.pitch;
+            torque.z += controlPower * controlInput.roll;
+            torque.y += controlPower * controlInput.yaw;
             
             // Bank turn
             const roll = aircraft.rotation.z;
