@@ -33,8 +33,8 @@
                 mass: 1100,
                 shape: new CANNON.Box(new CANNON.Vec3(2, 1, 5)),
                 material: material,
-                linearDamping: 0.01,
-                angularDamping: 0.05,
+                linearDamping: 0.3,
+                angularDamping: 0.8,
                 position: new CANNON.Vec3(
                     aircraft.position.x,
                     aircraft.position.y,
@@ -48,6 +48,15 @@
                 aircraft.rotation.z,
                 'YXZ'
             );
+            
+            // Sync initial velocity
+            if (aircraft.velocity) {
+                this.body.velocity.set(
+                    aircraft.velocity.x,
+                    aircraft.velocity.y,
+                    aircraft.velocity.z
+                );
+            }
             
             this.world.addBody(this.body);
         }
@@ -170,11 +179,14 @@
             const velocity = body.velocity.clone();
             velocity.normalize();
             
-            const alpha = clamp(forward.dot(up), -1, 1);
-            const beta = clamp(forward.dot(right), -1, 1);
+            // Alpha = angle between velocity and forward (aircraft nose)
+            const alpha = speed > 1 ? Math.asin(clamp(-velocity.dot(up), -1, 1) : 0;
+            // Beta = sideslip angle
+            const beta = speed > 1 ? Math.asin(clamp(velocity.dot(right), -1, 1) : 0;
             
             const q = 0.5 * AERODYNAMICS.rho * speed * speed;
             
+            // Control inputs are already -1 to 1
             const elevator = controlInput.pitch * this.maxElevatorDeflection;
             const aileron = controlInput.roll * this.maxAileronDeflection;
             const rudder = controlInput.yaw * this.maxRudderDeflection;
@@ -182,16 +194,15 @@
             const force = new CANNON.Vec3(0, 0, 0);
             const torque = new CANNON.Vec3(0, 0, 0);
             
-            // Thrust
+            // Thrust - along forward vector
             if (throttle > 0 && speed < 80) {
                 const thrustMag = AERODYNAMICS.thrust(throttle, this.maxThrust);
                 const thrustForce = forward.clone();
                 thrustForce.scale(thrustMag, thrustForce);
                 force.vadd(thrustForce, force);
-                torque.z += throttle * 50;
             }
             
-            // Lift
+            // Lift - perpendicular to velocity, in aircraft up direction
             const CL = AERODYNAMICS.liftCoefficient(alpha, {
                 Cl_alpha: this.Cl_alpha,
                 CLmax: this.CLmax
@@ -204,7 +215,7 @@
                 force.vadd(liftForce, force);
             }
             
-            // Drag
+            // Drag - opposite to velocity
             const CD = AERODYNAMICS.dragCoefficient(CL, {
                 CD0: this.CD0,
                 AR: this.aspectRatio
@@ -217,18 +228,15 @@
                 force.vadd(dragForce, force);
             }
             
-            // Control Forces
-            const Cm = 2.5;
-            const M_pitch = q * this.wingArea * 0.3 * Cm * elevator;
-            torque.x += M_pitch;
+            // Control torques (signs fixed for correct response)
+            const Cm = 3.0;
+            torque.x += q * this.wingArea * 0.3 * Cm * elevator;
             
-            const Cl_ail = -0.25;
-            const M_roll = q * this.wingArea * this.wingspan * 0.5 * Cl_ail * aileron;
-            torque.z -= M_roll;
+            const Cl_ail = 0.35;
+            torque.z += q * this.wingArea * this.wingspan * 0.5 * Cl_ail * aileron;
             
-            const Cn = 0.50;
-            const M_yaw = q * this.wingArea * this.wingspan * 0.5 * Cn * rudder;
-            torque.y += M_yaw;
+            const Cn = 0.60;
+            torque.y += q * this.wingArea * this.wingspan * 0.5 * Cn * rudder;
             
             // Bank turn
             const roll = aircraft.rotation.z;
@@ -241,9 +249,6 @@
             if (Math.abs(angVel.roll) > 0.01) {
                 torque.y -= angVel.roll * 100;
             }
-            
-            // Gravity
-            force.y -= this.mass * 9.81;
             
             body.applyForce(force);
             body.applyTorque(torque);
