@@ -651,8 +651,13 @@ var spinnerStripeBottom = new THREE.Mesh(
         this.controlInput = { pitch: 0, roll: 0, yaw: 0 };
         this.throttle = 0.5;
         
-        // Re-initialize physics
+        // Re-initialize physics (creates new physics body)
         this.initPhysics();
+        
+        // Sync physics body to aircraft state if physics has bridge
+        if (this.physics && this.physics.bridge) {
+            this.physics.bridge.reset(this);
+        }
         
         this.ias = 0;
         this.groundSpeed = 0;

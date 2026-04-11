@@ -104,6 +104,27 @@
             };
         }
         
+        reset(aircraft) {
+            // Reset body to aircraft position/rotation/velocity
+            this.body.position.set(
+                aircraft.position.x,
+                aircraft.position.y,
+                aircraft.position.z
+            );
+            this.body.quaternion.setFromEuler(
+                aircraft.rotation.x,
+                aircraft.rotation.y,
+                aircraft.rotation.z,
+                'YXZ'
+            );
+            this.body.velocity.set(
+                aircraft.velocity.x,
+                aircraft.velocity.y,
+                aircraft.velocity.z
+            );
+            this.body.angularVelocity.set(0, 0, 0);
+        }
+        
         update(delta, substeps) {
             substeps = substeps || 3;
             const dt = delta / substeps;
