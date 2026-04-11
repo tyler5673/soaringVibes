@@ -180,9 +180,12 @@
             velocity.normalize();
             
             // Alpha = angle between velocity and forward (aircraft nose)
-            const alpha = speed > 1 ? Math.asin(clamp(-velocity.dot(up), -1, 1) : 0;
-            // Beta = sideslip angle
-            const beta = speed > 1 ? Math.asin(clamp(velocity.dot(right), -1, 1) : 0;
+            let alpha = 0;
+            let beta = 0;
+            if (speed > 1) {
+                alpha = Math.asin(Math.max(-1, Math.min(1, -velocity.dot(up))));
+                beta = Math.asin(Math.max(-1, Math.min(1, velocity.dot(right))));
+            }
             
             const q = 0.5 * AERODYNAMICS.rho * speed * speed;
             
