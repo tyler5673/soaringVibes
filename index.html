@@ -2776,6 +2776,11 @@ document.addEventListener('DOMContentLoaded', function() {
             renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            
+            // Clamp pixel ratio on mobile for performance
+            if (/iPhone|Android/.test(navigator.userAgent)) {
+                renderer.setPixelRatio(1);
+            }
             renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
             
