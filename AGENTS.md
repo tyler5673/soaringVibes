@@ -89,8 +89,7 @@ soaringVibes/
 - Control surface deflections create moments
 - Adverse yaw requires rudder coordination
 - Stall behavior at high angle of attack
-- Propeller effects (torque, P-factor)
-- Control effectiveness varies with speed²
+- Control effectiveness varies with speed
 
 ### Flora System
 - LOD system: 3 detail levels based on distance
@@ -139,6 +138,38 @@ soaringVibes/
 - Ocean waves use CPU-based vertex displacement (may impact very low-end devices)
 - Foam effect not yet implemented (planned for future enhancement)
 - No dynamic wave generation from aircraft/boat wakes (cosmetic only)
+- Propeller effects (P-factor, slipstream, gyroscopic precession) disabled - caused uncontrolled yaw
+- Realistic mode rotation uses quaternion integration (avoids gimbal lock at high pitch angles)
+
+## Realistic Physics Coefficient Values (Current)
+
+```
+// Mass
+mass = 1157 kg, wingArea = 16.165 m², wingspan = 10.9728 m, meanChord = 1.473 m
+
+// Inertia
+ixx = 1280, iyy = 1825, izz = 3200, ixz = 50
+
+// Lift
+CL0 = 0.1, CL_alpha = 4.5, CLmax = 1.4, alphaStall = 15°, alphaZeroLift = -2°
+
+// Drag
+CD0 = 0.03, e = 0.78
+
+// Pitch
+CM0 = 0.0, trimAlpha = 2.5°, CM_alpha = -0.2, CM_q = -15, CM_de = -0.05
+
+// Roll
+Cl_beta = -0.08, Cl_p = -0.4, Cl_dr = 0.008
+
+// Yaw
+Cn_beta = 0.03, Cn_r = -0.1, Cn_dr = 0.008, Cn_da = -0.001
+
+// Side force
+CY_beta = -0.3, CY_dr = 0.1
+
+// Numerical angular damping: 3.0 per second (very light, aerodynamics provide real damping)
+```
 
 ## Development Commands
 ```bash

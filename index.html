@@ -1732,14 +1732,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Physics mode toggle
     const physicsModeToggle = document.getElementById('physics-mode-toggle');
     if (physicsModeToggle) {
-        // Initialize from saved setting
-        const savedMode = localStorage.getItem('physicsMode') || 'arcade';
-        physicsModeToggle.checked = (savedMode === 'realistic');
+        // Always default to arcade - don't restore from localStorage
+        physicsModeToggle.checked = false;
         
         physicsModeToggle.addEventListener('change', function() {
             const mode = this.checked ? 'realistic' : 'arcade';
             window.setPhysicsMode(mode);
         });
+        
+        // Set initial physics mode to arcade immediately
+        if (window.aircraft) {
+            window.aircraft.setPhysicsMode('arcade');
+        }
     }
     
     // Reverse elevator toggle

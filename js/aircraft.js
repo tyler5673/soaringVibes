@@ -621,12 +621,6 @@ var spinnerStripeBottom = new THREE.Mesh(
     }
     
     update(delta) {
-        if (this._debugFrame === undefined) this._debugFrame = 0;
-        this._debugFrame++;
-        if (this._debugFrame <= 3) {
-            console.log(`Frame ${this._debugFrame}: vel=(${this.velocity.x.toFixed(1)}, ${this.velocity.y.toFixed(1)}, ${this.velocity.z.toFixed(1)}), rotY=${this.rotation.y.toFixed(2)}`);
-        }
-        
         // Initialize physics if not set
         if (!this.physics) {
             this.initPhysics();
@@ -644,6 +638,15 @@ var spinnerStripeBottom = new THREE.Mesh(
     }
     
     reset() {
+        // Save debug settings before reset (if they exist)
+        let savedDebugSettings = null;
+        if (this.physics && this.physics.debugForces) {
+            savedDebugSettings = {
+                enabled: this.physics.debugForces.enabled,
+                arrowVisibility: { ...this.physics.debugForces.arrowVisibility }
+            };
+        }
+        
         // Reset to a random location near an island with forward momentum
         this.setRandomStartPosition();
         
@@ -653,6 +656,12 @@ var spinnerStripeBottom = new THREE.Mesh(
         
         // Re-initialize physics (creates new physics body)
         this.initPhysics();
+        
+        // Restore debug settings after physics re-initialization
+        if (savedDebugSettings && this.physics && this.physics.debugForces) {
+            this.physics.debugForces.enabled = savedDebugSettings.enabled;
+            this.physics.debugForces.arrowVisibility = { ...savedDebugSettings.arrowVisibility };
+        }
         
         // Sync physics body to aircraft state if physics has bridge
         if (this.physics && this.physics.bridge) {
@@ -945,10 +954,8 @@ var spinnerStripeBottom = new THREE.Mesh(
         this.physicsMode = mode;
         this.initPhysics();
         
-        // Reset angular velocity for realistic mode
-        if (mode === 'realistic' && this.physics.angularVelocity) {
-            this.physics.angularVelocity = { pitch: 0, roll: 0, yaw: 0 };
-        }
+        // RealisticPhysics initializes angularVelocity as THREE.Vector3 in constructor
+        // No need to reset it here
     }
 }
 

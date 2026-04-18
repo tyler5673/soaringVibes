@@ -210,6 +210,25 @@ class PlaneGeometry {
   }
 }
 
+class CapsuleGeometry {
+  constructor(radius, length, capSegments, radialSegments) {
+    this.radius = radius;
+    this.length = length;
+    this.capSegments = capSegments;
+    this.radialSegments = radialSegments;
+    this._scale = { x: 1, y: 1, z: 1 };
+  }
+  
+  scale(x, y, z) {
+    this._scale = { x, y, z };
+    return this;
+  }
+  
+  rotateX() { return this; }
+  rotateY() { return this; }
+  rotateZ() { return this; }
+}
+
 class MeshStandardMaterial {
   constructor(options = {}) {
     this.color = options.color || 0xffffff;
@@ -247,6 +266,7 @@ const THREE = {
   ConeGeometry,
   BoxGeometry,
   PlaneGeometry,
+  CapsuleGeometry,
   MeshStandardMaterial,
   MeshBasicMaterial,
   Scene,
