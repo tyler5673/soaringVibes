@@ -1891,3 +1891,10 @@ body { overflow: hidden; background: var(--color-bg-dark); }
         top: 40px;
     }
 }
+
+/* Force GPU compositing for WebGL canvas layer */
+canvas {
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    contain: paint;
+}
