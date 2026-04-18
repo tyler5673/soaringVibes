@@ -1,0 +1,26 @@
+{
+  "name": "Soaring Vibes - Hawaiian Flight Simulator",
+  "short_name": "Soaring Vibes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "orientation": "landscape",
+  "description": "A browser-based flight simulator featuring the Hawaiian islands with realistic physics, dynamic ocean, and multiplayer support.",
+  "categories": ["games", "education"],
+  "icons": [
+    {
+      "src": "assets/images/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/images/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
